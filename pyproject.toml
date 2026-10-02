@@ -11,6 +11,7 @@ dependencies = [
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
     "pypdf>=6.19.0",
+    "sqlalchemy>=2.0.54",
     "sqlmodel>=0.0.47",
     "streamlit>=1.64.0",
 ]
@@ -37,4 +38,4 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["live: calls a real external API (needs keys; skipped in CI)"]
-addopts = "-ra"
+addopts = "-ra --strict-markers"
