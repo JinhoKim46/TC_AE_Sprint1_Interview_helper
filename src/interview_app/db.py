@@ -6,13 +6,16 @@ more users later then needs no migration of existing data.
 New tables are added by the feature that needs them (applications, sessions, turns...).
 """
 
+import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, ForeignKey, Integer, event
+from sqlalchemy import Column, ForeignKey, Integer, event, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
+
+log = logging.getLogger(__name__)
 
 
 def utcnow() -> datetime:
@@ -105,8 +108,57 @@ def make_engine(database_url: str) -> Engine:
 
 
 def init_db(engine: Engine) -> None:
-    """Create any missing tables. (No migrations yet: tables are only ever added.)"""
+    """Create any missing tables, then add any missing columns to existing ones."""
     SQLModel.metadata.create_all(engine)
+    _add_missing_columns(engine)
+
+
+def _sql_literal(value) -> str:
+    # SQLite stores booleans as 0/1. Only simple literals are supported; anything fancier
+    # (a function default like utcnow) can't be expressed in ALTER TABLE ... DEFAULT.
+    if isinstance(value, bool):
+        return "1" if value else "0"
+    if isinstance(value, int | float):
+        return str(value)
+    if isinstance(value, str):
+        return "'" + value.replace("'", "''") + "'"
+    raise TypeError(f"unsupported default {value!r}")
+
+
+def _add_missing_columns(engine: Engine) -> None:
+    """A tiny migration step: `ALTER TABLE ... ADD COLUMN` for model columns the database lacks.
+
+    Why: `create_all` only creates *missing tables*; it never changes a table that already exists.
+    So a field added to a model (e.g. `Turn.superseded`) would make every query fail on an existing
+    `data/app.db` with "no such column". This handles the common, safe case — a new nullable column,
+    or one with a simple literal default — which is all this app has needed. Renames, type changes
+    or dropped columns would need a real migration tool (Alembic); we don't use one yet.
+    SQLite only (the only database this app uses).
+    """
+    if engine.dialect.name != "sqlite":
+        return
+    with engine.begin() as conn:
+        for table in SQLModel.metadata.sorted_tables:
+            rows = conn.execute(text(f'PRAGMA table_info("{table.name}")')).all()
+            if not rows:
+                continue  # table doesn't exist (create_all just ran, so this shouldn't happen)
+            existing = {row[1] for row in rows}  # row = (cid, name, type, notnull, default, pk)
+            for column in table.columns:
+                if column.name in existing:
+                    continue
+                ddl = f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" '
+                ddl += column.type.compile(dialect=engine.dialect)
+                default = column.default.arg if column.default is not None else None
+                if default is not None and not callable(default):
+                    # Existing rows get the default, so NOT NULL is safe here.
+                    ddl += f" NOT NULL DEFAULT {_sql_literal(default)}"
+                elif not column.nullable:
+                    raise RuntimeError(
+                        f"Cannot add required column {table.name}.{column.name} without a default; "
+                        "make it nullable or give it a literal default."
+                    )
+                log.info("Migrating database: %s", ddl)
+                conn.execute(text(ddl))
 
 
 @contextmanager
@@ -160,6 +212,10 @@ class Turn(SQLModel, table=True):
     is_followup: bool = False
     is_final: bool = False
     private_json: str | None = None  # P3 notes / P5 draft+critique: kept for analysis, never shown
+    # Coaching mode: an earlier attempt the candidate chose to retry. Kept (history, analysis) but
+    # excluded from every transcript view, the interviewer's messages and the final evaluation.
+    superseded: bool = False
+    live_json: str | None = None  # coaching mode: evaluation.live.LiveFeedback for a candidate answer
     created_at: datetime = Field(default_factory=utcnow)
 
 

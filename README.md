@@ -53,6 +53,14 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
 Design rule throughout: **the model judges, code computes.** Models decide what to ask and how good an answer
 is. Code counts, enforces limits, weights, normalises and decides bands.
 
+**Coaching mode** (pick it on the start form): after each answer, Jev scores it on the three rubric items that
+weigh most for that kind of question (one request, about 0.5 s; `evaluation/live.py`), and the app shows them
+as chips with a tip. The tip is built in code: it quotes the rubric's description of the next level up for the
+weakest item, so it is grounded in the rubric and costs nothing. The candidate can then **Retry** the answer (up
+to `LIMITS__MAX_RETRIES_PER_ANSWER`, default 2) or **Continue**. A retried attempt is kept in the database but
+marked superseded, so neither the interviewer nor the final judge ever sees it. Realistic mode shows nothing
+until the report.
+
 ## Course requirements and where they are met
 
 | Requirement | Where |
@@ -180,7 +188,7 @@ the OWASP Top 10 for LLM applications:
 ## Next improvements
 
 - The N-item red-flag checks with Jev.
-- Jev live scoring after each answer, plus a Coaching mode with tips and retries.
+- Calibrate the live Jev scores against the LLM judge (they are indicative until then).
 - Voice (speech-to-text / text-to-speech); JD import from URL.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.
 

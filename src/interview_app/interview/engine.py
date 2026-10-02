@@ -7,12 +7,16 @@ Division of labour ("the model judges, code computes"):
   refresh or a crash never loses an interview.
 
 The engine is stateless between calls: everything it needs is re-read from the database.
+
+Coaching mode adds one pause per answer: `answer` stores the answer and scores it live (Jev), but does
+not call the interviewer. The candidate then either `retry`s (the old attempt is marked superseded and
+disappears from every transcript the models see) or calls `continue_interview` (= `respond`).
 """
 
 import json
 import logging
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
@@ -21,8 +25,10 @@ from sqlmodel import col, func, select
 from interview_app.applications import get_application
 from interview_app.config import Settings
 from interview_app.db import InterviewSession, LLMCall, Turn, session_scope, utcnow
+from interview_app.evaluation.live import LiveFeedback, live_score
+from interview_app.evaluation.rubric import load_rubric
 from interview_app.ingest import DocKind
-from interview_app.interview.persona import Persona, SessionConfig, derive_persona
+from interview_app.interview.persona import Mode, Persona, SessionConfig, derive_persona
 from interview_app.interview.plan import make_plan
 from interview_app.interview.prompting import (
     TURN_SCHEMA,
@@ -35,6 +41,7 @@ from interview_app.interview.prompting import (
 )
 from interview_app.interview.schemas import AnyTurn, InterviewPlan, Stage, private_fields
 from interview_app.llm.client import LLMClient, LLMError
+from interview_app.llm.decide import DecisionClient
 from interview_app.security import (
     GuardResult,
     InjectionGuard,
@@ -62,6 +69,8 @@ class EngineDeps:
     # Builds an LLM client whose call log is bound to (user_id, session_id).
     make_llm: Callable[[int, int | None], LLMClient]
     guard: InjectionGuard | None = None
+    # Jev client for live scores in coaching mode. None -> coaching still works, just without scores.
+    decider: DecisionClient | None = None
 
 
 @dataclass
@@ -73,6 +82,7 @@ class TurnView:
     question_id: str | None
     is_followup: bool
     is_final: bool
+    live: LiveFeedback | None = None  # coaching mode: live scores + tip for a candidate answer
 
 
 @dataclass
@@ -96,6 +106,9 @@ class SessionView:
     turns: list[TurnView]
     progress: Progress
     cost_usd: float
+    # Coaching mode: retried attempts, kept for display only (never part of `turns`).
+    superseded: list[TurnView] = field(default_factory=list)
+    retries_used: int = 0  # retries of the current (latest) answer
 
 
 @dataclass
@@ -104,6 +117,10 @@ class AnswerOutcome:
     guard: GuardResult | None
     interviewer: TurnView | None
     finished: bool
+    # Coaching mode: the answer's live feedback (None if scoring is off or failed), and whether the
+    # engine is now waiting for the candidate to choose Retry or Continue.
+    live: LiveFeedback | None = None
+    awaiting_choice: bool = False
 
 
 # --- Pure logic (no database, no model): easy to test and to explain ----------------------------
@@ -169,10 +186,12 @@ def must_close(turn_count: int, cost_usd: float, settings: Settings) -> bool:
 
 
 def _turn_view(t: Turn) -> TurnView:
-    return TurnView(t.idx, t.speaker, t.text, t.stage, t.question_id, t.is_followup, t.is_final)
+    live = LiveFeedback.model_validate_json(t.live_json) if t.live_json else None
+    return TurnView(t.idx, t.speaker, t.text, t.stage, t.question_id, t.is_followup, t.is_final, live)
 
 
-def _load(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSession, list[Turn]] | None:
+def _load_all(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSession, list[Turn]] | None:
+    """The session and ALL its turns, superseded attempts included. Only for display and numbering."""
     with session_scope(engine) as s:
         row = s.exec(
             select(InterviewSession).where(
@@ -185,6 +204,36 @@ def _load(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSessi
         return row, list(turns)
 
 
+def _load(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSession, list[Turn]] | None:
+    """The session and its transcript *without* superseded attempts.
+
+    Everything that reasons about the interview (the interviewer's messages, progress counting, limits,
+    the final evaluation via get_session) goes through here, so a discarded attempt can never leak in.
+    """
+    loaded = _load_all(engine, user_id, session_id)
+    if loaded is None:
+        return None
+    row, turns = loaded
+    return row, [t for t in turns if not t.superseded]
+
+
+def _next_idx(engine: Engine, session_id: int) -> int:
+    # Not len(turns): superseded attempts keep their idx, so the kept transcript can have gaps.
+    with session_scope(engine) as s:
+        top = s.exec(select(func.max(Turn.idx)).where(Turn.session_id == session_id)).one()
+    return 0 if top is None else top + 1
+
+
+def _retries_used(all_turns: list[Turn]) -> int:
+    """Superseded candidate attempts since the last interviewer turn (= retries of the current answer)."""
+    used = 0
+    for t in reversed(all_turns):
+        if t.speaker == "interviewer":
+            break
+        used += t.superseded
+    return used
+
+
 def session_cost(engine: Engine, session_id: int) -> float:
     with session_scope(engine) as s:
         total = s.exec(select(func.sum(LLMCall.cost_usd)).where(LLMCall.session_id == session_id)).one()
@@ -192,12 +241,12 @@ def session_cost(engine: Engine, session_id: int) -> float:
 
 
 def get_session(engine: Engine, user_id: int, session_id: int) -> SessionView | None:
-    loaded = _load(engine, user_id, session_id)
+    loaded = _load_all(engine, user_id, session_id)
     if loaded is None:
         return None
-    row, turns = loaded
+    row, all_turns = loaded
     config = SessionConfig.model_validate_json(row.config_json)
-    views = [_turn_view(t) for t in turns]
+    views = [_turn_view(t) for t in all_turns if not t.superseded]
     return SessionView(
         id=row.id,
         application_id=row.application_id,
@@ -209,6 +258,8 @@ def get_session(engine: Engine, user_id: int, session_id: int) -> SessionView | 
         turns=views,
         progress=compute_progress(views),
         cost_usd=session_cost(engine, row.id),
+        superseded=[_turn_view(t) for t in all_turns if t.superseded],
+        retries_used=_retries_used(all_turns),
     )
 
 
@@ -367,25 +418,122 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
     return session_id
 
 
+def _check_answer(deps: EngineDeps, session_id: int, text: str) -> GuardResult | None:
+    """Run the limits and the injection guard. Returns the blocking result, or None if the answer is ok."""
+    length = check_answer_length(text, deps.settings.limits)
+    if not length.allowed:
+        return length
+    if deps.guard is not None:
+        verdict = deps.guard.check_answer(text)
+        if not verdict.allowed:
+            # The blocked text is never stored or sent to any model.
+            log.info("Blocked answer in session %s: %s", session_id, verdict.checks)
+            return verdict
+    return None
+
+
+def _is_coaching(row: InterviewSession) -> bool:
+    return SessionConfig.model_validate_json(row.config_json).mode == Mode.COACHING
+
+
+def _live_feedback(
+    deps: EngineDeps, row: InterviewSession, turns: list[Turn], text: str
+) -> LiveFeedback | None:
+    """Live scores for the answer to the latest interviewer turn, or None if scoring is off or fails."""
+    if deps.decider is None or not deps.settings.features.live_scoring:
+        return None
+    # Imported here, not at the top: exchanges.py imports this module (for TurnView), so a top-level
+    # import would be circular.
+    from interview_app.evaluation.exchanges import build_exchanges
+
+    exchanges = build_exchanges([_turn_view(t) for t in turns])
+    if not exchanges:
+        return None
+    # The category comes from the exchange's *main* question (a follow-up on an EXP question is still
+    # EXP); the question text is what the candidate is answering right now (the latest interviewer turn).
+    question = next(t.text for t in reversed(turns) if t.speaker == "interviewer")
+    documents = json.loads(row.documents_json)
+    return live_score(
+        deps.decider,
+        load_rubric(deps.settings.rubric_path),
+        category=exchanges[-1].category,
+        question=question,
+        answer=text,
+        jd_text=documents.get(DocKind.JD.value, ""),
+        cv_text=documents.get(DocKind.CV.value, ""),
+        cover_letter_text=documents.get(DocKind.COVER_LETTER.value, ""),
+    )
+
+
+def _store_scored_answer(
+    deps: EngineDeps, row: InterviewSession, turns: list[Turn], text: str, replaces: Turn | None = None
+) -> AnswerOutcome:
+    """Coaching mode: store the answer with its live feedback and wait for Retry / Continue.
+
+    `replaces` is the attempt a retry supersedes. Scoring runs first (it is a network call), then the
+    swap happens in one transaction, so a crash can never leave the question with no kept answer.
+    """
+    live = _live_feedback(deps, row, turns, text)
+    idx = _next_idx(deps.engine, row.id)
+    with session_scope(deps.engine) as s:
+        if replaces is not None:
+            old = s.get(Turn, replaces.id)
+            old.superseded = True
+            s.add(old)
+        s.add(
+            Turn(
+                session_id=row.id,
+                user_id=row.user_id,
+                idx=idx,
+                speaker="candidate",
+                text=text,
+                live_json=live.model_dump_json() if live is not None else None,
+            )
+        )
+    return AnswerOutcome(True, None, None, False, live=live, awaiting_choice=True)
+
+
 def answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerOutcome:
-    """Take the candidate's answer, run the guards, and get the next interviewer turn."""
+    """Take the candidate's answer, run the guards, and get the next interviewer turn.
+
+    Coaching mode stops after storing (and live-scoring) the answer; see `retry` / `continue_interview`.
+    """
     loaded = _load(deps.engine, user_id, session_id)
     if loaded is None or loaded[0].status != "active":
         raise InterviewError("This interview is not active.")
     row, turns = loaded
 
-    length = check_answer_length(text, deps.settings.limits)
-    if not length.allowed:
-        return AnswerOutcome(False, length, None, False)
-    if deps.guard is not None:
-        verdict = deps.guard.check_answer(text)
-        if not verdict.allowed:
-            # The blocked text is never stored or sent to the interviewer model.
-            log.info("Blocked answer in session %s: %s", session_id, verdict.checks)
-            return AnswerOutcome(False, verdict, None, False)
+    if (blocked := _check_answer(deps, session_id, text)) is not None:
+        return AnswerOutcome(False, blocked, None, False)
 
-    _add_turn(deps.engine, row, len(turns), "candidate", text.strip())
+    if _is_coaching(row):
+        return _store_scored_answer(deps, row, turns, text.strip())
+    _add_turn(deps.engine, row, _next_idx(deps.engine, session_id), "candidate", text.strip())
     return respond(deps, user_id, session_id)
+
+
+def retry(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerOutcome:
+    """Coaching mode: replace the latest answer with a new attempt (same guards), and score it.
+
+    The old attempt is kept but marked superseded, so the interviewer and the final judge only ever see
+    the last attempt — like a real second take, not a transcript with two answers in a row.
+    """
+    loaded = _load_all(deps.engine, user_id, session_id)
+    if loaded is None or loaded[0].status != "active":
+        raise InterviewError("This interview is not active.")
+    row, all_turns = loaded
+    turns = [t for t in all_turns if not t.superseded]
+    if not _is_coaching(row):
+        raise InterviewError("Retries are only available in coaching mode.")
+    if not turns or turns[-1].speaker != "candidate":
+        raise InterviewError("There is no answer to retry.")
+    if _retries_used(all_turns) >= deps.settings.limits.max_retries_per_answer:
+        raise InterviewError("You've used all retries for this answer. Press Continue.")
+
+    if (blocked := _check_answer(deps, session_id, text)) is not None:
+        return AnswerOutcome(False, blocked, None, False)  # the earlier attempt stays as it was
+
+    return _store_scored_answer(deps, row, turns[:-1], text.strip(), replaces=turns[-1])
 
 
 def respond(deps: EngineDeps, user_id: int, session_id: int, force_close: bool = False) -> AnswerOutcome:
@@ -394,10 +542,14 @@ def respond(deps: EngineDeps, user_id: int, session_id: int, force_close: bool =
     row, turns = _load(deps.engine, user_id, session_id)
     force_close = force_close or must_close(len(turns), session_cost(deps.engine, session_id), deps.settings)
     turn = _interviewer_turn(deps, row, turns, force_close)
-    view = _add_turn(deps.engine, row, len(turns), "interviewer", turn.message, turn)
+    view = _add_turn(deps.engine, row, _next_idx(deps.engine, session_id), "interviewer", turn.message, turn)
     if turn.is_final:
         _set_status(deps.engine, session_id, "finished")
     return AnswerOutcome(True, None, view, turn.is_final)
+
+
+# Coaching mode's "Continue" button: the answer is already stored, so this is just the next turn.
+continue_interview = respond
 
 
 def end_interview(deps: EngineDeps, user_id: int, session_id: int) -> None:

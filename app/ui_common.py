@@ -50,8 +50,10 @@ def engine_deps():
     def make_llm(uid: int, session_id: int | None) -> LLMClient:
         return LLMClient(cfg, recorder=make_db_recorder(engine, uid, session_id), pricing=get_price_catalog())
 
-    guard = InjectionGuard(cfg, DecisionClient(cfg, recorder=make_db_recorder(engine, user_id)))
-    return EngineDeps(engine=engine, settings=cfg, make_llm=make_llm, guard=guard)
+    # One Jev client serves both the injection guard and live scoring (coaching mode).
+    decider = DecisionClient(cfg, recorder=make_db_recorder(engine, user_id))
+    guard = InjectionGuard(cfg, decider)
+    return EngineDeps(engine=engine, settings=cfg, make_llm=make_llm, guard=guard, decider=decider)
 
 
 def document_guard():
