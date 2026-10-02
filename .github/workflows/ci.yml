@@ -5,6 +5,11 @@ on:
   push:
     branches: [main]
 
+# Least privilege: the jobs only read the code. A compromised action or dependency then can't push,
+# comment or change releases with the job's token.
+permissions:
+  contents: read
+
 # A newer push to the same branch cancels the older, still-running check (saves minutes).
 # Runs on main are never cancelled, so every merged commit gets a full result.
 concurrency:
@@ -14,10 +19,14 @@ concurrency:
 jobs:
   checks:
     runs-on: ubuntu-latest
+    # A hung test (e.g. a mock that never returns) fails after 15 minutes instead of GitHub's 6 hours.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
         with:
+          # The uv that wrote uv.lock (same pin as the Dockerfile), so `--locked` behaves identically.
+          version: "0.12.5"
           enable-cache: true
       - name: Install
         run: uv sync --locked
@@ -28,3 +37,13 @@ jobs:
       # Tests marked `live` call real APIs and need keys, so CI skips them.
       - name: Test
         run: uv run pytest -m "not live"
+
+  # Builds the image (never pushed), so a broken Dockerfile or a .dockerignore that leaves out a file
+  # the build needs fails the PR instead of the owner's next `make up`.
+  docker-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build .
