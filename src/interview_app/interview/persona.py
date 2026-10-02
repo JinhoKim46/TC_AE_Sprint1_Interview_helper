@@ -80,6 +80,20 @@ class PersonaOverride(BaseModel):
     seniority: str | None = None  # e.g. "team lead", "principal engineer"
 
 
+class LLMSettings(BaseModel):
+    """Per-session model settings for the interviewer (developer options, course task M1).
+
+    None means "don't send it, use the provider default". gpt-5 family models are reasoning models:
+    they ignore `temperature` and are steered with `reasoning_effort` instead.
+    """
+
+    model: str | None = None  # None -> Settings.models.interviewer
+    temperature: float | None = Field(default=None, ge=0.0, le=2.0)
+    max_tokens: int | None = Field(default=None, ge=64, le=8000)
+    # "low" keeps turns fast (a few seconds); the planning call uses more effort once per session.
+    reasoning_effort: str | None = "low"
+
+
 class SessionConfig(BaseModel):
     interview_type: InterviewType = InterviewType.HIRING_MANAGER
     difficulty: Difficulty = Difficulty.STANDARD
@@ -87,6 +101,7 @@ class SessionConfig(BaseModel):
     main_questions: int = Field(default=7, ge=2, le=15)
     prompt_variant: PromptVariant = PromptVariant.P4_ROLE_RICH
     override: PersonaOverride = PersonaOverride()
+    llm: LLMSettings = LLMSettings()
 
     @property
     def max_followups(self) -> int:

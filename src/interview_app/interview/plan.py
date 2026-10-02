@@ -23,7 +23,9 @@ def make_plan(
         plan_messages(company, role, documents, config),
         InterviewPlan,
         model=settings.models.planner,
-        # Planning is a reasoning task done once per session, so a bit more effort is worth it.
-        reasoning_effort="medium",
+        # Measured on the sample application: "low" took ~21 s and $0.006 for the same plan structure
+        # (7 requirements, 7 probes) that "medium" produced in ~36 s for $0.012. The user waits for
+        # this call before the interview starts, so latency wins.
+        reasoning_effort="low",
     )
     return plan
