@@ -92,7 +92,8 @@ class CotTurn(BaseModel):
     """P3: private reasoning first, then the turn."""
 
     notes: str = Field(
-        description="Private notes, never shown: what the last answer showed, which requirements are covered, "
+        description="Private notes, never shown: what the last answer showed, which requirements are "
+        "covered, "
         "what to probe next and why. On your first turn, write your interview plan here."
     )
     stage: Stage
