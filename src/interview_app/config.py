@@ -58,6 +58,8 @@ class Settings(BaseSettings):
 
     openrouter_api_key: SecretStr = SecretStr("")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Public model catalog with per-token prices and capabilities (see llm/pricing.py).
+    openrouter_models_url: str = "https://openrouter.ai/api/v1/models"
     # Encrypts the TOTP secret at rest (see auth.py). Must be a Fernet key.
     app_secret_key: SecretStr = SecretStr("")
 
