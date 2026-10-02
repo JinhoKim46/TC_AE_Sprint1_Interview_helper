@@ -38,7 +38,7 @@ def temp_database(tmp_path: Path, monkeypatch):
 
 def run_page(name: str, timeout: float = 30) -> AppTest:
     """Run one page directly (no navigation context)."""
-    at = AppTest.from_file(str(APP_DIR / "pages" / name), default_timeout=timeout)
+    at = AppTest.from_file(str(APP_DIR / "views" / name), default_timeout=timeout)
     at.run()
     assert not at.exception, at.exception
     return at
@@ -135,7 +135,7 @@ def test_interview_page_start_answer_and_reply(monkeypatch):
     uid = ui_common.ensure_local_user(ui_common.get_engine())
     save_preferences(ui_common.get_engine(), uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
     at.run()
     next(b for b in at.button if b.label == "Start interview").click().run()
     assert not at.exception, at.exception
@@ -204,7 +204,7 @@ def test_coaching_mode_shows_live_scores_then_continues(monkeypatch):
     load_sample_application(engine, uid)
     save_preferences(engine, uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
     at.run()
     next(r for r in at.radio if r.label == "Mode").set_value("coaching")
     next(b for b in at.button if b.label == "Start interview").click().run()
@@ -394,7 +394,7 @@ def test_feedback_report_after_ending_the_interview(monkeypatch):
     uid = ui_common.ensure_local_user(ui_common.get_engine())
     save_preferences(ui_common.get_engine(), uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=120)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=120)
     at.run()
     next(b for b in at.button if b.label == "Start interview").click().run()
     at.chat_input[0].set_value("I improved mIoU from 0.61 to 0.74 on the field set.").run()
@@ -494,7 +494,7 @@ def seed_scored_session(
 def test_history_page_empty_state():
     at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=30)
     at.run()
-    at.switch_page("pages/history.py").run()
+    at.switch_page("views/history.py").run()
     assert not at.exception, at.exception
     assert "No interviews yet" in at.info[0].value
 
@@ -599,7 +599,7 @@ def test_weak_spot_drill_starts_a_focused_interview(monkeypatch):
     load_sample_application(engine, uid)
     save_preferences(engine, uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=120)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=120)
     at.run()
     next(b for b in at.button if b.label == "Start interview").click().run()
     at.chat_input[0].set_value("I worked on many things with my team.").run()
@@ -1115,7 +1115,7 @@ def test_drill_offer_waits_for_a_running_interview_and_starts_once(monkeypatch):
     monkeypatch.setattr(eng, "start_interview", lambda *args: started.append(args) or 999)
     monkeypatch.setattr(ui_common, "engine_deps", lambda: None)
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=90)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=90)
     at.session_state["viewing_session"] = done
     at.run()
     assert not at.exception, at.exception
@@ -1145,7 +1145,7 @@ def test_feedback_reads_the_stored_report_without_building_api_clients(monkeypat
     monkeypatch.setattr(ui_common, "engine_deps", no_clients)
     engine, uid, app_id = sample_with_p1()
     done = seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 71.0, "An answer.")
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=90)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=90)
     at.session_state["viewing_session"] = done
     at.run()
     assert not at.exception, at.exception
@@ -1284,7 +1284,7 @@ def test_practise_this_application_preselects_it_on_the_start_form():
     next(b for b in at.button if b.key == f"practise_{other}").click().run()
     assert at.session_state["start_app_pick"] == other
 
-    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
     at.session_state["start_app_pick"] = other
     at.run()
     assert not at.exception, at.exception

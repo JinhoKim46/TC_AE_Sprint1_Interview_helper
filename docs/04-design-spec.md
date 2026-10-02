@@ -65,7 +65,7 @@ project_Interview_App/
   pyproject.toml  .env.example  README.md  .gitignore (data/, docs/applications/)
   app/                         # Streamlit only — no business logic
     main.py                    # st.navigation, page registry
-    pages/{interview,applications,history,dashboard,settings,help}.py
+    views/{interview,applications,history,dashboard,settings,help}.py
   src/interview_app/
     config.py                  # pydantic-settings: provider profiles, role→model map, limits, feature flags
     models.py                  # pydantic: InterviewPlan, InterviewerTurn, LiveScore, Evaluation, GuardResult

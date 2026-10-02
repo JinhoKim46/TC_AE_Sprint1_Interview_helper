@@ -71,7 +71,7 @@ settings_note = "Code applies the yes threshold (p >= 0.5) and the release gate.
 [[journey]]
 title = "The candidate types an answer"
 lane = "user"
-symbol = "app.pages.interview:chat"
+symbol = "app.views.interview:chat"
 text = "The Interview page re-reads the session from the database on every rerun. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
 payload = "\"I led the move of our detector to the phone: I quantised it to int8 and cut latency from 140 ms to 45 ms.\""
 
@@ -198,7 +198,7 @@ payload = "SessionView(turns=[…3 turns…], progress=Progress(main_asked=1, fo
 [[lifecycles]]
 name = "Documents"
 stages = [
-  ["born", "Upload or paste on the Applications page", "app.pages.applications:_document_input"],
+  ["born", "Upload or paste on the Applications page", "app.views.applications:_document_input"],
   ["transform", "PDF text layer: size, page and decompression limits, a 20 s timeout", "interview_app.ingest:extract_pdf_text"],
   ["transform", "Injection rules + Jev on canonical text, flag only (too long: flagged, no Jev)", "interview_app.security.injection:InjectionGuard.check_document"],
   ["transform", "Clean and validate", "interview_app.ingest:clean_text"],
@@ -236,7 +236,7 @@ stages = [
   ["born", "Jev scores three rubric items", "interview_app.evaluation.live:live_score"],
   ["transform", "Tip from the rubric's next level", "interview_app.evaluation.live:build_tip"],
   ["store", "Turn.live_json", "interview_app.interview.engine:_store_scored_answer"],
-  ["read", "Chips under the answer", "app.pages.interview:live_chips"],
+  ["read", "Chips under the answer", "app.views.interview:live_chips"],
 ]
 
 [[lifecycles]]
@@ -269,13 +269,13 @@ stages = [
   ["store", "SessionConfig.focus inside InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
   ["read", "Focused practice block in _base.md (every variant)", "interview_app.interview.prompting:interviewer_system_prompt"],
   ["read", "Probes built around the targets (plan.md)", "interview_app.interview.prompting:plan_messages"],
-  ["read", "Banner on the Interview page", "app.pages.interview:chat"],
+  ["read", "Banner on the Interview page", "app.views.interview:chat"],
 ]
 
 [[lifecycles]]
 name = "Preferences"
 stages = [
-  ["born", "Settings page form", "app.pages.settings:<module>"],
+  ["born", "Settings page form", "app.views.settings:<module>"],
   ["store", "UserPreferences.prefs_json", "interview_app.preferences:save_preferences"],
   ["read", "Pre-fills the start form", "interview_app.preferences:load_preferences"],
   ["transform", "Becomes the SessionConfig", "interview_app.preferences:to_session_config"],
@@ -286,9 +286,9 @@ stages = [
 id = "add-application"
 title = "Add an application"
 symbols = [
-  "app.pages.applications:_document_input",
+  "app.views.applications:_document_input",
   "interview_app.ingest:extract_pdf_text",
-  "app.pages.applications:_flag_documents",
+  "app.views.applications:_flag_documents",
   "interview_app.security.injection:InjectionGuard.check_document",
   "interview_app.applications:create_application",
   "interview_app.ingest:clean_text",
@@ -334,7 +334,7 @@ sequenceDiagram
 id = "start-interview"
 title = "Start an interview"
 symbols = [
-  "app.pages.interview:start_form",
+  "app.views.interview:start_form",
   "interview_app.preferences:load_preferences",
   "interview_app.preferences:to_session_config",
   "interview_app.interview.engine:start_interview",
@@ -394,7 +394,7 @@ sequenceDiagram
 id = "answer-realistic"
 title = "Answer (realistic mode)"
 symbols = [
-  "app.pages.interview:submit",
+  "app.views.interview:submit",
   "interview_app.interview.engine:answer",
   "interview_app.interview.engine:_check_answer",
   "interview_app.security.limits:check_answer_length",
@@ -461,7 +461,7 @@ symbols = [
   "interview_app.evaluation.live:build_tip",
   "interview_app.interview.engine:retry",
   "interview_app.interview.engine:respond",
-  "app.pages.interview:coaching_choice",
+  "app.views.interview:coaching_choice",
 ]
 mermaid = '''
 sequenceDiagram
@@ -501,7 +501,7 @@ sequenceDiagram
 id = "report"
 title = "Get the report (median of 3)"
 symbols = [
-  "app.pages.interview:feedback",
+  "app.views.interview:feedback",
   "interview_app.evaluation.service:stored_report",
   "interview_app.evaluation.service:evaluate_session",
   "interview_app.evaluation.metrics:compute_metrics",

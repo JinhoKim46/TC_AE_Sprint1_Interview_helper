@@ -64,7 +64,7 @@ def start_form() -> None:
     apps = list_applications(engine, user_id)
     if not apps:
         st.info("Add an application first (job description + CV).")
-        page_link("pages/applications.py", label="Go to Applications", icon=":material/folder_open:")
+        page_link("views/applications.py", label="Go to Applications", icon=":material/folder_open:")
         return
 
     # Saved preferences (Settings page) pre-fill the form; the developer part (prompt variant, model
@@ -129,7 +129,7 @@ def start_form() -> None:
             label_visibility="collapsed",
         )
     # Developer options live on the Settings page (course task M9): a candidate doesn't need them here.
-    page_link("pages/settings.py", label="Defaults, prompt and model settings", icon=":material/settings:")
+    page_link("views/settings.py", label="Defaults, prompt and model settings", icon=":material/settings:")
 
     if st.button("Start interview", type="primary", icon=":material/play_arrow:"):
         config = to_session_config(

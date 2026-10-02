@@ -55,7 +55,7 @@ def _ref(rel: str, needle: str) -> dict:
 def curated_findings(texts: dict) -> list[dict]:
     """Findings from reading the code. Each check returns refs (still true) or None (fixed, so dropped)."""
     ui = _src("app/ui_common.py")
-    apps = _src("app/pages/applications.py")
+    apps = _src("app/views/applications.py")
     judge_py = _src("src/interview_app/evaluation/judge.py")
     view = _src("app/report_view.py")
     base = _src("src/interview_app/prompts/_base.md")
@@ -81,18 +81,18 @@ def curated_findings(texts: dict) -> list[dict]:
             "edit_skips_guard",
             "update_document(" in apps and apps.count("check_document") == 1,
             [
-                _ref("app/pages/applications.py", "update_document("),
-                _ref("app/pages/applications.py", "def _flag_"),
+                _ref("app/views/applications.py", "update_document("),
+                _ref("app/views/applications.py", "def _flag_"),
             ],
             {},
         ),
         (
             "mode_not_saved",
-            '"mode"' not in _src("app/pages/settings.py")
+            '"mode"' not in _src("app/views/settings.py")
             and "mode: Mode" in _src("src/interview_app/preferences.py"),
             [
                 _ref("src/interview_app/preferences.py", "mode: Mode"),
-                _ref("app/pages/settings.py", "save_preferences("),
+                _ref("app/views/settings.py", "save_preferences("),
             ],
             {},
         ),
@@ -123,7 +123,7 @@ def curated_findings(texts: dict) -> list[dict]:
         ),
         (
             "stale_report_view",
-            "later, History)" in view and "render_report" in _src("app/pages/history.py"),
+            "later, History)" in view and "render_report" in _src("app/views/history.py"),
             [_ref("app/report_view.py", "later, History")],
             {},
         ),

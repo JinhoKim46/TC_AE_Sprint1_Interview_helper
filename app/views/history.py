@@ -175,13 +175,13 @@ def session_detail(summary: SessionSummary) -> None:
             drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")
-            go_button("pages/interview.py", "Go to the running interview", icon=":material/forum:")
+            go_button("views/interview.py", "Go to the running interview", icon=":material/forum:")
         else:
             # Opening the interview on the Interview page shows its "Get my feedback report" button, so
             # the judge (and its cost) only ever runs from there, on an explicit click.
             st.info("No report yet. Open the interview to get one (about a minute).")
             go_button(
-                "pages/interview.py",
+                "views/interview.py",
                 "Open it to get feedback",
                 icon=":material/assessment:",
                 key=f"history_get_report_{summary.session_id}",
@@ -203,7 +203,7 @@ def session_detail(summary: SessionSummary) -> None:
 all_sessions = list_sessions(engine, user_id)
 if not all_sessions:
     st.info("No interviews yet. Your past interviews and their reports will appear here.")
-    page_link("pages/interview.py", label="Start an interview", icon=":material/forum:")
+    page_link("views/interview.py", label="Start an interview", icon=":material/forum:")
     st.stop()
 
 apps = {a.id: f"{a.company} — {a.role}" for a in list_applications(engine, user_id)}

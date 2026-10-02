@@ -36,7 +36,7 @@ def drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview
     if active is not None and active.id != view.id:
         st.info("Another interview is in progress. Finish or end it before starting a practice interview.")
         ui_common.page_link(
-            "pages/interview.py", label="Go to the running interview", icon=":material/forum:"
+            "views/interview.py", label="Go to the running interview", icon=":material/forum:"
         )
         return
 
@@ -65,5 +65,5 @@ def drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview
                 return
         st.session_state.pop("viewing_session", None)
         if go_to_interview:
-            st.switch_page("pages/interview.py")
+            st.switch_page("views/interview.py")
         st.rerun()

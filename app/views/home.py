@@ -53,27 +53,27 @@ with st.container(border=True):
     if step == Step.ADD_APPLICATION:
         st.info("Start by adding an application: upload the job description and your CV.")
         st.caption("No documents at hand? The Applications page can load a fictional sample.")
-        go_button("pages/applications.py", "Add an application", icon=":material/add:")
+        go_button("views/applications.py", "Add an application", icon=":material/add:")
     elif step == Step.START_INTERVIEW:
         st.markdown("Your application is ready. Run your first mock interview.")
-        go_button("pages/interview.py", "Start an interview", icon=":material/play_arrow:")
+        go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")
     elif step == Step.RESUME_INTERVIEW:
         st.markdown("You have an interview in progress. Pick it up where you left off.")
-        go_button("pages/interview.py", "Resume the interview", icon=":material/forum:")
+        go_button("views/interview.py", "Resume the interview", icon=":material/forum:")
     elif step == Step.GET_FEEDBACK and newest is not None:
         st.markdown("Your last interview has no feedback report yet. Writing it takes about a minute.")
         # A horizontal container keeps the buttons side by side at their natural width (columns would
         # stretch them apart on a wide screen) and still wraps on a phone.
         with st.container(horizontal=True):
             go_button(
-                "pages/interview.py",
+                "views/interview.py",
                 "Get feedback on the last interview",
                 icon=":material/assessment:",
                 state={"viewing_session": newest.session_id},
             )
             # The way out when that interview had no answers to judge, or the report isn't wanted.
             go_button(
-                "pages/interview.py",
+                "views/interview.py",
                 "Start a new interview",
                 icon=":material/play_arrow:",
                 primary=False,
@@ -84,8 +84,8 @@ with st.container(border=True):
             "Practise again, or open a report in History and start a focused interview on your weak spots."
         )
         with st.container(horizontal=True):
-            go_button("pages/interview.py", "Start an interview", icon=":material/play_arrow:")
-            go_button("pages/history.py", "See your progress", icon=":material/insights:", primary=False)
+            go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")
+            go_button("views/history.py", "See your progress", icon=":material/insights:", primary=False)
 
 # --- Applications at a glance ----------------------------------------------------------------------
 

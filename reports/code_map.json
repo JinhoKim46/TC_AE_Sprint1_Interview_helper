@@ -277,8 +277,8 @@
     "decide"
    ],
    "callers": [
-    "app.pages.applications:<module>",
-    "app.pages.applications:_flag_documents",
+    "app.views.applications:<module>",
+    "app.views.applications:_flag_documents",
     "interview_app.interview.engine:_check_answer"
    ],
    "default_model": "typesafe/jev-1.13-20260917",
@@ -887,1223 +887,6 @@
    "to": "interview_app.interview.engine:start_interview"
   },
   {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    274
-   ],
-   "to": "app.pages.applications:_check_length"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    199,
-    220
-   ],
-   "to": "app.pages.applications:_collect_documents"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    192,
-    193,
-    195,
-    196
-   ],
-   "to": "app.pages.applications:_document_input"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    203
-   ],
-   "to": "app.pages.applications:_flag_documents"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    212,
-    220
-   ],
-   "to": "app.pages.applications:_save"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    283,
-    288
-   ],
-   "to": "app.pages.applications:_save_edit"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    39
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    278
-   ],
-   "to": "app.ui_common:document_guard"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    38
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    247
-   ],
-   "to": "app.ui_common:go_button"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    216,
-    234,
-    235,
-    285
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    234,
-    235
-   ],
-   "to": "app.ui_common:short"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    301
-   ],
-   "to": "interview_app.applications:delete_application"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    236
-   ],
-   "to": "interview_app.applications:get_application"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    166,
-    176,
-    224
-   ],
-   "to": "interview_app.applications:list_applications"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    40
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    180
-   ],
-   "to": "interview_app.demo:load_sample_application"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    231
-   ],
-   "to": "interview_app.history:list_sessions"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    229
-   ],
-   "to": "interview_app.interview.engine:active_session"
-  },
-  {
-   "from": "app.pages.applications:<module>",
-   "kind": "call",
-   "lines": [
-    278
-   ],
-   "to": "interview_app.security.injection:InjectionGuard.check_document"
-  },
-  {
-   "from": "app.pages.applications:_check_length",
-   "kind": "call",
-   "lines": [
-    110
-   ],
-   "to": "interview_app.ingest:clean_text"
-  },
-  {
-   "from": "app.pages.applications:_check_length",
-   "kind": "call",
-   "lines": [
-    110
-   ],
-   "to": "interview_app.ingest:validate_document"
-  },
-  {
-   "from": "app.pages.applications:_collect_documents",
-   "kind": "call",
-   "lines": [
-    99,
-    103
-   ],
-   "to": "app.pages.applications:_text_key"
-  },
-  {
-   "from": "app.pages.applications:_collect_documents",
-   "kind": "construct",
-   "lines": [
-    96
-   ],
-   "to": "interview_app.applications:DocumentIn"
-  },
-  {
-   "from": "app.pages.applications:_document_input",
-   "kind": "call",
-   "lines": [
-    74
-   ],
-   "to": "app.pages.applications:_check_length"
-  },
-  {
-   "from": "app.pages.applications:_document_input",
-   "kind": "call",
-   "lines": [
-    75,
-    86
-   ],
-   "to": "app.pages.applications:_text_key"
-  },
-  {
-   "from": "app.pages.applications:_document_input",
-   "kind": "call",
-   "lines": [
-    71
-   ],
-   "to": "interview_app.ingest:extract_pdf_text"
-  },
-  {
-   "from": "app.pages.applications:_flag_documents",
-   "kind": "call",
-   "lines": [
-    116
-   ],
-   "to": "app.pages.applications:_check_length"
-  },
-  {
-   "from": "app.pages.applications:_flag_documents",
-   "kind": "call",
-   "lines": [
-    117
-   ],
-   "to": "app.ui_common:document_guard"
-  },
-  {
-   "from": "app.pages.applications:_flag_documents",
-   "kind": "call",
-   "lines": [
-    118
-   ],
-   "to": "interview_app.security.injection:InjectionGuard.check_document"
-  },
-  {
-   "from": "app.pages.applications:_save",
-   "kind": "call",
-   "lines": [
-    143
-   ],
-   "to": "app.pages.applications:_clear_new_form"
-  },
-  {
-   "from": "app.pages.applications:_save",
-   "kind": "call",
-   "lines": [
-    132
-   ],
-   "to": "app.pages.applications:_fingerprint"
-  },
-  {
-   "from": "app.pages.applications:_save",
-   "kind": "call",
-   "lines": [
-    138
-   ],
-   "to": "interview_app.applications:create_application"
-  },
-  {
-   "from": "app.pages.applications:_save_edit",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "interview_app.applications:update_document"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    226
-   ],
-   "to": "app.pages.history:progress_block"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    223
-   ],
-   "to": "app.pages.history:score_metrics"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    247
-   ],
-   "to": "app.pages.history:session_detail"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    242
-   ],
-   "to": "app.pages.history:session_label"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    234
-   ],
-   "to": "app.pages.history:sessions_table"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    28
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    27
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    206
-   ],
-   "to": "app.ui_common:page_link"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    209
-   ],
-   "to": "interview_app.applications:list_applications"
-  },
-  {
-   "from": "app.pages.history:<module>",
-   "kind": "call",
-   "lines": [
-    203,
-    220
-   ],
-   "to": "interview_app.history:list_sessions"
-  },
-  {
-   "from": "app.pages.history:progress_block",
-   "kind": "call",
-   "lines": [
-    124
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.history:progress_block",
-   "kind": "call",
-   "lines": [
-    78
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.history:progress_block",
-   "kind": "call",
-   "lines": [
-    78
-   ],
-   "to": "interview_app.history:progress"
-  },
-  {
-   "from": "app.pages.history:score_metrics",
-   "kind": "call",
-   "lines": [
-    129
-   ],
-   "to": "interview_app.journey:score_summary"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    175
-   ],
-   "to": "app.drill_ui:drill_offer"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    174
-   ],
-   "to": "app.report_view:render_report"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    178,
-    183
-   ],
-   "to": "app.ui_common:go_button"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    149,
-    163,
-    164,
-    168
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    174
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    196
-   ],
-   "to": "interview_app.history:delete_session"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    172
-   ],
-   "to": "interview_app.history:load_report"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    143
-   ],
-   "to": "interview_app.interview.engine:get_session"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "construct",
-   "lines": [
-    147
-   ],
-   "to": "interview_app.interview.persona:InterviewType"
-  },
-  {
-   "from": "app.pages.history:session_label",
-   "kind": "construct",
-   "lines": [
-    38
-   ],
-   "to": "interview_app.interview.persona:InterviewType"
-  },
-  {
-   "from": "app.pages.history:sessions_table",
-   "kind": "ref",
-   "lines": [
-    71
-   ],
-   "to": "app.pages.history:sessions_table.open_selected"
-  },
-  {
-   "from": "app.pages.history:sessions_table",
-   "kind": "construct",
-   "lines": [
-    54
-   ],
-   "to": "interview_app.interview.persona:InterviewType"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    109
-   ],
-   "to": "app.report_view:band_badge"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    14
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    13
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    56,
-    59,
-    62,
-    68,
-    75,
-    87,
-    88
-   ],
-   "to": "app.ui_common:go_button"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    103,
-    104
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    103,
-    104
-   ],
-   "to": "app.ui_common:short"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    22
-   ],
-   "to": "interview_app.applications:list_applications"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    23
-   ],
-   "to": "interview_app.history:list_sessions"
-  },
-  {
-   "from": "app.pages.home:<module>",
-   "kind": "call",
-   "lines": [
-    24
-   ],
-   "to": "interview_app.journey:next_step"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    435,
-    441
-   ],
-   "to": "app.pages.interview:chat"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    443
-   ],
-   "to": "app.pages.interview:start_form"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    38
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    37
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    432
-   ],
-   "to": "interview_app.interview.engine:active_session"
-  },
-  {
-   "from": "app.pages.interview:<module>",
-   "kind": "call",
-   "lines": [
-    438
-   ],
-   "to": "interview_app.interview.engine:get_session"
-  },
-  {
-   "from": "app.pages.interview:blocked_answer_editor",
-   "kind": "call",
-   "lines": [
-    235
-   ],
-   "to": "app.pages.interview:submit"
-  },
-  {
-   "from": "app.pages.interview:blocked_answer_editor",
-   "kind": "ref",
-   "lines": [
-    235
-   ],
-   "to": "interview_app.interview.engine:answer"
-  },
-  {
-   "from": "app.pages.interview:blocked_answer_editor",
-   "kind": "ref",
-   "lines": [
-    235
-   ],
-   "to": "interview_app.interview.engine:retry"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    343
-   ],
-   "to": "app.pages.interview:blocked_answer_editor"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    346
-   ],
-   "to": "app.pages.interview:coaching_choice"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    339
-   ],
-   "to": "app.pages.interview:earlier_attempts"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    387
-   ],
-   "to": "app.pages.interview:feedback"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    338
-   ],
-   "to": "app.pages.interview:live_chips"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    323
-   ],
-   "to": "app.pages.interview:progress_text"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    364
-   ],
-   "to": "app.pages.interview:submit"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    311,
-    353,
-    380
-   ],
-   "to": "app.ui_common:engine_deps"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    294,
-    300,
-    318,
-    330,
-    331,
-    335
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    362
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "ref",
-   "lines": [
-    364
-   ],
-   "to": "interview_app.interview.engine:answer"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    311,
-    380
-   ],
-   "to": "interview_app.interview.engine:end_interview"
-  },
-  {
-   "from": "app.pages.interview:chat",
-   "kind": "call",
-   "lines": [
-    353
-   ],
-   "to": "interview_app.interview.engine:respond"
-  },
-  {
-   "from": "app.pages.interview:coaching_choice",
-   "kind": "call",
-   "lines": [
-    253
-   ],
-   "to": "app.pages.interview:submit"
-  },
-  {
-   "from": "app.pages.interview:coaching_choice",
-   "kind": "call",
-   "lines": [
-    271
-   ],
-   "to": "app.ui_common:engine_deps"
-  },
-  {
-   "from": "app.pages.interview:coaching_choice",
-   "kind": "call",
-   "lines": [
-    244
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.interview:coaching_choice",
-   "kind": "call",
-   "lines": [
-    271
-   ],
-   "to": "interview_app.interview.engine:respond"
-  },
-  {
-   "from": "app.pages.interview:coaching_choice",
-   "kind": "ref",
-   "lines": [
-    253
-   ],
-   "to": "interview_app.interview.engine:retry"
-  },
-  {
-   "from": "app.pages.interview:earlier_attempts",
-   "kind": "call",
-   "lines": [
-    188
-   ],
-   "to": "app.pages.interview:live_chips"
-  },
-  {
-   "from": "app.pages.interview:earlier_attempts",
-   "kind": "call",
-   "lines": [
-    186
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    429
-   ],
-   "to": "app.drill_ui:drill_offer"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    427
-   ],
-   "to": "app.report_view:render_report"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    419
-   ],
-   "to": "app.ui_common:engine_deps"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    419,
-    427
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    418
-   ],
-   "to": "interview_app.evaluation.service:evaluate_session"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    403
-   ],
-   "to": "interview_app.history:load_report"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    428
-   ],
-   "to": "interview_app.interview.engine:session_cost"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    419
-   ],
-   "to": "interview_app.preferences:judge_model"
-  },
-  {
-   "from": "app.pages.interview:feedback",
-   "kind": "call",
-   "lines": [
-    417
-   ],
-   "to": "interview_app.preferences:load_preferences"
-  },
-  {
-   "from": "app.pages.interview:live_chips",
-   "kind": "call",
-   "lines": [
-    177
-   ],
-   "to": "app.ui_common:safe_md"
-  },
-  {
-   "from": "app.pages.interview:progress_text",
-   "kind": "construct",
-   "lines": [
-    283
-   ],
-   "to": "interview_app.interview.schemas:Stage"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "app.ui_common:engine_deps"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    111
-   ],
-   "to": "app.ui_common:kept_widget"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    67,
-    132
-   ],
-   "to": "app.ui_common:page_link"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    114
-   ],
-   "to": "app.ui_common:slider_start"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    64
-   ],
-   "to": "interview_app.applications:list_applications"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    87
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "interview_app.interview.engine:start_interview"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "construct",
-   "lines": [
-    138
-   ],
-   "to": "interview_app.interview.persona:Difficulty"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "construct",
-   "lines": [
-    93,
-    97
-   ],
-   "to": "interview_app.interview.persona:InterviewType"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "construct",
-   "lines": [
-    140
-   ],
-   "to": "interview_app.interview.persona:Mode"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    72
-   ],
-   "to": "interview_app.preferences:load_preferences"
-  },
-  {
-   "from": "app.pages.interview:start_form",
-   "kind": "call",
-   "lines": [
-    135
-   ],
-   "to": "interview_app.preferences:to_session_config"
-  },
-  {
-   "from": "app.pages.interview:submit",
-   "kind": "call",
-   "lines": [
-    198
-   ],
-   "to": "app.ui_common:engine_deps"
-  },
-  {
-   "from": "app.pages.interview:submit",
-   "kind": "ref",
-   "lines": [
-    213
-   ],
-   "to": "interview_app.interview.engine:retry"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    170,
-    233
-   ],
-   "to": "app.pages.settings:_model_picker"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    300,
-    301
-   ],
-   "to": "app.pages.settings:_price"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    290,
-    292
-   ],
-   "to": "app.pages.settings:_rows"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    28
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    27
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    111
-   ],
-   "to": "app.ui_common:get_price_catalog"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    158,
-    179,
-    184,
-    196,
-    201,
-    214
-   ],
-   "to": "app.ui_common:kept_widget"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    99
-   ],
-   "to": "app.ui_common:slider_start"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    29
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    253
-   ],
-   "to": "interview_app.interview.persona:Difficulty"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    56,
-    60
-   ],
-   "to": "interview_app.interview.persona:InterviewType"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    225
-   ],
-   "to": "interview_app.interview.persona:LLMSettings"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    254
-   ],
-   "to": "interview_app.interview.persona:Mode"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    157,
-    164
-   ],
-   "to": "interview_app.interview.persona:PromptVariant"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "construct",
-   "lines": [
-    115
-   ],
-   "to": "interview_app.llm.pricing:ModelOption"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    111
-   ],
-   "to": "interview_app.llm.pricing:model_options"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    153
-   ],
-   "to": "interview_app.preferences:judge_model"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    30
-   ],
-   "to": "interview_app.preferences:load_preferences"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    247
-   ],
-   "to": "interview_app.preferences:save_preferences"
-  },
-  {
-   "from": "app.pages.settings:<module>",
-   "kind": "call",
-   "lines": [
-    268
-   ],
-   "to": "interview_app.usage:usage_summary"
-  },
-  {
-   "from": "app.pages.settings:_model_label",
-   "kind": "call",
-   "lines": [
-    129
-   ],
-   "to": "app.pages.settings:_price"
-  },
-  {
-   "from": "app.pages.settings:_model_picker",
-   "kind": "ref",
-   "lines": [
-    135
-   ],
-   "to": "app.pages.settings:_model_label"
-  },
-  {
-   "from": "app.pages.settings:_model_picker",
-   "kind": "call",
-   "lines": [
-    134
-   ],
-   "to": "app.ui_common:kept_widget"
-  },
-  {
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
@@ -2389,6 +1172,1223 @@
     114
    ],
    "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    39
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    278
+   ],
+   "to": "app.ui_common:document_guard"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    38
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    247
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    216,
+    234,
+    235,
+    285
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    234,
+    235
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    274
+   ],
+   "to": "app.views.applications:_check_length"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    199,
+    220
+   ],
+   "to": "app.views.applications:_collect_documents"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    192,
+    193,
+    195,
+    196
+   ],
+   "to": "app.views.applications:_document_input"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    203
+   ],
+   "to": "app.views.applications:_flag_documents"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    212,
+    220
+   ],
+   "to": "app.views.applications:_save"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    283,
+    288
+   ],
+   "to": "app.views.applications:_save_edit"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    301
+   ],
+   "to": "interview_app.applications:delete_application"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    236
+   ],
+   "to": "interview_app.applications:get_application"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    166,
+    176,
+    224
+   ],
+   "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    40
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    180
+   ],
+   "to": "interview_app.demo:load_sample_application"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    231
+   ],
+   "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    229
+   ],
+   "to": "interview_app.interview.engine:active_session"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    278
+   ],
+   "to": "interview_app.security.injection:InjectionGuard.check_document"
+  },
+  {
+   "from": "app.views.applications:_check_length",
+   "kind": "call",
+   "lines": [
+    110
+   ],
+   "to": "interview_app.ingest:clean_text"
+  },
+  {
+   "from": "app.views.applications:_check_length",
+   "kind": "call",
+   "lines": [
+    110
+   ],
+   "to": "interview_app.ingest:validate_document"
+  },
+  {
+   "from": "app.views.applications:_collect_documents",
+   "kind": "call",
+   "lines": [
+    99,
+    103
+   ],
+   "to": "app.views.applications:_text_key"
+  },
+  {
+   "from": "app.views.applications:_collect_documents",
+   "kind": "construct",
+   "lines": [
+    96
+   ],
+   "to": "interview_app.applications:DocumentIn"
+  },
+  {
+   "from": "app.views.applications:_document_input",
+   "kind": "call",
+   "lines": [
+    74
+   ],
+   "to": "app.views.applications:_check_length"
+  },
+  {
+   "from": "app.views.applications:_document_input",
+   "kind": "call",
+   "lines": [
+    75,
+    86
+   ],
+   "to": "app.views.applications:_text_key"
+  },
+  {
+   "from": "app.views.applications:_document_input",
+   "kind": "call",
+   "lines": [
+    71
+   ],
+   "to": "interview_app.ingest:extract_pdf_text"
+  },
+  {
+   "from": "app.views.applications:_flag_documents",
+   "kind": "call",
+   "lines": [
+    117
+   ],
+   "to": "app.ui_common:document_guard"
+  },
+  {
+   "from": "app.views.applications:_flag_documents",
+   "kind": "call",
+   "lines": [
+    116
+   ],
+   "to": "app.views.applications:_check_length"
+  },
+  {
+   "from": "app.views.applications:_flag_documents",
+   "kind": "call",
+   "lines": [
+    118
+   ],
+   "to": "interview_app.security.injection:InjectionGuard.check_document"
+  },
+  {
+   "from": "app.views.applications:_save",
+   "kind": "call",
+   "lines": [
+    143
+   ],
+   "to": "app.views.applications:_clear_new_form"
+  },
+  {
+   "from": "app.views.applications:_save",
+   "kind": "call",
+   "lines": [
+    132
+   ],
+   "to": "app.views.applications:_fingerprint"
+  },
+  {
+   "from": "app.views.applications:_save",
+   "kind": "call",
+   "lines": [
+    138
+   ],
+   "to": "interview_app.applications:create_application"
+  },
+  {
+   "from": "app.views.applications:_save_edit",
+   "kind": "call",
+   "lines": [
+    150
+   ],
+   "to": "interview_app.applications:update_document"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    28
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    27
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    206
+   ],
+   "to": "app.ui_common:page_link"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    226
+   ],
+   "to": "app.views.history:progress_block"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    223
+   ],
+   "to": "app.views.history:score_metrics"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    247
+   ],
+   "to": "app.views.history:session_detail"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    242
+   ],
+   "to": "app.views.history:session_label"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    234
+   ],
+   "to": "app.views.history:sessions_table"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    209
+   ],
+   "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.views.history:<module>",
+   "kind": "call",
+   "lines": [
+    203,
+    220
+   ],
+   "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.views.history:progress_block",
+   "kind": "call",
+   "lines": [
+    124
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.history:progress_block",
+   "kind": "call",
+   "lines": [
+    78
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.history:progress_block",
+   "kind": "call",
+   "lines": [
+    78
+   ],
+   "to": "interview_app.history:progress"
+  },
+  {
+   "from": "app.views.history:score_metrics",
+   "kind": "call",
+   "lines": [
+    129
+   ],
+   "to": "interview_app.journey:score_summary"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    175
+   ],
+   "to": "app.drill_ui:drill_offer"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    174
+   ],
+   "to": "app.report_view:render_report"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    178,
+    183
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    149,
+    163,
+    164,
+    168
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    174
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    196
+   ],
+   "to": "interview_app.history:delete_session"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    172
+   ],
+   "to": "interview_app.history:load_report"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    143
+   ],
+   "to": "interview_app.interview.engine:get_session"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "construct",
+   "lines": [
+    147
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.history:session_label",
+   "kind": "construct",
+   "lines": [
+    38
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.history:sessions_table",
+   "kind": "ref",
+   "lines": [
+    71
+   ],
+   "to": "app.views.history:sessions_table.open_selected"
+  },
+  {
+   "from": "app.views.history:sessions_table",
+   "kind": "construct",
+   "lines": [
+    54
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    109
+   ],
+   "to": "app.report_view:band_badge"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    14
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    13
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    56,
+    59,
+    62,
+    68,
+    75,
+    87,
+    88
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    103,
+    104
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    103,
+    104
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    22
+   ],
+   "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    23
+   ],
+   "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    24
+   ],
+   "to": "interview_app.journey:next_step"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    38
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    37
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    435,
+    441
+   ],
+   "to": "app.views.interview:chat"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    443
+   ],
+   "to": "app.views.interview:start_form"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    432
+   ],
+   "to": "interview_app.interview.engine:active_session"
+  },
+  {
+   "from": "app.views.interview:<module>",
+   "kind": "call",
+   "lines": [
+    438
+   ],
+   "to": "interview_app.interview.engine:get_session"
+  },
+  {
+   "from": "app.views.interview:blocked_answer_editor",
+   "kind": "call",
+   "lines": [
+    235
+   ],
+   "to": "app.views.interview:submit"
+  },
+  {
+   "from": "app.views.interview:blocked_answer_editor",
+   "kind": "ref",
+   "lines": [
+    235
+   ],
+   "to": "interview_app.interview.engine:answer"
+  },
+  {
+   "from": "app.views.interview:blocked_answer_editor",
+   "kind": "ref",
+   "lines": [
+    235
+   ],
+   "to": "interview_app.interview.engine:retry"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    311,
+    353,
+    380
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    294,
+    300,
+    318,
+    330,
+    331,
+    335
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    343
+   ],
+   "to": "app.views.interview:blocked_answer_editor"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    346
+   ],
+   "to": "app.views.interview:coaching_choice"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    339
+   ],
+   "to": "app.views.interview:earlier_attempts"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    387
+   ],
+   "to": "app.views.interview:feedback"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    338
+   ],
+   "to": "app.views.interview:live_chips"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    323
+   ],
+   "to": "app.views.interview:progress_text"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    364
+   ],
+   "to": "app.views.interview:submit"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    362
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "ref",
+   "lines": [
+    364
+   ],
+   "to": "interview_app.interview.engine:answer"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    311,
+    380
+   ],
+   "to": "interview_app.interview.engine:end_interview"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    353
+   ],
+   "to": "interview_app.interview.engine:respond"
+  },
+  {
+   "from": "app.views.interview:coaching_choice",
+   "kind": "call",
+   "lines": [
+    271
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:coaching_choice",
+   "kind": "call",
+   "lines": [
+    253
+   ],
+   "to": "app.views.interview:submit"
+  },
+  {
+   "from": "app.views.interview:coaching_choice",
+   "kind": "call",
+   "lines": [
+    244
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.interview:coaching_choice",
+   "kind": "call",
+   "lines": [
+    271
+   ],
+   "to": "interview_app.interview.engine:respond"
+  },
+  {
+   "from": "app.views.interview:coaching_choice",
+   "kind": "ref",
+   "lines": [
+    253
+   ],
+   "to": "interview_app.interview.engine:retry"
+  },
+  {
+   "from": "app.views.interview:earlier_attempts",
+   "kind": "call",
+   "lines": [
+    186
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.interview:earlier_attempts",
+   "kind": "call",
+   "lines": [
+    188
+   ],
+   "to": "app.views.interview:live_chips"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    429
+   ],
+   "to": "app.drill_ui:drill_offer"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    427
+   ],
+   "to": "app.report_view:render_report"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    419
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    419,
+    427
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    418
+   ],
+   "to": "interview_app.evaluation.service:evaluate_session"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    403
+   ],
+   "to": "interview_app.history:load_report"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    428
+   ],
+   "to": "interview_app.interview.engine:session_cost"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    419
+   ],
+   "to": "interview_app.preferences:judge_model"
+  },
+  {
+   "from": "app.views.interview:feedback",
+   "kind": "call",
+   "lines": [
+    417
+   ],
+   "to": "interview_app.preferences:load_preferences"
+  },
+  {
+   "from": "app.views.interview:live_chips",
+   "kind": "call",
+   "lines": [
+    177
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.interview:progress_text",
+   "kind": "construct",
+   "lines": [
+    283
+   ],
+   "to": "interview_app.interview.schemas:Stage"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    150
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    111
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    67,
+    132
+   ],
+   "to": "app.ui_common:page_link"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    114
+   ],
+   "to": "app.ui_common:slider_start"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    64
+   ],
+   "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    87
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    150
+   ],
+   "to": "interview_app.interview.engine:start_interview"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "construct",
+   "lines": [
+    138
+   ],
+   "to": "interview_app.interview.persona:Difficulty"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "construct",
+   "lines": [
+    93,
+    97
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "construct",
+   "lines": [
+    140
+   ],
+   "to": "interview_app.interview.persona:Mode"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    72
+   ],
+   "to": "interview_app.preferences:load_preferences"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    135
+   ],
+   "to": "interview_app.preferences:to_session_config"
+  },
+  {
+   "from": "app.views.interview:submit",
+   "kind": "call",
+   "lines": [
+    198
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:submit",
+   "kind": "ref",
+   "lines": [
+    213
+   ],
+   "to": "interview_app.interview.engine:retry"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    28
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    27
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    111
+   ],
+   "to": "app.ui_common:get_price_catalog"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    158,
+    179,
+    184,
+    196,
+    201,
+    214
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    99
+   ],
+   "to": "app.ui_common:slider_start"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    170,
+    233
+   ],
+   "to": "app.views.settings:_model_picker"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    300,
+    301
+   ],
+   "to": "app.views.settings:_price"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    290,
+    292
+   ],
+   "to": "app.views.settings:_rows"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    29
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    253
+   ],
+   "to": "interview_app.interview.persona:Difficulty"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    56,
+    60
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    225
+   ],
+   "to": "interview_app.interview.persona:LLMSettings"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    254
+   ],
+   "to": "interview_app.interview.persona:Mode"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    157,
+    164
+   ],
+   "to": "interview_app.interview.persona:PromptVariant"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    115
+   ],
+   "to": "interview_app.llm.pricing:ModelOption"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    111
+   ],
+   "to": "interview_app.llm.pricing:model_options"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    153
+   ],
+   "to": "interview_app.preferences:judge_model"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    30
+   ],
+   "to": "interview_app.preferences:load_preferences"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    247
+   ],
+   "to": "interview_app.preferences:save_preferences"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    268
+   ],
+   "to": "interview_app.usage:usage_summary"
+  },
+  {
+   "from": "app.views.settings:_model_label",
+   "kind": "call",
+   "lines": [
+    129
+   ],
+   "to": "app.views.settings:_price"
+  },
+  {
+   "from": "app.views.settings:_model_picker",
+   "kind": "call",
+   "lines": [
+    134
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.views.settings:_model_picker",
+   "kind": "ref",
+   "lines": [
+    135
+   ],
+   "to": "app.views.settings:_model_label"
   },
   {
    "from": "interview_app.applications:_clean_label",
@@ -6259,8 +6259,8 @@
     "streamlit"
    ],
    "imported_by": [
-    "app.pages.history",
-    "app.pages.interview"
+    "app.views.history",
+    "app.views.interview"
    ],
    "imports": [
     "app.ui_common",
@@ -6279,7 +6279,7 @@
   },
   "app.main": {
    "doc": "Entry point: `uv run streamlit run app/main.py`.",
-   "doc_more": "Only page registration lives here. Each page is a script in app/pages/ and calls the core package (src/interview_app) for all real work.",
+   "doc_more": "Only page registration lives here. Each page is a script in app/views/ and calls the core package (src/interview_app) for all real work.\n\nThe folder is `views/`, not `pages/`: Streamlit treats a `pages/` folder next to the entry script as legacy auto-navigation, and a deep link opened right after a server start (a tab reconnecting after a restart) then showed the raw file list instead of these sections.",
    "external_imports": [
     "logging",
     "streamlit"
@@ -6287,159 +6287,9 @@
    "imported_by": [],
    "imports": [],
    "layer": "ui",
-   "lines": 27,
+   "lines": 31,
    "path": "app/main.py",
    "symbols": []
-  },
-  "app.pages.applications": {
-   "doc": "Applications page: create an application from a JD + CV (+ optional cover letter / notes), review the extracted text, edit it, or delete the application.",
-   "doc_more": "Each document can be uploaded as a PDF or pasted. PDF text is extracted into an editable box, so extraction mistakes (columns, headers, hyphenation) can be fixed before saving.",
-   "external_imports": [
-    "collections",
-    "hashlib",
-    "math",
-    "streamlit"
-   ],
-   "imported_by": [],
-   "imports": [
-    "app.ui_common",
-    "interview_app.applications",
-    "interview_app.config",
-    "interview_app.demo",
-    "interview_app.history",
-    "interview_app.ingest",
-    "interview_app.interview.engine"
-   ],
-   "layer": "ui",
-   "lines": 303,
-   "path": "app/pages/applications.py",
-   "symbols": [
-    "app.pages.applications:<module>",
-    "app.pages.applications:_check_length",
-    "app.pages.applications:_clear_new_form",
-    "app.pages.applications:_collect_documents",
-    "app.pages.applications:_document_input",
-    "app.pages.applications:_fingerprint",
-    "app.pages.applications:_flag_documents",
-    "app.pages.applications:_save",
-    "app.pages.applications:_save_edit",
-    "app.pages.applications:_text_key"
-   ]
-  },
-  "app.pages.history": {
-   "doc": "History page: past interviews, their transcripts and reports, and progress per application.",
-   "doc_more": "Read-only over what is stored: this page never calls the interviewer or the judge, so opening it costs nothing. A report that doesn't exist yet is generated from the Interview page.",
-   "external_imports": [
-    "streamlit"
-   ],
-   "imported_by": [],
-   "imports": [
-    "app.drill_ui",
-    "app.report_view",
-    "app.ui_common",
-    "interview_app.applications",
-    "interview_app.config",
-    "interview_app.history",
-    "interview_app.interview.engine",
-    "interview_app.interview.persona",
-    "interview_app.journey"
-   ],
-   "layer": "ui",
-   "lines": 248,
-   "path": "app/pages/history.py",
-   "symbols": [
-    "app.pages.history:<module>",
-    "app.pages.history:progress_block",
-    "app.pages.history:score_metrics",
-    "app.pages.history:session_detail",
-    "app.pages.history:session_label",
-    "app.pages.history:sessions_table",
-    "app.pages.history:sessions_table.open_selected"
-   ]
-  },
-  "app.pages.home": {
-   "doc": "Home: what the app does, where the user is in the flow, and the one thing to do next.",
-   "doc_more": "",
-   "external_imports": [
-    "collections",
-    "streamlit"
-   ],
-   "imported_by": [],
-   "imports": [
-    "app.report_view",
-    "app.ui_common",
-    "interview_app.applications",
-    "interview_app.history",
-    "interview_app.journey"
-   ],
-   "layer": "ui",
-   "lines": 112,
-   "path": "app/pages/home.py",
-   "symbols": [
-    "app.pages.home:<module>"
-   ]
-  },
-  "app.pages.interview": {
-   "doc": "Interview page: pick an application, configure the interview, then talk to the interviewer.",
-   "doc_more": "The page holds no interview state of its own: the engine stores every turn in the database and the page re-reads it on each rerun, so refreshing the browser resumes the interview where it was.",
-   "external_imports": [
-    "streamlit"
-   ],
-   "imported_by": [],
-   "imports": [
-    "app.drill_ui",
-    "app.report_view",
-    "app.ui_common",
-    "interview_app.applications",
-    "interview_app.config",
-    "interview_app.evaluation.service",
-    "interview_app.history",
-    "interview_app.interview.engine",
-    "interview_app.interview.persona",
-    "interview_app.interview.schemas",
-    "interview_app.preferences"
-   ],
-   "layer": "ui",
-   "lines": 444,
-   "path": "app/pages/interview.py",
-   "symbols": [
-    "app.pages.interview:<module>",
-    "app.pages.interview:blocked_answer_editor",
-    "app.pages.interview:chat",
-    "app.pages.interview:coaching_choice",
-    "app.pages.interview:earlier_attempts",
-    "app.pages.interview:feedback",
-    "app.pages.interview:live_chips",
-    "app.pages.interview:progress_text",
-    "app.pages.interview:start_form",
-    "app.pages.interview:submit"
-   ]
-  },
-  "app.pages.settings": {
-   "doc": "Settings page: interview defaults, developer settings, and usage/cost.",
-   "doc_more": "Course task M9 asks to keep developer settings (model, system prompt) apart from the candidate's experience, because a candidate may know nothing about LLMs. So the page has a plain-language part (interview defaults) and a developer part that stays hidden until a toggle is switched on. Everything saved here is read by the Interview page when a new interview starts (preferences.py).",
-   "external_imports": [
-    "streamlit"
-   ],
-   "imported_by": [],
-   "imports": [
-    "app.ui_common",
-    "interview_app.config",
-    "interview_app.interview.persona",
-    "interview_app.llm.pricing",
-    "interview_app.preferences",
-    "interview_app.usage"
-   ],
-   "layer": "ui",
-   "lines": 305,
-   "path": "app/pages/settings.py",
-   "symbols": [
-    "app.pages.settings:<module>",
-    "app.pages.settings:_model_label",
-    "app.pages.settings:_model_picker",
-    "app.pages.settings:_price",
-    "app.pages.settings:_rows"
-   ]
   },
   "app.report_view": {
    "doc": "Render a feedback report (shared by the Interview and History pages).",
@@ -6448,9 +6298,9 @@
     "streamlit"
    ],
    "imported_by": [
-    "app.pages.history",
-    "app.pages.home",
-    "app.pages.interview"
+    "app.views.history",
+    "app.views.home",
+    "app.views.interview"
    ],
    "imports": [
     "app.ui_common",
@@ -6475,12 +6325,12 @@
    ],
    "imported_by": [
     "app.drill_ui",
-    "app.pages.applications",
-    "app.pages.history",
-    "app.pages.home",
-    "app.pages.interview",
-    "app.pages.settings",
-    "app.report_view"
+    "app.report_view",
+    "app.views.applications",
+    "app.views.history",
+    "app.views.home",
+    "app.views.interview",
+    "app.views.settings"
    ],
    "imports": [
     "interview_app.config",
@@ -6514,6 +6364,156 @@
     "app.ui_common:slider_start"
    ]
   },
+  "app.views.applications": {
+   "doc": "Applications page: create an application from a JD + CV (+ optional cover letter / notes), review the extracted text, edit it, or delete the application.",
+   "doc_more": "Each document can be uploaded as a PDF or pasted. PDF text is extracted into an editable box, so extraction mistakes (columns, headers, hyphenation) can be fixed before saving.",
+   "external_imports": [
+    "collections",
+    "hashlib",
+    "math",
+    "streamlit"
+   ],
+   "imported_by": [],
+   "imports": [
+    "app.ui_common",
+    "interview_app.applications",
+    "interview_app.config",
+    "interview_app.demo",
+    "interview_app.history",
+    "interview_app.ingest",
+    "interview_app.interview.engine"
+   ],
+   "layer": "ui",
+   "lines": 303,
+   "path": "app/views/applications.py",
+   "symbols": [
+    "app.views.applications:<module>",
+    "app.views.applications:_check_length",
+    "app.views.applications:_clear_new_form",
+    "app.views.applications:_collect_documents",
+    "app.views.applications:_document_input",
+    "app.views.applications:_fingerprint",
+    "app.views.applications:_flag_documents",
+    "app.views.applications:_save",
+    "app.views.applications:_save_edit",
+    "app.views.applications:_text_key"
+   ]
+  },
+  "app.views.history": {
+   "doc": "History page: past interviews, their transcripts and reports, and progress per application.",
+   "doc_more": "Read-only over what is stored: this page never calls the interviewer or the judge, so opening it costs nothing. A report that doesn't exist yet is generated from the Interview page.",
+   "external_imports": [
+    "streamlit"
+   ],
+   "imported_by": [],
+   "imports": [
+    "app.drill_ui",
+    "app.report_view",
+    "app.ui_common",
+    "interview_app.applications",
+    "interview_app.config",
+    "interview_app.history",
+    "interview_app.interview.engine",
+    "interview_app.interview.persona",
+    "interview_app.journey"
+   ],
+   "layer": "ui",
+   "lines": 248,
+   "path": "app/views/history.py",
+   "symbols": [
+    "app.views.history:<module>",
+    "app.views.history:progress_block",
+    "app.views.history:score_metrics",
+    "app.views.history:session_detail",
+    "app.views.history:session_label",
+    "app.views.history:sessions_table",
+    "app.views.history:sessions_table.open_selected"
+   ]
+  },
+  "app.views.home": {
+   "doc": "Home: what the app does, where the user is in the flow, and the one thing to do next.",
+   "doc_more": "",
+   "external_imports": [
+    "collections",
+    "streamlit"
+   ],
+   "imported_by": [],
+   "imports": [
+    "app.report_view",
+    "app.ui_common",
+    "interview_app.applications",
+    "interview_app.history",
+    "interview_app.journey"
+   ],
+   "layer": "ui",
+   "lines": 112,
+   "path": "app/views/home.py",
+   "symbols": [
+    "app.views.home:<module>"
+   ]
+  },
+  "app.views.interview": {
+   "doc": "Interview page: pick an application, configure the interview, then talk to the interviewer.",
+   "doc_more": "The page holds no interview state of its own: the engine stores every turn in the database and the page re-reads it on each rerun, so refreshing the browser resumes the interview where it was.",
+   "external_imports": [
+    "streamlit"
+   ],
+   "imported_by": [],
+   "imports": [
+    "app.drill_ui",
+    "app.report_view",
+    "app.ui_common",
+    "interview_app.applications",
+    "interview_app.config",
+    "interview_app.evaluation.service",
+    "interview_app.history",
+    "interview_app.interview.engine",
+    "interview_app.interview.persona",
+    "interview_app.interview.schemas",
+    "interview_app.preferences"
+   ],
+   "layer": "ui",
+   "lines": 444,
+   "path": "app/views/interview.py",
+   "symbols": [
+    "app.views.interview:<module>",
+    "app.views.interview:blocked_answer_editor",
+    "app.views.interview:chat",
+    "app.views.interview:coaching_choice",
+    "app.views.interview:earlier_attempts",
+    "app.views.interview:feedback",
+    "app.views.interview:live_chips",
+    "app.views.interview:progress_text",
+    "app.views.interview:start_form",
+    "app.views.interview:submit"
+   ]
+  },
+  "app.views.settings": {
+   "doc": "Settings page: interview defaults, developer settings, and usage/cost.",
+   "doc_more": "Course task M9 asks to keep developer settings (model, system prompt) apart from the candidate's experience, because a candidate may know nothing about LLMs. So the page has a plain-language part (interview defaults) and a developer part that stays hidden until a toggle is switched on. Everything saved here is read by the Interview page when a new interview starts (preferences.py).",
+   "external_imports": [
+    "streamlit"
+   ],
+   "imported_by": [],
+   "imports": [
+    "app.ui_common",
+    "interview_app.config",
+    "interview_app.interview.persona",
+    "interview_app.llm.pricing",
+    "interview_app.preferences",
+    "interview_app.usage"
+   ],
+   "layer": "ui",
+   "lines": 305,
+   "path": "app/views/settings.py",
+   "symbols": [
+    "app.views.settings:<module>",
+    "app.views.settings:_model_label",
+    "app.views.settings:_model_picker",
+    "app.views.settings:_price",
+    "app.views.settings:_rows"
+   ]
+  },
   "interview_app": {
    "doc": "Interview practice app: core package (UI-independent).",
    "doc_more": "",
@@ -6536,10 +6536,10 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.applications",
-    "app.pages.history",
-    "app.pages.home",
-    "app.pages.interview",
+    "app.views.applications",
+    "app.views.history",
+    "app.views.home",
+    "app.views.interview",
     "interview_app.demo",
     "interview_app.interview.engine",
     "interview_app.lab.runner"
@@ -6580,11 +6580,11 @@
     "typing"
    ],
    "imported_by": [
-    "app.pages.applications",
-    "app.pages.history",
-    "app.pages.interview",
-    "app.pages.settings",
     "app.ui_common",
+    "app.views.applications",
+    "app.views.history",
+    "app.views.interview",
+    "app.views.settings",
     "interview_app.applications",
     "interview_app.demo",
     "interview_app.evaluation.judge",
@@ -6676,7 +6676,7 @@
     "sqlalchemy"
    ],
    "imported_by": [
-    "app.pages.applications",
+    "app.views.applications",
     "interview_app.lab.compare"
    ],
    "imports": [
@@ -6932,7 +6932,7 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.interview"
+    "app.views.interview"
    ],
    "imports": [
     "interview_app.db",
@@ -6970,10 +6970,10 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.applications",
-    "app.pages.history",
-    "app.pages.home",
-    "app.pages.interview",
+    "app.views.applications",
+    "app.views.history",
+    "app.views.home",
+    "app.views.interview",
     "interview_app.evaluation.service",
     "interview_app.journey"
    ],
@@ -7015,7 +7015,7 @@
     "threading"
    ],
    "imported_by": [
-    "app.pages.applications",
+    "app.views.applications",
     "interview_app.applications",
     "interview_app.demo",
     "interview_app.evaluation.judge",
@@ -7092,10 +7092,10 @@
    ],
    "imported_by": [
     "app.drill_ui",
-    "app.pages.applications",
-    "app.pages.history",
-    "app.pages.interview",
     "app.ui_common",
+    "app.views.applications",
+    "app.views.history",
+    "app.views.interview",
     "interview_app.evaluation.exchanges",
     "interview_app.evaluation.service",
     "interview_app.history",
@@ -7172,9 +7172,9 @@
     "pydantic"
    ],
    "imported_by": [
-    "app.pages.history",
-    "app.pages.interview",
-    "app.pages.settings",
+    "app.views.history",
+    "app.views.interview",
+    "app.views.settings",
     "interview_app.history",
     "interview_app.interview.drill",
     "interview_app.interview.engine",
@@ -7277,7 +7277,7 @@
     "pydantic"
    ],
    "imported_by": [
-    "app.pages.interview",
+    "app.views.interview",
     "interview_app.evaluation.judge",
     "interview_app.interview.engine",
     "interview_app.interview.plan",
@@ -7309,8 +7309,8 @@
     "enum"
    ],
    "imported_by": [
-    "app.pages.history",
-    "app.pages.home"
+    "app.views.history",
+    "app.views.home"
    ],
    "imports": [
     "interview_app.history"
@@ -7617,8 +7617,8 @@
     "typing"
    ],
    "imported_by": [
-    "app.pages.settings",
     "app.ui_common",
+    "app.views.settings",
     "interview_app.lab.compare",
     "interview_app.llm.client"
    ],
@@ -7656,8 +7656,8 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.interview",
-    "app.pages.settings"
+    "app.views.interview",
+    "app.views.settings"
    ],
    "imports": [
     "interview_app.config",
@@ -7809,7 +7809,7 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.settings"
+    "app.views.settings"
    ],
    "imports": [
     "interview_app.db"
@@ -10337,7 +10337,7 @@
    ]
   }
  },
- "source_sha256": "f276d776599448857b34ce7ae59da3e93843340bc383d8e2ecc6dc04dc76b126",
+ "source_sha256": "1c8363229415aadc02129493a102e456007cfc61f4823c78b78924119209e602",
  "stats": {
   "agents": 7,
   "call_sites": {
@@ -10393,587 +10393,6 @@
    "name": "drill_offer",
    "qualname": "drill_offer",
    "signature": "drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview: bool=False) -> None"
-  },
-  "app.pages.applications:<module>": {
-   "doc": "",
-   "end_line": 1,
-   "externals": [
-    "collections.Counter",
-    "math.ceil",
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.checkbox",
-    "streamlit.columns",
-    "streamlit.columns()[0].caption",
-    "streamlit.columns()[0].text_input",
-    "streamlit.columns()[1].button",
-    "streamlit.columns()[1].text_input",
-    "streamlit.divider",
-    "streamlit.error",
-    "streamlit.expander",
-    "streamlit.info",
-    "streamlit.markdown",
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.pop",
-    "streamlit.subheader",
-    "streamlit.tabs",
-    "streamlit.text_area",
-    "streamlit.title",
-    "streamlit.toast",
-    "streamlit.warning"
-   ],
-   "kind": "module",
-   "line": 1,
-   "module": "app.pages.applications",
-   "name": "<module>",
-   "qualname": "<module>",
-   "signature": "module-level code"
-  },
-  "app.pages.applications:_check_length": {
-   "doc": "The same limits the save applies (raises IngestError). Run before the guard, so an oversize document is refused for free instead of being sent to Jev first.",
-   "end_line": 110,
-   "kind": "function",
-   "line": 107,
-   "module": "app.pages.applications",
-   "name": "_check_length",
-   "qualname": "_check_length",
-   "signature": "_check_length(kind: DocKind, text: str) -> None"
-  },
-  "app.pages.applications:_clear_new_form": {
-   "doc": "",
-   "end_line": 161,
-   "kind": "function",
-   "line": 158,
-   "module": "app.pages.applications",
-   "name": "_clear_new_form",
-   "qualname": "_clear_new_form",
-   "signature": "_clear_new_form() -> None"
-  },
-  "app.pages.applications:_collect_documents": {
-   "doc": "",
-   "end_line": 104,
-   "externals": [
-    "streamlit.session_state.get",
-    "streamlit.session_state.get().strip"
-   ],
-   "kind": "function",
-   "line": 94,
-   "module": "app.pages.applications",
-   "name": "_collect_documents",
-   "qualname": "_collect_documents",
-   "signature": "_collect_documents() -> list[DocumentIn]"
-  },
-  "app.pages.applications:_document_input": {
-   "doc": "Upload-or-paste widget for one document. The text always ends up in st.session_state[_text_key].",
-   "end_line": 91,
-   "externals": [
-    "streamlit.error",
-    "streamlit.file_uploader",
-    "streamlit.file_uploader().getvalue",
-    "streamlit.markdown",
-    "streamlit.session_state.get",
-    "streamlit.text_area",
-    "streamlit.warning"
-   ],
-   "kind": "function",
-   "line": 52,
-   "module": "app.pages.applications",
-   "name": "_document_input",
-   "qualname": "_document_input",
-   "signature": "_document_input(kind: DocKind) -> None"
-  },
-  "app.pages.applications:_fingerprint": {
-   "doc": "",
-   "end_line": 124,
-   "externals": [
-    "hashlib.sha256",
-    "hashlib.sha256().hexdigest"
-   ],
-   "kind": "function",
-   "line": 122,
-   "module": "app.pages.applications",
-   "name": "_fingerprint",
-   "qualname": "_fingerprint",
-   "signature": "_fingerprint(company: str, role: str, documents: list[DocumentIn]) -> str"
-  },
-  "app.pages.applications:_flag_documents": {
-   "doc": "Injection-check the documents. Raises IngestError first if one is unusable (e.g. too long).",
-   "end_line": 119,
-   "kind": "function",
-   "line": 113,
-   "module": "app.pages.applications",
-   "name": "_flag_documents",
-   "qualname": "_flag_documents",
-   "signature": "_flag_documents(documents: list[DocumentIn]) -> list[str]"
-  },
-  "app.pages.applications:_save": {
-   "doc": "",
-   "end_line": 145,
-   "externals": [
-    "streamlit.error",
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.pop",
-    "streamlit.toast"
-   ],
-   "kind": "function",
-   "line": 127,
-   "module": "app.pages.applications",
-   "name": "_save",
-   "qualname": "_save",
-   "signature": "_save(company: str, role: str, documents: list[DocumentIn]) -> None"
-  },
-  "app.pages.applications:_save_edit": {
-   "doc": "",
-   "end_line": 155,
-   "externals": [
-    "streamlit.error",
-    "streamlit.session_state.pop",
-    "streamlit.toast",
-    "streamlit.warning"
-   ],
-   "kind": "function",
-   "line": 148,
-   "module": "app.pages.applications",
-   "name": "_save_edit",
-   "qualname": "_save_edit",
-   "signature": "_save_edit(application_id: int, kind: DocKind, text: str) -> None"
-  },
-  "app.pages.applications:_text_key": {
-   "doc": "",
-   "end_line": 49,
-   "kind": "function",
-   "line": 48,
-   "module": "app.pages.applications",
-   "name": "_text_key",
-   "qualname": "_text_key",
-   "signature": "_text_key(kind: DocKind) -> str"
-  },
-  "app.pages.history:<module>": {
-   "doc": "",
-   "end_line": 1,
-   "externals": [
-    "streamlit.caption",
-    "streamlit.divider",
-    "streamlit.header",
-    "streamlit.info",
-    "streamlit.selectbox",
-    "streamlit.session_state.get",
-    "streamlit.stop",
-    "streamlit.title"
-   ],
-   "kind": "module",
-   "line": 1,
-   "module": "app.pages.history",
-   "name": "<module>",
-   "qualname": "<module>",
-   "signature": "module-level code"
-  },
-  "app.pages.history:progress_block": {
-   "doc": "",
-   "end_line": 124,
-   "externals": [
-    "streamlit.caption",
-    "streamlit.column_config.ProgressColumn",
-    "streamlit.dataframe",
-    "streamlit.header",
-    "streamlit.line_chart",
-    "streamlit.markdown",
-    "streamlit.subheader"
-   ],
-   "kind": "function",
-   "line": 76,
-   "module": "app.pages.history",
-   "name": "progress_block",
-   "qualname": "progress_block",
-   "signature": "progress_block(application_id: int) -> None"
-  },
-  "app.pages.history:score_metrics": {
-   "doc": "Three numbers to answer \"am I improving?\" before any table has to be read.",
-   "end_line": 139,
-   "externals": [
-    "streamlit.columns",
-    "streamlit.columns()[0].metric",
-    "streamlit.columns()[1].metric",
-    "streamlit.columns()[2].metric"
-   ],
-   "kind": "function",
-   "line": 127,
-   "module": "app.pages.history",
-   "name": "score_metrics",
-   "qualname": "score_metrics",
-   "signature": "score_metrics(sessions: list[SessionSummary]) -> None"
-  },
-  "app.pages.history:session_detail": {
-   "doc": "",
-   "end_line": 200,
-   "externals": [
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.chat_message",
-    "streamlit.checkbox",
-    "streamlit.expander",
-    "streamlit.info",
-    "streamlit.markdown",
-    "streamlit.rerun",
-    "streamlit.session_state.pop",
-    "streamlit.subheader",
-    "streamlit.tabs",
-    "streamlit.toast",
-    "streamlit.warning"
-   ],
-   "kind": "function",
-   "line": 142,
-   "module": "app.pages.history",
-   "name": "session_detail",
-   "qualname": "session_detail",
-   "signature": "session_detail(summary: SessionSummary) -> None"
-  },
-  "app.pages.history:session_label": {
-   "doc": "",
-   "end_line": 39,
-   "kind": "function",
-   "line": 36,
-   "module": "app.pages.history",
-   "name": "session_label",
-   "qualname": "session_label",
-   "signature": "session_label(s: SessionSummary) -> str"
-  },
-  "app.pages.history:sessions_table": {
-   "doc": "",
-   "end_line": 73,
-   "externals": [
-    "streamlit.column_config.DatetimeColumn",
-    "streamlit.column_config.NumberColumn",
-    "streamlit.column_config.ProgressColumn",
-    "streamlit.dataframe"
-   ],
-   "kind": "function",
-   "line": 42,
-   "module": "app.pages.history",
-   "name": "sessions_table",
-   "qualname": "sessions_table",
-   "signature": "sessions_table(sessions: list[SessionSummary]) -> None"
-  },
-  "app.pages.history:sessions_table.open_selected": {
-   "doc": "",
-   "end_line": 47,
-   "kind": "nested",
-   "line": 43,
-   "module": "app.pages.history",
-   "name": "open_selected",
-   "parent": "app.pages.history:sessions_table",
-   "qualname": "sessions_table.open_selected",
-   "signature": "open_selected() -> None"
-  },
-  "app.pages.home:<module>": {
-   "doc": "",
-   "end_line": 1,
-   "externals": [
-    "collections.defaultdict",
-    "collections.defaultdict().get",
-    "streamlit.caption",
-    "streamlit.columns",
-    "streamlit.container",
-    "streamlit.info",
-    "streamlit.markdown",
-    "streamlit.subheader",
-    "streamlit.title",
-    "streamlit.write"
-   ],
-   "kind": "module",
-   "line": 1,
-   "module": "app.pages.home",
-   "name": "<module>",
-   "qualname": "<module>",
-   "signature": "module-level code",
-   "unresolved": [
-    {
-     "candidates": [],
-     "line": 38,
-     "text": "col.container"
-    },
-    {
-     "candidates": [],
-     "line": 101,
-     "text": "cols[i % len(cols)].container"
-    }
-   ]
-  },
-  "app.pages.interview:<module>": {
-   "doc": "",
-   "end_line": 1,
-   "externals": [
-    "streamlit.session_state.get",
-    "streamlit.title"
-   ],
-   "kind": "module",
-   "line": 1,
-   "module": "app.pages.interview",
-   "name": "<module>",
-   "qualname": "<module>",
-   "signature": "module-level code"
-  },
-  "app.pages.interview:blocked_answer_editor": {
-   "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
-   "end_line": 239,
-   "externals": [
-    "streamlit.columns",
-    "streamlit.columns()[0].button",
-    "streamlit.columns()[1].button",
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.pop",
-    "streamlit.text_area"
-   ],
-   "kind": "function",
-   "line": 222,
-   "module": "app.pages.interview",
-   "name": "blocked_answer_editor",
-   "qualname": "blocked_answer_editor",
-   "signature": "blocked_answer_editor(view: eng.SessionView) -> bool"
-  },
-  "app.pages.interview:chat": {
-   "doc": "",
-   "end_line": 391,
-   "externals": [
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.chat_input",
-    "streamlit.chat_message",
-    "streamlit.divider",
-    "streamlit.error",
-    "streamlit.info",
-    "streamlit.markdown",
-    "streamlit.metric",
-    "streamlit.progress",
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.pop",
-    "streamlit.spinner",
-    "streamlit.success",
-    "streamlit.warning"
-   ],
-   "kind": "function",
-   "line": 287,
-   "module": "app.pages.interview",
-   "name": "chat",
-   "qualname": "chat",
-   "signature": "chat(view: eng.SessionView) -> None"
-  },
-  "app.pages.interview:coaching_choice": {
-   "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
-   "end_line": 275,
-   "externals": [
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.chat_input",
-    "streamlit.container",
-    "streamlit.container().caption",
-    "streamlit.container().columns",
-    "streamlit.container().columns()[0].button",
-    "streamlit.container().columns()[1].button",
-    "streamlit.container().markdown",
-    "streamlit.error",
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.pop",
-    "streamlit.spinner"
-   ],
-   "kind": "function",
-   "line": 242,
-   "module": "app.pages.interview",
-   "name": "coaching_choice",
-   "qualname": "coaching_choice",
-   "signature": "coaching_choice(view: eng.SessionView) -> None"
-  },
-  "app.pages.interview:earlier_attempts": {
-   "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
-   "end_line": 188,
-   "externals": [
-    "streamlit.expander",
-    "streamlit.markdown"
-   ],
-   "kind": "function",
-   "line": 180,
-   "module": "app.pages.interview",
-   "name": "earlier_attempts",
-   "qualname": "earlier_attempts",
-   "signature": "earlier_attempts(view: eng.SessionView, turn: eng.TurnView, previous_idx: int) -> None"
-  },
-  "app.pages.interview:feedback": {
-   "doc": "The report for a finished interview: generated once on request, then stored.",
-   "end_line": 429,
-   "externals": [
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.divider",
-    "streamlit.error",
-    "streamlit.header",
-    "streamlit.markdown",
-    "streamlit.status",
-    "streamlit.status().update",
-    "streamlit.write"
-   ],
-   "kind": "function",
-   "line": 394,
-   "module": "app.pages.interview",
-   "name": "feedback",
-   "qualname": "feedback",
-   "signature": "feedback(view: eng.SessionView) -> None"
-  },
-  "app.pages.interview:live_chips": {
-   "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
-   "end_line": 177,
-   "externals": [
-    "streamlit.caption",
-    "streamlit.markdown"
-   ],
-   "kind": "function",
-   "line": 161,
-   "module": "app.pages.interview",
-   "name": "live_chips",
-   "qualname": "live_chips",
-   "signature": "live_chips(live) -> None"
-  },
-  "app.pages.interview:progress_text": {
-   "doc": "'Question 3 of 7 · Experience (follow-up)': where the interview is, in words.",
-   "end_line": 284,
-   "kind": "function",
-   "line": 278,
-   "module": "app.pages.interview",
-   "name": "progress_text",
-   "qualname": "progress_text",
-   "signature": "progress_text(view: eng.SessionView, done: int) -> str"
-  },
-  "app.pages.interview:start_form": {
-   "doc": "",
-   "end_line": 158,
-   "externals": [
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.columns",
-    "streamlit.columns()[0].selectbox",
-    "streamlit.columns()[1].segmented_control",
-    "streamlit.container",
-    "streamlit.error",
-    "streamlit.info",
-    "streamlit.markdown",
-    "streamlit.radio",
-    "streamlit.rerun",
-    "streamlit.selectbox",
-    "streamlit.session_state.pop",
-    "streamlit.status",
-    "streamlit.status().update",
-    "streamlit.write"
-   ],
-   "kind": "function",
-   "line": 63,
-   "module": "app.pages.interview",
-   "name": "start_form",
-   "qualname": "start_form",
-   "signature": "start_form() -> None"
-  },
-  "app.pages.interview:submit": {
-   "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
-   "end_line": 219,
-   "externals": [
-    "streamlit.rerun",
-    "streamlit.session_state.get",
-    "streamlit.session_state.get().get",
-    "streamlit.session_state.pop",
-    "streamlit.spinner"
-   ],
-   "kind": "function",
-   "line": 191,
-   "module": "app.pages.interview",
-   "name": "submit",
-   "qualname": "submit",
-   "signature": "submit(action, view: eng.SessionView, text: str) -> None",
-   "unresolved": [
-    {
-     "candidates": [],
-     "line": 198,
-     "text": "action"
-    }
-   ]
-  },
-  "app.pages.settings:<module>": {
-   "doc": "",
-   "end_line": 1,
-   "externals": [
-    "load_preferences().model_copy",
-    "streamlit.button",
-    "streamlit.caption",
-    "streamlit.checkbox",
-    "streamlit.columns",
-    "streamlit.columns()[0].caption",
-    "streamlit.columns()[0].dataframe",
-    "streamlit.columns()[0].metric",
-    "streamlit.columns()[0].selectbox",
-    "streamlit.columns()[1].caption",
-    "streamlit.columns()[1].dataframe",
-    "streamlit.columns()[1].metric",
-    "streamlit.columns()[1].segmented_control",
-    "streamlit.dataframe",
-    "streamlit.divider",
-    "streamlit.radio",
-    "streamlit.slider",
-    "streamlit.subheader",
-    "streamlit.title",
-    "streamlit.toast",
-    "streamlit.toggle"
-   ],
-   "kind": "module",
-   "line": 1,
-   "module": "app.pages.settings",
-   "name": "<module>",
-   "qualname": "<module>",
-   "signature": "module-level code"
-  },
-  "app.pages.settings:_model_label": {
-   "doc": "",
-   "end_line": 129,
-   "kind": "function",
-   "line": 125,
-   "module": "app.pages.settings",
-   "name": "_model_label",
-   "qualname": "_model_label",
-   "signature": "_model_label(model_id: str) -> str"
-  },
-  "app.pages.settings:_model_picker": {
-   "doc": "",
-   "end_line": 147,
-   "externals": [
-    "streamlit.markdown"
-   ],
-   "kind": "function",
-   "line": 132,
-   "module": "app.pages.settings",
-   "name": "_model_picker",
-   "qualname": "_model_picker",
-   "signature": "_model_picker(label: str, current: str, help_text: str, key: str) -> str"
-  },
-  "app.pages.settings:_price": {
-   "doc": "",
-   "end_line": 122,
-   "kind": "function",
-   "line": 119,
-   "module": "app.pages.settings",
-   "name": "_price",
-   "qualname": "_price",
-   "signature": "_price(o: ModelOption) -> str"
-  },
-  "app.pages.settings:_rows": {
-   "doc": "",
-   "end_line": 284,
-   "kind": "function",
-   "line": 274,
-   "module": "app.pages.settings",
-   "name": "_rows",
-   "qualname": "_rows",
-   "signature": "_rows(rows, name: str) -> list[dict]"
   },
   "app.report_view:band_badge": {
    "doc": "The hiring signal as a coloured badge with an icon and words, so colour is never the only cue. Static text only (labels from BAND_LABELS), so it is safe in markdown as it is.",
@@ -11214,6 +10633,587 @@
    "name": "slider_start",
    "qualname": "slider_start",
    "signature": "slider_start(questions: int) -> int"
+  },
+  "app.views.applications:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "collections.Counter",
+    "math.ceil",
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.checkbox",
+    "streamlit.columns",
+    "streamlit.columns()[0].caption",
+    "streamlit.columns()[0].text_input",
+    "streamlit.columns()[1].button",
+    "streamlit.columns()[1].text_input",
+    "streamlit.divider",
+    "streamlit.error",
+    "streamlit.expander",
+    "streamlit.info",
+    "streamlit.markdown",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.subheader",
+    "streamlit.tabs",
+    "streamlit.text_area",
+    "streamlit.title",
+    "streamlit.toast",
+    "streamlit.warning"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.views.applications",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code"
+  },
+  "app.views.applications:_check_length": {
+   "doc": "The same limits the save applies (raises IngestError). Run before the guard, so an oversize document is refused for free instead of being sent to Jev first.",
+   "end_line": 110,
+   "kind": "function",
+   "line": 107,
+   "module": "app.views.applications",
+   "name": "_check_length",
+   "qualname": "_check_length",
+   "signature": "_check_length(kind: DocKind, text: str) -> None"
+  },
+  "app.views.applications:_clear_new_form": {
+   "doc": "",
+   "end_line": 161,
+   "kind": "function",
+   "line": 158,
+   "module": "app.views.applications",
+   "name": "_clear_new_form",
+   "qualname": "_clear_new_form",
+   "signature": "_clear_new_form() -> None"
+  },
+  "app.views.applications:_collect_documents": {
+   "doc": "",
+   "end_line": 104,
+   "externals": [
+    "streamlit.session_state.get",
+    "streamlit.session_state.get().strip"
+   ],
+   "kind": "function",
+   "line": 94,
+   "module": "app.views.applications",
+   "name": "_collect_documents",
+   "qualname": "_collect_documents",
+   "signature": "_collect_documents() -> list[DocumentIn]"
+  },
+  "app.views.applications:_document_input": {
+   "doc": "Upload-or-paste widget for one document. The text always ends up in st.session_state[_text_key].",
+   "end_line": 91,
+   "externals": [
+    "streamlit.error",
+    "streamlit.file_uploader",
+    "streamlit.file_uploader().getvalue",
+    "streamlit.markdown",
+    "streamlit.session_state.get",
+    "streamlit.text_area",
+    "streamlit.warning"
+   ],
+   "kind": "function",
+   "line": 52,
+   "module": "app.views.applications",
+   "name": "_document_input",
+   "qualname": "_document_input",
+   "signature": "_document_input(kind: DocKind) -> None"
+  },
+  "app.views.applications:_fingerprint": {
+   "doc": "",
+   "end_line": 124,
+   "externals": [
+    "hashlib.sha256",
+    "hashlib.sha256().hexdigest"
+   ],
+   "kind": "function",
+   "line": 122,
+   "module": "app.views.applications",
+   "name": "_fingerprint",
+   "qualname": "_fingerprint",
+   "signature": "_fingerprint(company: str, role: str, documents: list[DocumentIn]) -> str"
+  },
+  "app.views.applications:_flag_documents": {
+   "doc": "Injection-check the documents. Raises IngestError first if one is unusable (e.g. too long).",
+   "end_line": 119,
+   "kind": "function",
+   "line": 113,
+   "module": "app.views.applications",
+   "name": "_flag_documents",
+   "qualname": "_flag_documents",
+   "signature": "_flag_documents(documents: list[DocumentIn]) -> list[str]"
+  },
+  "app.views.applications:_save": {
+   "doc": "",
+   "end_line": 145,
+   "externals": [
+    "streamlit.error",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.toast"
+   ],
+   "kind": "function",
+   "line": 127,
+   "module": "app.views.applications",
+   "name": "_save",
+   "qualname": "_save",
+   "signature": "_save(company: str, role: str, documents: list[DocumentIn]) -> None"
+  },
+  "app.views.applications:_save_edit": {
+   "doc": "",
+   "end_line": 155,
+   "externals": [
+    "streamlit.error",
+    "streamlit.session_state.pop",
+    "streamlit.toast",
+    "streamlit.warning"
+   ],
+   "kind": "function",
+   "line": 148,
+   "module": "app.views.applications",
+   "name": "_save_edit",
+   "qualname": "_save_edit",
+   "signature": "_save_edit(application_id: int, kind: DocKind, text: str) -> None"
+  },
+  "app.views.applications:_text_key": {
+   "doc": "",
+   "end_line": 49,
+   "kind": "function",
+   "line": 48,
+   "module": "app.views.applications",
+   "name": "_text_key",
+   "qualname": "_text_key",
+   "signature": "_text_key(kind: DocKind) -> str"
+  },
+  "app.views.history:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "streamlit.caption",
+    "streamlit.divider",
+    "streamlit.header",
+    "streamlit.info",
+    "streamlit.selectbox",
+    "streamlit.session_state.get",
+    "streamlit.stop",
+    "streamlit.title"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.views.history",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code"
+  },
+  "app.views.history:progress_block": {
+   "doc": "",
+   "end_line": 124,
+   "externals": [
+    "streamlit.caption",
+    "streamlit.column_config.ProgressColumn",
+    "streamlit.dataframe",
+    "streamlit.header",
+    "streamlit.line_chart",
+    "streamlit.markdown",
+    "streamlit.subheader"
+   ],
+   "kind": "function",
+   "line": 76,
+   "module": "app.views.history",
+   "name": "progress_block",
+   "qualname": "progress_block",
+   "signature": "progress_block(application_id: int) -> None"
+  },
+  "app.views.history:score_metrics": {
+   "doc": "Three numbers to answer \"am I improving?\" before any table has to be read.",
+   "end_line": 139,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.columns()[0].metric",
+    "streamlit.columns()[1].metric",
+    "streamlit.columns()[2].metric"
+   ],
+   "kind": "function",
+   "line": 127,
+   "module": "app.views.history",
+   "name": "score_metrics",
+   "qualname": "score_metrics",
+   "signature": "score_metrics(sessions: list[SessionSummary]) -> None"
+  },
+  "app.views.history:session_detail": {
+   "doc": "",
+   "end_line": 200,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.chat_message",
+    "streamlit.checkbox",
+    "streamlit.expander",
+    "streamlit.info",
+    "streamlit.markdown",
+    "streamlit.rerun",
+    "streamlit.session_state.pop",
+    "streamlit.subheader",
+    "streamlit.tabs",
+    "streamlit.toast",
+    "streamlit.warning"
+   ],
+   "kind": "function",
+   "line": 142,
+   "module": "app.views.history",
+   "name": "session_detail",
+   "qualname": "session_detail",
+   "signature": "session_detail(summary: SessionSummary) -> None"
+  },
+  "app.views.history:session_label": {
+   "doc": "",
+   "end_line": 39,
+   "kind": "function",
+   "line": 36,
+   "module": "app.views.history",
+   "name": "session_label",
+   "qualname": "session_label",
+   "signature": "session_label(s: SessionSummary) -> str"
+  },
+  "app.views.history:sessions_table": {
+   "doc": "",
+   "end_line": 73,
+   "externals": [
+    "streamlit.column_config.DatetimeColumn",
+    "streamlit.column_config.NumberColumn",
+    "streamlit.column_config.ProgressColumn",
+    "streamlit.dataframe"
+   ],
+   "kind": "function",
+   "line": 42,
+   "module": "app.views.history",
+   "name": "sessions_table",
+   "qualname": "sessions_table",
+   "signature": "sessions_table(sessions: list[SessionSummary]) -> None"
+  },
+  "app.views.history:sessions_table.open_selected": {
+   "doc": "",
+   "end_line": 47,
+   "kind": "nested",
+   "line": 43,
+   "module": "app.views.history",
+   "name": "open_selected",
+   "parent": "app.views.history:sessions_table",
+   "qualname": "sessions_table.open_selected",
+   "signature": "open_selected() -> None"
+  },
+  "app.views.home:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "collections.defaultdict",
+    "collections.defaultdict().get",
+    "streamlit.caption",
+    "streamlit.columns",
+    "streamlit.container",
+    "streamlit.info",
+    "streamlit.markdown",
+    "streamlit.subheader",
+    "streamlit.title",
+    "streamlit.write"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.views.home",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 38,
+     "text": "col.container"
+    },
+    {
+     "candidates": [],
+     "line": 101,
+     "text": "cols[i % len(cols)].container"
+    }
+   ]
+  },
+  "app.views.interview:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "streamlit.session_state.get",
+    "streamlit.title"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.views.interview",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code"
+  },
+  "app.views.interview:blocked_answer_editor": {
+   "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
+   "end_line": 239,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.columns()[0].button",
+    "streamlit.columns()[1].button",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.text_area"
+   ],
+   "kind": "function",
+   "line": 222,
+   "module": "app.views.interview",
+   "name": "blocked_answer_editor",
+   "qualname": "blocked_answer_editor",
+   "signature": "blocked_answer_editor(view: eng.SessionView) -> bool"
+  },
+  "app.views.interview:chat": {
+   "doc": "",
+   "end_line": 391,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.chat_input",
+    "streamlit.chat_message",
+    "streamlit.divider",
+    "streamlit.error",
+    "streamlit.info",
+    "streamlit.markdown",
+    "streamlit.metric",
+    "streamlit.progress",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.spinner",
+    "streamlit.success",
+    "streamlit.warning"
+   ],
+   "kind": "function",
+   "line": 287,
+   "module": "app.views.interview",
+   "name": "chat",
+   "qualname": "chat",
+   "signature": "chat(view: eng.SessionView) -> None"
+  },
+  "app.views.interview:coaching_choice": {
+   "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
+   "end_line": 275,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.chat_input",
+    "streamlit.container",
+    "streamlit.container().caption",
+    "streamlit.container().columns",
+    "streamlit.container().columns()[0].button",
+    "streamlit.container().columns()[1].button",
+    "streamlit.container().markdown",
+    "streamlit.error",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.spinner"
+   ],
+   "kind": "function",
+   "line": 242,
+   "module": "app.views.interview",
+   "name": "coaching_choice",
+   "qualname": "coaching_choice",
+   "signature": "coaching_choice(view: eng.SessionView) -> None"
+  },
+  "app.views.interview:earlier_attempts": {
+   "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
+   "end_line": 188,
+   "externals": [
+    "streamlit.expander",
+    "streamlit.markdown"
+   ],
+   "kind": "function",
+   "line": 180,
+   "module": "app.views.interview",
+   "name": "earlier_attempts",
+   "qualname": "earlier_attempts",
+   "signature": "earlier_attempts(view: eng.SessionView, turn: eng.TurnView, previous_idx: int) -> None"
+  },
+  "app.views.interview:feedback": {
+   "doc": "The report for a finished interview: generated once on request, then stored.",
+   "end_line": 429,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.divider",
+    "streamlit.error",
+    "streamlit.header",
+    "streamlit.markdown",
+    "streamlit.status",
+    "streamlit.status().update",
+    "streamlit.write"
+   ],
+   "kind": "function",
+   "line": 394,
+   "module": "app.views.interview",
+   "name": "feedback",
+   "qualname": "feedback",
+   "signature": "feedback(view: eng.SessionView) -> None"
+  },
+  "app.views.interview:live_chips": {
+   "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
+   "end_line": 177,
+   "externals": [
+    "streamlit.caption",
+    "streamlit.markdown"
+   ],
+   "kind": "function",
+   "line": 161,
+   "module": "app.views.interview",
+   "name": "live_chips",
+   "qualname": "live_chips",
+   "signature": "live_chips(live) -> None"
+  },
+  "app.views.interview:progress_text": {
+   "doc": "'Question 3 of 7 · Experience (follow-up)': where the interview is, in words.",
+   "end_line": 284,
+   "kind": "function",
+   "line": 278,
+   "module": "app.views.interview",
+   "name": "progress_text",
+   "qualname": "progress_text",
+   "signature": "progress_text(view: eng.SessionView, done: int) -> str"
+  },
+  "app.views.interview:start_form": {
+   "doc": "",
+   "end_line": 158,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.columns",
+    "streamlit.columns()[0].selectbox",
+    "streamlit.columns()[1].segmented_control",
+    "streamlit.container",
+    "streamlit.error",
+    "streamlit.info",
+    "streamlit.markdown",
+    "streamlit.radio",
+    "streamlit.rerun",
+    "streamlit.selectbox",
+    "streamlit.session_state.pop",
+    "streamlit.status",
+    "streamlit.status().update",
+    "streamlit.write"
+   ],
+   "kind": "function",
+   "line": 63,
+   "module": "app.views.interview",
+   "name": "start_form",
+   "qualname": "start_form",
+   "signature": "start_form() -> None"
+  },
+  "app.views.interview:submit": {
+   "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
+   "end_line": 219,
+   "externals": [
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.get().get",
+    "streamlit.session_state.pop",
+    "streamlit.spinner"
+   ],
+   "kind": "function",
+   "line": 191,
+   "module": "app.views.interview",
+   "name": "submit",
+   "qualname": "submit",
+   "signature": "submit(action, view: eng.SessionView, text: str) -> None",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 198,
+     "text": "action"
+    }
+   ]
+  },
+  "app.views.settings:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "load_preferences().model_copy",
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.checkbox",
+    "streamlit.columns",
+    "streamlit.columns()[0].caption",
+    "streamlit.columns()[0].dataframe",
+    "streamlit.columns()[0].metric",
+    "streamlit.columns()[0].selectbox",
+    "streamlit.columns()[1].caption",
+    "streamlit.columns()[1].dataframe",
+    "streamlit.columns()[1].metric",
+    "streamlit.columns()[1].segmented_control",
+    "streamlit.dataframe",
+    "streamlit.divider",
+    "streamlit.radio",
+    "streamlit.slider",
+    "streamlit.subheader",
+    "streamlit.title",
+    "streamlit.toast",
+    "streamlit.toggle"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.views.settings",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code"
+  },
+  "app.views.settings:_model_label": {
+   "doc": "",
+   "end_line": 129,
+   "kind": "function",
+   "line": 125,
+   "module": "app.views.settings",
+   "name": "_model_label",
+   "qualname": "_model_label",
+   "signature": "_model_label(model_id: str) -> str"
+  },
+  "app.views.settings:_model_picker": {
+   "doc": "",
+   "end_line": 147,
+   "externals": [
+    "streamlit.markdown"
+   ],
+   "kind": "function",
+   "line": 132,
+   "module": "app.views.settings",
+   "name": "_model_picker",
+   "qualname": "_model_picker",
+   "signature": "_model_picker(label: str, current: str, help_text: str, key: str) -> str"
+  },
+  "app.views.settings:_price": {
+   "doc": "",
+   "end_line": 122,
+   "kind": "function",
+   "line": 119,
+   "module": "app.views.settings",
+   "name": "_price",
+   "qualname": "_price",
+   "signature": "_price(o: ModelOption) -> str"
+  },
+  "app.views.settings:_rows": {
+   "doc": "",
+   "end_line": 284,
+   "kind": "function",
+   "line": 274,
+   "module": "app.views.settings",
+   "name": "_rows",
+   "qualname": "_rows",
+   "signature": "_rows(rows, name: str) -> list[dict]"
   },
   "interview_app.applications:ApplicationDetail": {
    "doc": "",
