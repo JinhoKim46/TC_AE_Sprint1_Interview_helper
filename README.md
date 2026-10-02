@@ -141,7 +141,8 @@ E8 (one setting tuned): with P4, `reasoning_effort` medium vs low doubled the la
 Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before it reaches a model, mapped to the OWASP Top 10 for LLM applications:
 
 - **LLM01 Prompt injection:** (1) regex rules for known patterns ("ignore previous instructions", fake role markers, chat-template tokens, score manipulation, delimiter escapes); (2) a Jev yes/no check for paraphrased attacks, with a threshold set in code; (3) **spotlighting**: all user text is wrapped in `<document>` / `<candidate_answer>` tags that it cannot close early, and the prompts say this text is data. Blocked answers are never stored or sent. Suspicious documents are flagged for the user to confirm.
-- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend per session. At a limit, code forces the interview to close.
+- **LLM05 Improper output handling:** model replies, report text and the candidate's own answers are shown as plain text. The UI escapes markdown (`ui_common.safe_md`) and never enables raw HTML, so a reply can't run a script, load a tracking image (`![](https://…)`), add a link or render `$…$` as LaTeX.
+- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend per session. At a limit, code forces the interview to close. Document length is checked before the (paid) injection check runs.
 - **Grounding:** the judge must quote the candidate for requirement credit and strengths, and code verifies the quote against the transcript.
 
 ## Known limitations

@@ -7,7 +7,7 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import BAND_LABELS, LEVEL_LABELS, render_report
-from ui_common import current_user_id, get_engine, settings
+from ui_common import current_user_id, get_engine, page_link, safe_md, settings
 
 from interview_app.applications import list_applications
 from interview_app.history import SessionSummary, delete_session, list_sessions, load_report, progress
@@ -110,7 +110,7 @@ def progress_block(application_id: int) -> None:
     if prog.recurring_improvements:
         st.subheader("Advice that keeps coming back")
         for imp in prog.recurring_improvements:
-            st.markdown(f"- **{imp.area}** — in {imp.count} reports")
+            st.markdown(f"- **{safe_md(imp.area, inline=True)}** — in {imp.count} reports")
 
 
 def session_detail(summary: SessionSummary) -> None:
@@ -118,7 +118,7 @@ def session_detail(summary: SessionSummary) -> None:
     if view is None:  # deleted in another tab
         st.warning("This interview no longer exists.")
         return
-    st.header(session_label(summary))
+    st.header(safe_md(session_label(summary), inline=True))
     st.caption(
         f"{STATUS_LABELS.get(view.status, view.status)} · {summary.main_questions_asked} main question(s) · "
         f"{summary.difficulty} · {summary.mode} · prompt {summary.prompt_variant} · ${summary.cost_usd:.4f}"
@@ -130,10 +130,10 @@ def session_detail(summary: SessionSummary) -> None:
         for t in view.turns:
             if t.speaker == "interviewer":
                 with st.chat_message("assistant", avatar=":material/person:"):
-                    st.markdown(f"**{persona.name}** · {persona.title}\n\n{t.text}")
+                    st.markdown(f"**{persona.name}** · {persona.title}\n\n{safe_md(t.text)}")
             else:
                 with st.chat_message("user"):
-                    st.markdown(t.text)
+                    st.markdown(safe_md(t.text))
         if not view.turns:
             st.caption("No messages were exchanged.")
     with report_tab:
@@ -147,10 +147,12 @@ def session_detail(summary: SessionSummary) -> None:
             st.info("No report yet. It can be generated from the Interview page after the interview.")
 
     with st.expander("Delete this interview", icon=":material/delete:"):
-        sure = st.checkbox("Yes, delete the transcript and report for good", key="history_confirm")
+        # Keyed per session, so a tick given for one interview never carries over to the next one opened.
+        confirm_key = f"history_confirm_{summary.session_id}"
+        sure = st.checkbox("Yes, delete the transcript and report for good", key=confirm_key)
         if st.button("Delete interview", type="primary", disabled=not sure):
             delete_session(engine, user_id, summary.session_id)
-            for key in ("history_open", "history_confirm", "history_table"):
+            for key in ("history_open", confirm_key, "history_table"):
                 st.session_state.pop(key, None)
             st.toast("Interview deleted")
             st.rerun()
@@ -159,10 +161,14 @@ def session_detail(summary: SessionSummary) -> None:
 all_sessions = list_sessions(engine, user_id)
 if not all_sessions:
     st.info("No interviews yet. Your past interviews and their reports will appear here.")
-    st.page_link("pages/interview.py", label="Start an interview", icon=":material/forum:")
+    page_link("pages/interview.py", label="Start an interview", icon=":material/forum:")
     st.stop()
 
 apps = {a.id: f"{a.company} — {a.role}" for a in list_applications(engine, user_id)}
+# The remembered filter may point at an application deleted since; fall back to all of them. This must
+# run before the selectbox is drawn, because a drawn widget's value can't be changed in the same run.
+if st.session_state.get("history_app") not in (None, *apps):
+    st.session_state.history_app = None
 app_id = st.selectbox(
     "Application",
     options=[None, *apps],
