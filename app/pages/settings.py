@@ -16,6 +16,7 @@ from interview_app.interview.persona import (
     Difficulty,
     InterviewType,
     LLMSettings,
+    Mode,
     PromptVariant,
 )
 from interview_app.llm.pricing import ModelOption, model_options
@@ -64,6 +65,18 @@ difficulty = col2.segmented_control(
     default=prefs.difficulty.value,
     format_func=str.capitalize,
     help="Friendly: supportive, one follow-up per topic. Tough: probes gaps and assumptions harder.",
+)
+MODE_CHOICES = {
+    Mode.REALISTIC.value: "Realistic: feedback at the end",
+    Mode.COACHING.value: "Coaching: feedback after every answer, with retries",
+}
+mode = st.radio(
+    "Mode",
+    options=[m.value for m in Mode],
+    format_func=lambda v: MODE_CHOICES[v],
+    index=[m.value for m in Mode].index(prefs.mode.value),
+    horizontal=True,
+    key="pref_mode",
 )
 # Fixed label and help text on purpose: Streamlit identifies a widget by its parameters, so text that
 # changed with the interview type would make a "new" checkbox on every type change and lose its state.
@@ -219,6 +232,7 @@ if st.button("Save settings", type="primary", icon=":material/save:"):
             update={
                 "interview_type": interview_type,
                 "difficulty": Difficulty(difficulty or Difficulty.STANDARD),
+                "mode": Mode(mode),
                 "main_questions": main_questions,
                 "prompt_variant": variant,
                 "interviewer": llm,
