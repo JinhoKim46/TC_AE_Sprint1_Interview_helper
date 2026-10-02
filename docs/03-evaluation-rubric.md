@@ -464,7 +464,7 @@ The decision model answers typed questions over a `state` object and returns pro
 
 | Rubric part | Primitive | Notes |
 |---|---|---|
-| A1–A10, S1, S3, S4 | `score` with levels 1–5 | `criteria` = the level table, in order. Use the returned probability-weighted `score` directly |
+| A1–A10, S1, S3, S4 | `score` with levels 1–5 | `criteria` = the level table, in order. The returned probability-weighted `score` is 0-based (level index); add 1 for the 1–5 scale (`llm/decide.py` does this) |
 | N1–N11 | `noul` | Gate in code; start at 0.5 and calibrate |
 | S2, S5, S6 | `choice` | Include the no-match option (`not_addressed`, `declined`) |
 
