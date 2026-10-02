@@ -1,0 +1,29 @@
+# --- Privacy: never commit personal or third-party material -------------------
+# Real job applications (CVs, cover letters, JDs) stay local as example cases.
+docs/applications/
+# Third-party design screenshots used only as local inspiration.
+references/app_design/
+# Runtime data: SQLite DB, uploaded documents, audio, generated avatars.
+data/
+# Secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# --- Tooling -----------------------------------------------------------------
+.worktrees/
+.venv/
+__pycache__/
+*.py[oc]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+.ipynb_checkpoints/
+.DS_Store
+.idea/
+.vscode/
