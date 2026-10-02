@@ -9,7 +9,6 @@ aggregated on its own, and the report is the run whose overall score is the medi
 The report is stored, so re-opening it costs nothing; `force=True` re-runs the judge.
 """
 
-import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 
@@ -23,9 +22,14 @@ from interview_app.evaluation.judge import judge_messages, run_judge
 from interview_app.evaluation.metrics import compute_metrics
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
-from interview_app.ingest import DocKind
-from interview_app.interview.engine import EngineDeps, get_session, session_cost
-from interview_app.interview.schemas import InterviewPlan
+from interview_app.history import load_report
+from interview_app.interview.engine import (
+    EngineDeps,
+    get_session,
+    session_cost,
+    session_documents,
+    session_plan,
+)
 from interview_app.llm.client import LLMError
 from interview_app.security import check_budget
 
@@ -45,11 +49,7 @@ def median_run(scored: list[tuple]) -> tuple:
 
 
 def stored_report(deps: EngineDeps, user_id: int, session_id: int) -> Report | None:
-    with session_scope(deps.engine) as s:
-        row = s.exec(
-            select(Evaluation).where(Evaluation.session_id == session_id, Evaluation.user_id == user_id)
-        ).first()
-    return Report.model_validate_json(row.report_json) if row else None
+    return load_report(deps.engine, user_id, session_id)
 
 
 def evaluate_session(
@@ -69,8 +69,7 @@ def evaluate_session(
 
     with session_scope(deps.engine) as s:
         row = s.get(InterviewSession, session_id)
-        documents = {DocKind(k): v for k, v in json.loads(row.documents_json).items()}
-        plan = InterviewPlan.model_validate_json(row.plan_json) if row.plan_json else None
+    documents, plan = session_documents(row), session_plan(row)
 
     rubric = load_rubric(deps.settings.rubric_path)
     metrics = compute_metrics(exchanges, rubric)
