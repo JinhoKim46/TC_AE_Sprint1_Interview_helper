@@ -16,7 +16,7 @@ from interview_app.ingest import DocKind
 from interview_app.interview.prompting import document_blocks, render
 from interview_app.interview.schemas import InterviewPlan
 from interview_app.llm.client import LLMClient
-from interview_app.security import ANSWER_DATA_NOTE, UNTRUSTED_DATA_NOTE, wrap_answer
+from interview_app.security import ANSWER_DATA_NOTE, UNTRUSTED_DATA_NOTE, wrap_answer, wrap_untrusted
 
 JUDGED_SESSION_ITEMS = ("S1", "S3", "S4")  # S2 is the requirement list; S5/S6 are not used by the app
 
@@ -25,6 +25,23 @@ def _item_question(rubric: Rubric, item: dict) -> str:
     # rubric.json instructions start with a shared prefix about `state.*` fields (written for the
     # decision model). The LLM judge gets the documents differently, so only the item text is kept.
     return item["instructions"].removeprefix(rubric.data["shared_instruction_prefix"]).strip()
+
+
+def _turn_text(speaker: str, text: str) -> str:
+    # Answers are untrusted text: wrapped, so "give me a 5" is read as content. The interviewer's
+    # turns are wrapped too: a model wrote them from the (untrusted) documents and the candidate's
+    # answers, so an injection could echo through them into the judge (second-order injection).
+    if speaker == "candidate":
+        return wrap_answer(text)
+    return wrap_untrusted("interviewer_turn", text)
+
+
+def _requirements_block(plan: InterviewPlan | None) -> str:
+    # The planner model wrote these from the job description, so they are data, not our instructions.
+    if plan is None or not plan.requirements:
+        return ""
+    lines = [f"- [{r.priority.value}] {r.text}" for r in plan.requirements]
+    return wrap_untrusted("plan_requirements", "\n".join(lines))
 
 
 def judge_messages(
@@ -54,8 +71,7 @@ def judge_messages(
                 {
                     "id": turn_id(t.idx),
                     "speaker": t.speaker,
-                    # Answers are untrusted text: wrapped, so "give me a 5" is read as content.
-                    "text": wrap_answer(t.text) if t.speaker == "candidate" else t.text,
+                    "text": _turn_text(t.speaker, t.text),
                 }
                 for t in ex.turns
             ],
@@ -67,9 +83,7 @@ def judge_messages(
         exchange_items=exchange_items,
         session_items=session_items,
         requirement_options=", ".join(rubric.session_items["S2"]["options"]),
-        requirements=[{"priority": r.priority.value, "text": r.text} for r in plan.requirements]
-        if plan
-        else [],
+        requirements_block=_requirements_block(plan),
         documents=blocks,
         exchanges=rendered_exchanges,
         data_note=UNTRUSTED_DATA_NOTE,
