@@ -14,12 +14,8 @@
 | 2026-10-02 | **Jev's role so far:** injection guard (rules → Jev) and the interviewer-quality judge in `lab/`. Live per-answer scoring is secondary. | Priority change above |
 
 ## Context
-Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the user keeps using it for real job
-applications → a clean, tested, readable personal tool rather than a throwaway demo. Existing inputs:
-`docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md`, `rubric.json` (the source of truth
-for scoring), `docs/applications/**` (real example cases, mostly PDFs), and `references/app_design/` (Attio, Plain).
-Dates: build Fri 10/2 → Thu 10/8, **review Fri 2026-10-09**, hard submission deadline Mon 10/12.
-Scope: **everything, including Jev and voice**, before the review. Voice sits behind a feature flag.
+Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the user keeps using it for real job applications → a clean, tested, readable personal tool rather than a throwaway demo. Existing inputs:
+`docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md`, `rubric.json` (the source of truth for scoring), `docs/applications/**` (real example cases, mostly PDFs), and `references/app_design/` (Attio, Plain). Dates: build Fri 10/2 → Thu 10/8, **review Fri 2026-10-09**, hard submission deadline Mon 10/12. Scope: **everything, including Jev and voice**, before the review. Voice sits behind a feature flag.
 
 ## Decisions (from the grilling)
 | Topic | Decision |
@@ -94,8 +90,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 - **Guard outcome:** blocked answer → not sent, "please rephrase", logged. Flagged document → the user must confirm or edit it.
 
 ## Execution method
-**Autonomous**, like a real team. I only stop to ask about decisions that really are the user's to make (product behaviour, privacy, spend).
-Hybrid: the foundation and the interview engine are built **sequentially**. Independent leaf modules (ingest, pricing, aggregate, avatar, audio, dashboard) go to **2–3 parallel subagents**, each in its own worktree, once their interfaces are fixed. No large Workflow.
+**Autonomous**, like a real team. I only stop to ask about decisions that really are the user's to make (product behaviour, privacy, spend). Hybrid: the foundation and the interview engine are built **sequentially**. Independent leaf modules (ingest, pricing, aggregate, avatar, audio, dashboard) go to **2–3 parallel subagents**, each in its own worktree, once their interfaces are fixed. No large Workflow.
 
 ### Git workflow (every change)
 1. `git worktree add .worktrees/<branch> -b <type>/<short-name> origin/main` (types: feat, fix, chore, docs, test). Never commit on `main` directly.

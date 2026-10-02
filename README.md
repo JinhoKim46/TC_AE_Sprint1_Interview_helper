@@ -1,10 +1,6 @@
 # Interview Helper
 
-A mock-interview practice app tailored to **one specific job application** (Turing College AE, Sprint 1
-capstone). You upload the job description and your CV (cover letter optional). An LLM interviewer reads them and
-runs a realistic, multi-turn interview: it asks what *this* role's interviewers would ask, probes vague or
-unevidenced answers, and tests the gaps between the job description and your CV. Afterwards, an LLM judge
-scores the transcript against a rubric and writes evidence-based feedback.
+A mock-interview practice app tailored to **one specific job application** (Turing College AE, Sprint 1 capstone). You upload the job description and your CV (cover letter optional). An LLM interviewer reads them and runs a realistic, multi-turn interview: it asks what *this* role's interviewers would ask, probes vague or unevidenced answers, and tests the gaps between the job description and your CV. Afterwards, an LLM judge scores the transcript against a rubric and writes evidence-based feedback.
 
 ## Quick start
 
@@ -14,14 +10,11 @@ cp .env.example .env          # set OPENROUTER_API_KEY (APP_SECRET_KEY is only f
 uv run streamlit run app/main.py
 ```
 
-1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional),
-   or click **Load sample application** for a fictional one.
+1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one.
 2. **Interview** → pick the application, the interview type and the difficulty, then **Start interview**.
 3. Answer in the chat. When it ends (or you click **End interview**), click **Get my feedback report**.
-4. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature,
-   max tokens, reasoning effort, judge model; and usage and cost.
-5. **History** → past interviews with their transcripts and reports; pick one application to see
-   its progress (score trend, weakest rubric skills, job requirements over time, recurring advice).
+4. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
+5. **History** → past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice).
 
 Everything runs locally: a SQLite database in `data/`, model calls through OpenRouter.
 
@@ -50,16 +43,9 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
 | `src/interview_app/history.py` | Past sessions and per-application progress, computed in code from stored reports (no model calls) |
 | `docs/rubric.json` | The single source of truth for rubric items, weights and bands |
 
-Design rule throughout: **the model judges, code computes.** Models decide what to ask and how good an answer
-is. Code counts, enforces limits, weights, normalises and decides bands.
+Design rule throughout: **the model judges, code computes.** Models decide what to ask and how good an answer is. Code counts, enforces limits, weights, normalises and decides bands.
 
-**Coaching mode** (pick it on the start form): after each answer, Jev scores it on the three rubric items that
-weigh most for that kind of question (one request, about 0.5 s; `evaluation/live.py`), and the app shows them
-as chips with a tip. The tip is built in code: it quotes the rubric's description of the next level up for the
-weakest item, so it is grounded in the rubric and costs nothing. The candidate can then **Retry** the answer (up
-to `LIMITS__MAX_RETRIES_PER_ANSWER`, default 2) or **Continue**. A retried attempt is kept in the database but
-marked superseded, so neither the interviewer nor the final judge ever sees it. Realistic mode shows nothing
-until the report.
+**Coaching mode** (pick it on the start form): after each answer, Jev scores it on the three rubric items that weigh most for that kind of question (one request, about 0.5 s; `evaluation/live.py`), and the app shows them as chips with a tip. The tip is built in code: it quotes the rubric's description of the next level up for the weakest item, so it is grounded in the rubric and costs nothing. The candidate can then **Retry** the answer (up to `LIMITS__MAX_RETRIES_PER_ANSWER`, default 2) or **Continue**. A retried attempt is kept in the database but marked superseded, so neither the interviewer nor the final judge ever sees it. Realistic mode shows nothing until the report.
 
 ## Course requirements and where they are met
 
@@ -90,14 +76,11 @@ until the report.
 - **system**: our instructions: persona, rules, the documents (wrapped as data), the output format.
 - **user**: the candidate's answers, wrapped in `<candidate_answer>` tags after passing the guards.
 - **assistant**: the interviewer's earlier turns, sent back so the model sees the whole conversation.
-- A short **system** message at the end carries the status the app computed (questions asked, follow-ups
-  used, what to do next). It sits last so the long system prompt above stays identical between turns, and the
-  provider can cache it.
+- A short **system** message at the end carries the status the app computed (questions asked, follow-ups used, what to do next). It sits last so the long system prompt above stays identical between turns, and the provider can cache it.
 
 ### The five interviewer prompts (R4)
 
-Each variant is the zero-shot baseline plus **exactly one** technique, so a comparison shows what each technique
-adds.
+Each variant is the zero-shot baseline plus **exactly one** technique, so a comparison shows what each technique adds.
 
 | Variant | Technique | What changes |
 |---|---|---|
@@ -107,14 +90,11 @@ adds.
 | P4 | Role-rich + prompt chaining | + detailed persona, the interviewer guideline, and a plan made by a separate planning call |
 | P5 | Self-critique | + `draft` → `critique` against a checklist → final message, all in one turn |
 
-Field order in the JSON schema is part of the technique: a model writes JSON top to bottom, so `notes`, `draft`
-and `critique` come before `message`.
+Field order in the JSON schema is part of the technique: a model writes JSON top to bottom, so `notes`, `draft` and `critique` come before `message`.
 
 ### Which prompt works best
 
-`lab/compare_prompts.py` runs each variant against a simulated candidate (Gemini 2.5 Flash playing strong, weak
-and evasive personas from the fictional sample CV) and has Jev judge each transcript on the interviewer-quality
-items in rubric §12. Full results and limitations: [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md).
+`lab/compare_prompts.py` runs each variant against a simulated candidate (Gemini 2.5 Flash playing strong, weak and evasive personas from the fictional sample CV) and has Jev judge each transcript on the interviewer-quality items in rubric §12. Full results and limitations: [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md).
 
 | Variant | Realism (I9, 1–5) | Mean follow-ups per session | $ / session | s / turn |
 |---|---|---|---|---|
@@ -127,25 +107,18 @@ items in rubric §12. Full results and limitations: [`docs/05-prompt-comparison.
 What the data supports:
 
 - **Zero-shot (P1) is clearly the least realistic.** Every added technique improved realism.
-- **P2, P4 and P5 are within noise of each other** with one session per persona. P4's adaptive follow-ups
-  (2 / 2 / 6) in the first run did **not** reproduce in a second run (4 / 4 / 4).
+- **P2, P4 and P5 are within noise of each other** with one session per persona. P4's adaptive follow-ups (2 / 2 / 6) in the first run did **not** reproduce in a second run (4 / 4 / 4).
 - **All five passed the safety release gate:** no fabrication, coaching, illegal questions or role breaks.
-- **All five packed several sub-questions into a turn.** Spelling out "one question" in the shared base prompt
-  made turns 20–28% shorter. Stacking still happens in at least one turn per session, so it's only partly fixed.
+- **All five packed several sub-questions into a turn.** Spelling out "one question" in the shared base prompt made turns 20–28% shorter. Stacking still happens in at least one turn per session, so it's only partly fixed.
 
-**P4 stays the default.** It follows the full interviewer guideline and a plan of the job's requirements, which
-makes coverage traceable. **P2** is the cheaper alternative, at about 60% of the cost and with no planning wait.
-Separating P2, P4 and P5 for certain needs a larger run (at least 3 sessions per persona).
+**P4 stays the default.** It follows the full interviewer guideline and a plan of the job's requirements, which makes coverage traceable. **P2** is the cheaper alternative, at about 60% of the cost and with no planning wait. Separating P2, P4 and P5 for certain needs a larger run (at least 3 sessions per persona).
 
-E8 (one setting tuned): with P4, `reasoning_effort` medium vs low doubled the latency (2.9 → 6.0 s per turn),
-cost about 50% more, and gave no quality gain. So the interviewer runs at `low`.
+E8 (one setting tuned): with P4, `reasoning_effort` medium vs low doubled the latency (2.9 → 6.0 s per turn), cost about 50% more, and gave no quality gain. So the interviewer runs at `low`.
 
 ### Output types
 
-- **Structured JSON** (`response_format: json_schema`) for every interviewer turn, the interview plan and the
-  judge's evaluation. It's validated with pydantic and repaired once if invalid.
-- **Typed probabilities** from Jev (decision model): `noul` (yes/no probability), `score` (distribution over
-  levels), `choice`. No text to parse, and code sets the thresholds.
+- **Structured JSON** (`response_format: json_schema`) for every interviewer turn, the interview plan and the judge's evaluation. It's validated with pydantic and repaired once if invalid.
+- **Typed probabilities** from Jev (decision model): `noul` (yes/no probability), `score` (distribution over levels), `choice`. No text to parse, and code sets the thresholds.
 - **Free text** inside JSON fields (the interviewer's message, the feedback).
 
 ### Model settings
@@ -159,29 +132,17 @@ cost about 50% more, and gave no quality gain. So the interviewer runs at `low`.
 
 ## Security
 
-Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before it reaches a model, mapped to
-the OWASP Top 10 for LLM applications:
+Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before it reaches a model, mapped to the OWASP Top 10 for LLM applications:
 
-- **LLM01 Prompt injection:** (1) regex rules for known patterns ("ignore previous instructions", fake role
-  markers, chat-template tokens, score manipulation, delimiter escapes); (2) a Jev yes/no check for paraphrased
-  attacks, with a threshold set in code; (3) **spotlighting**: all user text is wrapped in `<document>` /
-  `<candidate_answer>` tags that it cannot close early, and the prompts say this text is data. Blocked answers are
-  never stored or sent. Suspicious documents are flagged for the user to confirm.
-- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend
-  per session. At a limit, code forces the interview to close.
-- **Grounding:** the judge must quote the candidate for requirement credit and strengths, and code verifies the
-  quote against the transcript.
+- **LLM01 Prompt injection:** (1) regex rules for known patterns ("ignore previous instructions", fake role markers, chat-template tokens, score manipulation, delimiter escapes); (2) a Jev yes/no check for paraphrased attacks, with a threshold set in code; (3) **spotlighting**: all user text is wrapped in `<document>` / `<candidate_answer>` tags that it cannot close early, and the prompts say this text is data. Blocked answers are never stored or sent. Suspicious documents are flagged for the user to confirm.
+- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend per session. At a limit, code forces the interview to close.
+- **Grounding:** the judge must quote the candidate for requirement credit and strengths, and code verifies the quote against the transcript.
 
 ## Known limitations
 
-- **Judge variance:** a single judge run can score the same transcript several points apart (observed 56.6 vs
-  71.5). Reports now use the median of 3 parallel runs and show all three scores. On a real interview the runs
-  scored 54.7, 45.0 and 45.0, a median of 45.0. That takes about 60 s and $0.10 per report; set
-  `JUDGE_RUNS=1` in `.env` for the cheaper single run.
-- **Partial rubric:** the red-flag checks (N-items) and the logistics item (S5) are not judged yet. Their weight
-  is redistributed, and only the "no company motivation" penalty applies.
-- **Simulated evaluation:** the prompt comparison uses a simulated candidate and a single fictional application,
-  so the numbers are indicative, not conclusive.
+- **Judge variance:** a single judge run can score the same transcript several points apart (observed 56.6 vs 71.5). Reports now use the median of 3 parallel runs and show all three scores. On a real interview the runs scored 54.7, 45.0 and 45.0, a median of 45.0. That takes about 60 s and $0.10 per report; set `JUDGE_RUNS=1` in `.env` for the cheaper single run.
+- **Partial rubric:** the red-flag checks (N-items) and the logistics item (S5) are not judged yet. Their weight is redistributed, and only the "no company motivation" penalty applies.
+- **Simulated evaluation:** the prompt comparison uses a simulated candidate and a single fictional application, so the numbers are indicative, not conclusive.
 - **Latency:** starting an interview takes about 25 s (planning call), and a report about a minute.
 - **Single user, local only:** MFA is designed and specified (draft PR #4) but not built.
 
@@ -200,8 +161,7 @@ uv run pytest -m "not live"   # unit and UI tests (no API calls) — what CI run
 uv run pytest -m live         # real-API tests (needs .env)
 ```
 
-Every change goes through a branch in a git worktree and a PR to `main`, merged when CI (lint + tests) passes.
-See [`CLAUDE.md`](CLAUDE.md) for the rules.
+Every change goes through a branch in a git worktree and a PR to `main`, merged when CI (lint + tests) passes. See [`CLAUDE.md`](CLAUDE.md) for the rules.
 
 ## Docs
 
