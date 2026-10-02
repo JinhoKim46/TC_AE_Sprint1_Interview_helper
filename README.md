@@ -172,6 +172,8 @@ Every change goes through a branch in a git worktree and a PR to `main`, merged 
 | File | What it is |
 |---|---|
 | [`reports/interview-helper-report.html`](reports/interview-helper-report.html) | Interactive report: clickable system map, session walkthrough, grading map, stack, decisions, prompt chart |
+| [`reports/code-flow-report.html`](reports/code-flow-report.html) | Interactive code-flow report generated from the source: agents, prompt journey, call graph, data flow, sequence diagrams, module index |
+| [`reports/code_map.json`](reports/code_map.json) | The code map behind it (modules, functions, call edges, model calls, templates, tables); regenerate with `uv run python reports/tools/build_code_map.py` |
 | [`reports/2026-10-02-project-report.md`](reports/2026-10-02-project-report.md) | Project report: architecture, stack, decisions, grading map, evidence, risks, next steps |
 | [`docs/00-project-objective.md`](docs/00-project-objective.md) | The course brief and my understanding of every requirement |
 | [`docs/04-design-spec.md`](docs/04-design-spec.md) | The approved design and the changes since |
