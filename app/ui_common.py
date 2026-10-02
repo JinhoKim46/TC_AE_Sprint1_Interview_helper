@@ -74,6 +74,12 @@ def short(text: str | None, limit: int = 90) -> str:
     return cut.rstrip(",;:.-—") + "…"
 
 
+# Chat avatars: neutral icons for both speakers. Streamlit's default user avatar is red, which in this
+# app reads as "error" or "weak score".
+INTERVIEWER_AVATAR = ":material/person:"
+CANDIDATE_AVATAR = ":material/account_circle:"
+
+
 def page_link(page: str, label: str, icon: str | None = None) -> None:
     """st.page_link, falling back to plain text when the page runs on its own (tests run one page
     file without main.py's st.navigation, and then Streamlit can't resolve the page path)."""

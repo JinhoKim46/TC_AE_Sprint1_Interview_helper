@@ -7,7 +7,15 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import BAND_LABELS, LEVEL_LABELS, render_report
-from ui_common import current_user_id, get_engine, go_button, page_link, safe_md
+from ui_common import (
+    CANDIDATE_AVATAR,
+    INTERVIEWER_AVATAR,
+    current_user_id,
+    get_engine,
+    go_button,
+    page_link,
+    safe_md,
+)
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
@@ -150,13 +158,13 @@ def session_detail(summary: SessionSummary) -> None:
         persona = view.persona
         for t in view.turns:
             if t.speaker == "interviewer":
-                with st.chat_message("assistant", avatar=":material/person:"):
+                with st.chat_message("assistant", avatar=INTERVIEWER_AVATAR):
                     st.markdown(
                         f"**{safe_md(persona.name, inline=True)}** · {safe_md(persona.title, inline=True)}"
                         f"\n\n{safe_md(t.text)}"
                     )
             else:
-                with st.chat_message("user"):
+                with st.chat_message("user", avatar=CANDIDATE_AVATAR):
                     st.markdown(safe_md(t.text))
         if not view.turns:
             st.caption("No messages were exchanged.")
