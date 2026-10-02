@@ -100,12 +100,12 @@ input[type=search], input[type=text] { border: 1px solid var(--line); background
 .loc a { color: var(--muted); }
 
 /* agents */
-.agents { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(330px, 100%), 1fr)); gap: 14px; }
+.agents { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .agent { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--accent); border-radius: 10px; padding: 14px 16px; display: grid; gap: 10px; align-content: start; min-width: 0; }
 .agent.jev { border-top-color: var(--amber); }
 .agent.lab { border-top-color: var(--l-lab); }
 .agent .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.agent dl { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 6px 10px; margin: 0; font-size: 13.5px; }
+.agent dl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 6px 10px; margin: 0; font-size: 13.5px; }
 .agent dt { color: var(--muted); font-size: 11px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 3px; }
 .agent dd { margin: 0; min-width: 0; display: grid; gap: 4px; }
 .msg { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 6px; font-size: 13px; }
@@ -154,8 +154,7 @@ details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--muted)
 .seg-own { border-color: var(--accent); } .seg-own .seg-label { color: var(--accent); }
 
 /* templates */
-.tpl-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
-@media (max-width: 900px) { .tpl-layout { grid-template-columns: minmax(0, 1fr); } }
+.tpl-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: auto; }
 .frame svg { display: block; }
 .tnode { cursor: pointer; }
@@ -168,8 +167,7 @@ details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--muted)
 .colhead { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
 
 /* call graph */
-.graph-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 14px; align-items: start; }
-@media (max-width: 1000px) { .graph-layout { grid-template-columns: minmax(0, 1fr); } }
+.graph-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .graph-frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: auto; max-height: 78vh; position: relative; }
 .graph-frame svg { display: block; }
 .mod rect.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
@@ -196,8 +194,11 @@ details.more > summary { cursor: pointer; font-size: 12.5px; color: var(--muted)
 .gedge.in { stroke: var(--amber); stroke-opacity: 0.95; stroke-width: 2; }
 .gedge.path { stroke: var(--bad); stroke-opacity: 1; stroke-width: 2.8; }
 .colhead-g { font-family: var(--font-mono); font-size: 10.5px; fill: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; min-width: 0; position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto; }
-@media (max-width: 1000px) { .panel { position: static; max-height: none; } }
+/* The panel sits above the graph at a fixed height, so clicking around the graph never makes it jump. */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px 24px; min-width: 0; height: 380px; }
+.panel > div { display: grid; gap: 10px; align-content: start; min-width: 0; overflow-y: auto; padding-right: 4px; }
+.panel .ego { max-width: 330px; }
+@media (max-width: 860px) { .panel { grid-template-columns: minmax(0, 1fr); height: auto; } .panel > div { overflow: visible; } }
 .panel .sig { font-family: var(--font-mono); font-size: 12px; background: var(--surface-2); border-radius: 6px; padding: 6px 8px; overflow-wrap: anywhere; }
 .panel ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 3px; }
 .panel li { display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
@@ -309,8 +310,8 @@ footer pre { background: var(--surface); border: 1px solid var(--line); border-r
   <section id="templates">
     <div class="section-head"><h2>Prompt templates and their includes</h2><p>Which function renders which Jinja template, and which partials each template pulls in. Click a template to read it, with the variables it needs and what its renderer passes.</p></div>
     <div class="tpl-layout">
-      <div class="frame" id="tpl-tree"></div>
       <div class="stepcard" id="tpl-view"></div>
+      <div class="frame" id="tpl-tree"></div>
     </div>
   </section>
 
@@ -320,8 +321,8 @@ footer pre { background: var(--surface); border: 1px solid var(--line); border-r
     <div class="toolbar" id="graph-toolbar2"></div>
     <div class="pathbox" id="pathbox" hidden></div>
     <div class="graph-layout">
-      <div class="graph-frame" id="graph-frame"></div>
       <aside class="panel" id="panel" aria-live="polite"></aside>
+      <div class="graph-frame" id="graph-frame"></div>
     </div>
     <div class="legend">
       <span><span class="ln" style="border-color:var(--muted)"></span>calls</span>
@@ -653,9 +654,14 @@ function tplTree() {
   const entry = names.filter((n) => T[n].rendered_by.length).sort();
   const partials = names.filter((n) => T[n].included_by.length && !T[n].rendered_by.length).sort();
   const renderers = [...new Set(entry.flatMap((n) => T[n].rendered_by.map((r) => r.symbol)))].sort();
-  const RH = 26, top = 30, cols = [12, 222, 452], widths = [196, 214, 130];
+  // Base layout is 594px wide; when the frame is wider, scale the columns and boxes up to fill it (text stays
+  // the same size, so longer names fit before truncation).
+  const base = 594, frameW = document.getElementById("tpl-tree").clientWidth - 2;
+  const k = Math.max(1, frameW / base);
+  const RH = 26, top = 30, cols = [12, 222, 452].map((x) => x * k), widths = [196, 214, 130].map((w) => w * k);
   const height = top + Math.max(renderers.length, entry.length, partials.length) * RH + 10;
-  const width = cols[2] + widths[2] + 12;
+  const width = Math.max(base, frameW);
+  const maxChars = (w) => Math.floor((w - 12) / 6.7);
   const svg = s("svg", { width, height, viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Template include tree" });
   [["Rendered by", 0], ["Template", 1], ["Includes", 2]].forEach(([t, i]) => svg.append(s("text", { class: "colhead", x: cols[i], y: 18, text: t })));
   const pos = {};
@@ -680,7 +686,7 @@ function tplTree() {
     const name = key.slice(2);
     const label = isFn ? symLabel(name).replace("interview.", "") : name;
     const node = s("g", { class: "tnode" + (!isFn && name === tplSel ? " sel" : ""), transform: `translate(${p.x},${p.y})`, onclick: () => (isFn ? openInGraph(name) : showTemplate(name)) },
-      s("rect", { width: p.w, height: 20, rx: 4 }), s("text", { x: 6, y: 14, text: truncate(label, isFn ? 30 : 32) }), s("title", { text: isFn ? M.symbols[name].signature : M.templates[name].comment || name }));
+      s("rect", { width: p.w, height: 20, rx: 4 }), s("text", { x: 6, y: 14, text: truncate(label, maxChars(p.w)) }), s("title", { text: isFn ? M.symbols[name].signature : M.templates[name].comment || name }));
     svg.append(node);
   }
   fill(document.getElementById("tpl-tree"), svg);
@@ -706,6 +712,8 @@ function showTemplate(name, scroll) {
 }
 tplTree();
 showTemplate("interviewer_p4_role_rich.md");
+let tplResize;
+window.addEventListener("resize", () => { clearTimeout(tplResize); tplResize = setTimeout(tplTree, 150); });
 
 // ------------------------------------------------------------------ call graph
 const GW = 186, GGAP = 54, HEAD = 30, ROWH = 17, PADB = 6, VGAP = 12, GTOP = 36;
@@ -909,7 +917,7 @@ function egoGraph(id) {
   const callers = [...new Set((IN[id] || []).filter((e) => e.kind !== "construct").map((e) => e.from))].slice(0, 14);
   const callees = [...new Set((OUT[id] || []).filter((e) => e.kind !== "construct").map((e) => e.to))].slice(0, 14);
   const RH = 20, n = Math.max(callers.length, callees.length, 1), height = n * RH + 16, width = 330, cy = height / 2;
-  const svg = s("svg", { width: "100%", viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Callers and callees" });
+  const svg = s("svg", { class: "ego", width: "100%", viewBox: `0 0 ${width} ${height}`, role: "img", "aria-label": "Callers and callees" });
   const node = (x, y, sid, anchor) => {
     const g = s("g", { class: "tnode", onclick: () => selectSym(sid, true) });
     g.append(s("text", { x, y: y + 4, "text-anchor": anchor, text: truncate(M.symbols[sid] ? (M.symbols[sid].kind === "module" ? shortMod(M.symbols[sid].module) + " ‹mod›" : M.symbols[sid].qualname) : sid, 20) }), s("title", { text: symLabel(sid) }));
@@ -923,20 +931,20 @@ function egoGraph(id) {
 function renderPanel() {
   const panel = document.getElementById("panel");
   if (!G.sel) {
-    fill(panel, h("h3", { text: "Pick a module or function" }), h("p", { class: "note", text: "Click a module header to open it, then a function. Or search above. ◆ makes a model call, ▤ touches the database, ¶ renders a prompt template." }));
+    fill(panel, h("div", { style: "grid-column: 1 / -1" }, h("h3", { text: "Pick a module or function" }), h("p", { class: "note", text: "Click a module header in the graph below to open it, then a function. Or search above. ◆ makes a model call, ▤ touches the database, ¶ renders a prompt template." })));
     return;
   }
   if (G.sel.type === "mod") {
     const m = G.sel.id, info = M.modules[m];
-    fill(panel, 
+    fill(panel, h("div", {},
       h("div", {}, h("span", { class: "badge", style: `border-color:${layerColor(info.layer)};color:${layerColor(info.layer)}`, text: info.layer }), " ", h("span", { class: "kind-tag", text: "module" })),
       h("h3", { text: shortMod(m) }), locLink(info.path),
       info.doc ? h("p", { text: info.doc }) : null,
-      info.doc_more ? h("details", { class: "more" }, h("summary", { text: "More of the docstring" }), h("pre", { style: "font-family:var(--font-body);font-size:13px", text: info.doc_more })) : null,
-      h("h4", { text: "Functions" }), h("ul", {}, info.symbols.filter((id) => ROW_KINDS.has(M.symbols[id].kind)).map((id) => h("li", {}, symLink(id, M.symbols[id].kind === "module" ? "(module code)" : M.symbols[id].qualname), h("span", { class: "kind-tag", text: "line " + M.symbols[id].line })))),
+      info.doc_more ? h("details", { class: "more" }, h("summary", { text: "More of the docstring" }), h("pre", { style: "font-family:var(--font-body);font-size:13px", text: info.doc_more })) : null),
+      h("div", {}, h("h4", { text: "Functions" }), h("ul", {}, info.symbols.filter((id) => ROW_KINDS.has(M.symbols[id].kind)).map((id) => h("li", {}, symLink(id, M.symbols[id].kind === "module" ? "(module code)" : M.symbols[id].qualname), h("span", { class: "kind-tag", text: "line " + M.symbols[id].line })))),
       h("h4", { text: "Imports" }), h("div", { class: "chips" }, info.imports.length ? info.imports.map((i) => h("span", { class: "chip mono", onclick: () => { G.expanded.add(i); G.sel = { type: "mod", id: i }; drawGraph(); renderPanel(); }, text: shortMod(i) })) : h("span", { class: "note", text: "no internal imports" })),
       h("h4", { text: "Imported by" }), h("div", { class: "chips" }, info.imported_by.length ? info.imported_by.map((i) => h("span", { class: "chip mono", onclick: () => { G.sel = { type: "mod", id: i }; drawGraph(); renderPanel(); }, text: shortMod(i) })) : h("span", { class: "note", text: "nothing (an entry point)" })),
-      info.external_imports.length ? h("p", { class: "note", text: "Libraries: " + info.external_imports.join(", ") }) : null);
+      info.external_imports.length ? h("p", { class: "note", text: "Libraries: " + info.external_imports.join(", ") }) : null));
     return;
   }
   const id = G.sel.id, sym = M.symbols[id];
@@ -947,18 +955,18 @@ function renderPanel() {
   for (const a of sym.aliases || []) badges.push(h("span", { class: "badge", text: "alias: " + a }));
   if (sym.tested_by) badges.push(h("span", { class: "badge", title: sym.tested_by.join(", "), text: `tested in ${sym.tested_by.length} test file${sym.tested_by.length > 1 ? "s" : ""}` }));
   const out = (OUT[id] || []), inn = (IN[id] || []);
-  fill(panel, 
+  fill(panel, h("div", {},
     h("div", {}, h("span", { class: "badge", style: `border-color:${layerColor(M.modules[sym.module].layer)};color:${layerColor(M.modules[sym.module].layer)}`, text: M.modules[sym.module].layer }), " ", h("span", { class: "kind-tag", text: sym.kind })),
     h("h3", { style: "overflow-wrap:anywhere", text: sym.kind === "module" ? shortMod(sym.module) + " (module code)" : sym.qualname }),
     h("div", {}, h("button", { class: "symlink", type: "button", onclick: () => { G.sel = { type: "mod", id: sym.module }; drawGraph(); renderPanel(); }, text: shortMod(sym.module) }), " · ", locLink(pathOf(id), sym.line)),
     h("div", { class: "sig", text: sym.signature }),
     sym.doc ? h("p", { text: sym.doc }) : h("p", { class: "note", text: "No docstring." }),
     badges.length ? h("div", { class: "chips" }, badges) : null,
-    (inn.length || out.length) ? egoGraph(id) : null,
-    h("h4", { text: `Called by (${new Set(inn.map((e) => e.from)).size})` }), edgeList(inn, "from"),
+    (inn.length || out.length) ? egoGraph(id) : null),
+    h("div", {}, h("h4", { text: `Called by (${new Set(inn.map((e) => e.from)).size})` }), edgeList(inn, "from"),
     h("h4", { text: `Calls (${new Set(out.map((e) => e.to)).size})` }), edgeList(out, "to"),
     sym.unresolved ? h("details", { class: "more", open: true }, h("summary", { text: `Unresolved calls (${sym.unresolved.length})` }), h("ul", {}, sym.unresolved.map((u) => h("li", {}, h("code", { text: u.text }), h("span", { class: "kind-tag", text: "line " + u.line }), u.candidates.length ? h("span", { class: "note" }, " possibly: ", u.candidates.map((c) => symLink(c))) : null)))) : null,
-    sym.externals ? h("details", { class: "more" }, h("summary", { text: `Library calls (${sym.externals.length})` }), h("ul", {}, sym.externals.map((x) => h("li", {}, h("code", { text: x }))))) : null);
+    sym.externals ? h("details", { class: "more" }, h("summary", { text: `Library calls (${sym.externals.length})` }), h("ul", {}, sym.externals.map((x) => h("li", {}, h("code", { text: x }))))) : null));
 }
 const ALL_SYMS = Object.keys(M.symbols).filter((id) => ROW_KINDS.has(M.symbols[id].kind));
 function findSym(text) {
