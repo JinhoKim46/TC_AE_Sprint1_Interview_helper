@@ -591,3 +591,15 @@ def test_last_main_question_can_still_get_a_followup():
     assert "follow-up" in after_last and "candidate_questions" in after_last
     capped = eng.next_directive(eng.Progress(7, 2, 9, False, "candidate"), config, force_close=False)
     assert "All planned main questions are done" in capped
+
+
+def test_ending_a_preparing_session_is_not_undone_by_the_start(setup, monkeypatch):
+    real_turn = eng._interviewer_turn
+
+    def end_meanwhile(deps, row, turns, force_close):
+        eng.end_interview(deps, row.user_id, row.id)  # the user ends it from another tab
+        return real_turn(deps, row, turns, force_close)
+
+    monkeypatch.setattr(eng, "_interviewer_turn", end_meanwhile)
+    sid = start(setup)
+    assert eng.get_session(setup.deps.engine, setup.user_id, sid).status == "ended_early"

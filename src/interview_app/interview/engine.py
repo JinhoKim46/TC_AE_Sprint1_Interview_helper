@@ -461,7 +461,11 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
         raise InterviewError("Could not start the interview. Please try again.") from e
 
     _add_turn(deps.engine, row, 0, "interviewer", turn.message, turn)
-    _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
+    with session_scope(deps.engine) as s:
+        # The user may have ended the session (another tab) while planning ran; don't revive it.
+        still_preparing = s.get(InterviewSession, session_id).status == "preparing"
+    if still_preparing:
+        _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
     return session_id
 
 
