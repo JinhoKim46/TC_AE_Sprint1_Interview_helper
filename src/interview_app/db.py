@@ -174,3 +174,20 @@ class UserPreferences(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", unique=True, index=True)
     prefs_json: str
     updated_at: datetime = Field(default_factory=utcnow)
+
+
+class Evaluation(SQLModel, table=True):
+    """The feedback report for one interview (at most one per session)."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("interviewsession.id", ondelete="CASCADE"), nullable=False, unique=True
+        )
+    )
+    user_id: int = Field(foreign_key="user.id", index=True)
+    judge_model: str
+    overall: float | None = None
+    band: str | None = None
+    report_json: str
+    created_at: datetime = Field(default_factory=utcnow)
