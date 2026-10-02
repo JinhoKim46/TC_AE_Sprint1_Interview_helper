@@ -9,7 +9,7 @@ import hashlib
 import math
 
 import streamlit as st
-from ui_common import current_user_id, document_guard, get_engine, safe_md, settings, short
+from ui_common import current_user_id, document_guard, get_engine, safe_md, short
 
 from interview_app.applications import (
     DocumentIn,
@@ -19,6 +19,7 @@ from interview_app.applications import (
     list_applications,
     update_document,
 )
+from interview_app.config import get_settings
 from interview_app.demo import SAMPLE_COMPANY, SAMPLE_ROLE, load_sample_application
 from interview_app.history import list_sessions
 from interview_app.ingest import (
@@ -35,7 +36,7 @@ from interview_app.interview.engine import active_session
 
 engine = get_engine()
 user_id = current_user_id()
-limits = settings().limits
+limits = get_settings().limits
 # st.file_uploader takes whole megabytes; rounding up keeps the stricter check in extract_pdf_text.
 UPLOAD_MB = max(1, math.ceil(limits.max_upload_mb))
 

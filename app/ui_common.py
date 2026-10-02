@@ -10,8 +10,14 @@ import streamlit as st
 from sqlalchemy.engine import Engine
 from streamlit.errors import StreamlitAPIException
 
-from interview_app.config import Settings, get_settings
+from interview_app.config import get_settings
 from interview_app.db import init_db, make_engine
+from interview_app.interview.engine import EngineDeps
+from interview_app.llm.calllog import make_db_recorder
+from interview_app.llm.client import LLMClient
+from interview_app.llm.decide import DecisionClient
+from interview_app.llm.pricing import PriceCatalog
+from interview_app.security import InjectionGuard
 from interview_app.users import ensure_local_user
 
 
@@ -22,10 +28,6 @@ def get_engine() -> Engine:
     return engine
 
 
-def settings() -> Settings:
-    return get_settings()
-
-
 def current_user_id() -> int:
     """Single local user for now (see interview_app/users.py)."""
     if "user_id" not in st.session_state:
@@ -34,9 +36,7 @@ def current_user_id() -> int:
 
 
 @st.cache_resource
-def get_price_catalog():
-    from interview_app.llm.pricing import PriceCatalog
-
+def get_price_catalog() -> PriceCatalog:
     return PriceCatalog(get_settings())
 
 
@@ -104,26 +104,17 @@ def kept_widget(widget, key: str, default, *args, **kwargs):
 
 
 @st.cache_resource
-def _user_decider(user_id: int):
+def _user_decider(user_id: int) -> DecisionClient:
     # The user-level Jev client (calls outside any interview). Cached because each DecisionClient opens
     # its own HTTP client, and engine_deps() runs on many reruns.
-    from interview_app.llm.calllog import make_db_recorder
-    from interview_app.llm.decide import DecisionClient
-
     return DecisionClient(get_settings(), recorder=make_db_recorder(get_engine(), user_id))
 
 
-def engine_deps():
+def engine_deps() -> EngineDeps:
     """Wire the interview engine to real models, the call log, pricing and the injection guard.
 
     Cheap to call: the factories below build a client only when the engine asks for one, bound to that
     interview session so every call is recorded against it."""
-    from interview_app.interview.engine import EngineDeps
-    from interview_app.llm.calllog import make_db_recorder
-    from interview_app.llm.client import LLMClient
-    from interview_app.llm.decide import DecisionClient
-    from interview_app.security import InjectionGuard
-
     engine, cfg, user_id = get_engine(), get_settings(), current_user_id()
 
     def make_llm(uid: int, session_id: int | None) -> LLMClient:
@@ -145,14 +136,12 @@ def engine_deps():
 
 
 @st.cache_resource
-def _document_guard_for(user_id: int):
+def _document_guard_for(user_id: int) -> InjectionGuard:
     # Document checks belong to no interview, so they use the user-level Jev client, and one guard per
     # user is reused across reruns.
-    from interview_app.security import InjectionGuard
-
     return InjectionGuard(get_settings(), _user_decider(user_id))
 
 
-def document_guard():
+def document_guard() -> InjectionGuard:
     """Injection guard for uploaded documents (rules first, then Jev)."""
     return _document_guard_for(current_user_id())

@@ -18,7 +18,7 @@ def drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview
     """Turn the report's weak spots into the next practice interview for the same application.
     `go_to_interview`: from another page (History), jump to the Interview page once it has started."""
     focus = focus_from_report(
-        report, load_rubric(ui_common.settings().rubric_path), source_session_id=view.id
+        report, load_rubric(ui_common.get_settings().rubric_path), source_session_id=view.id
     )
     if focus is None:
         return

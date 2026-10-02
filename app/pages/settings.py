@@ -7,8 +7,9 @@ Everything saved here is read by the Interview page when a new interview starts 
 """
 
 import streamlit as st
-from ui_common import current_user_id, get_engine, get_price_catalog, kept_widget, settings
+from ui_common import current_user_id, get_engine, get_price_catalog, kept_widget
 
+from interview_app.config import get_settings
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
     TYPE_LABELS,
@@ -25,7 +26,7 @@ from interview_app.usage import usage_summary
 
 engine = get_engine()
 user_id = current_user_id()
-cfg = settings()
+cfg = get_settings()
 prefs = load_preferences(engine, user_id)
 
 # One line per prompting technique (course requirement R4), so the choice is understandable here.
