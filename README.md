@@ -194,6 +194,7 @@ See [`CLAUDE.md`](CLAUDE.md) for the rules.
 
 | File | What it is |
 |---|---|
+| [`reports/2026-10-02-project-report.md`](reports/2026-10-02-project-report.md) | Project report: architecture, stack, decisions, grading map, evidence, risks, next steps |
 | [`docs/00-project-objective.md`](docs/00-project-objective.md) | The course brief and my understanding of every requirement |
 | [`docs/04-design-spec.md`](docs/04-design-spec.md) | The approved design and the changes since |
 | [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md) | R4: the five prompts compared |
