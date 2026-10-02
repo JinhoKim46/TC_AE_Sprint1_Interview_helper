@@ -7,18 +7,20 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import BAND_LABELS, LEVEL_LABELS, render_report
-from ui_common import current_user_id, get_engine, page_link, safe_md
+from ui_common import current_user_id, get_engine, go_button, page_link, safe_md
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
 from interview_app.history import SessionSummary, delete_session, list_sessions, load_report, progress
 from interview_app.interview.engine import get_session
 from interview_app.interview.persona import TYPE_LABELS, InterviewType
+from interview_app.journey import score_summary
 
 engine = get_engine()
 user_id = current_user_id()
 
 st.title("History")
+st.caption("Your past interviews, their reports, and how your scores develop per application.")
 
 STATUS_LABELS = {"active": "In progress", "finished": "Finished", "ended_early": "Ended early"}
 
@@ -114,15 +116,33 @@ def progress_block(application_id: int) -> None:
             st.markdown(f"- **{safe_md(imp.area, inline=True)}** — in {imp.count} reports")
 
 
+def score_metrics(sessions: list[SessionSummary]) -> None:
+    """Three numbers to answer "am I improving?" before any table has to be read."""
+    stats = score_summary(sessions)
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Interviews", len(sessions), help=f"{stats.scored} of them with a feedback report")
+    m2.metric(
+        "Latest score",
+        f"{stats.latest:.0f}" if stats.latest is not None else "—",
+        # The delta shows an arrow and a sign as well as a colour, so it reads without colour too.
+        delta=f"{stats.change:+.0f} vs previous" if stats.change is not None else None,
+        help="Change against the previous interview with a report.",
+    )
+    m3.metric("Best score", f"{stats.best:.0f}" if stats.best is not None else "—")
+
+
 def session_detail(summary: SessionSummary) -> None:
     view = get_session(engine, user_id, summary.session_id)
     if view is None:  # deleted in another tab
         st.warning("This interview no longer exists.")
         return
-    st.header(safe_md(session_label(summary), inline=True))
+    kind = TYPE_LABELS[InterviewType(summary.interview_type)]
+    score = f" · {summary.overall:.0f}/100" if summary.overall is not None else ""
+    st.subheader(f"{safe_md(summary.company, inline=True)} — {kind}{score}")
     st.caption(
-        f"{STATUS_LABELS.get(view.status, view.status)} · {summary.main_questions_asked} main question(s) · "
-        f"{summary.difficulty} · {summary.mode} · prompt {summary.prompt_variant} · ${summary.cost_usd:.4f}"
+        f"{summary.started_at:%Y-%m-%d %H:%M} UTC · {STATUS_LABELS.get(view.status, view.status)} · "
+        f"{summary.main_questions_asked} main question(s) · {summary.difficulty} · {summary.mode} · "
+        f"prompt {summary.prompt_variant} · ${summary.cost_usd:.4f}"
     )
 
     transcript, report_tab = st.tabs(["Transcript", "Report"])
@@ -131,7 +151,10 @@ def session_detail(summary: SessionSummary) -> None:
         for t in view.turns:
             if t.speaker == "interviewer":
                 with st.chat_message("assistant", avatar=":material/person:"):
-                    st.markdown(f"**{persona.name}** · {persona.title}\n\n{safe_md(t.text)}")
+                    st.markdown(
+                        f"**{safe_md(persona.name, inline=True)}** · {safe_md(persona.title, inline=True)}"
+                        f"\n\n{safe_md(t.text)}"
+                    )
             else:
                 with st.chat_message("user"):
                     st.markdown(safe_md(t.text))
@@ -144,8 +167,18 @@ def session_detail(summary: SessionSummary) -> None:
             drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")
+            go_button("pages/interview.py", "Go to the running interview", icon=":material/forum:")
         else:
-            st.info("No report yet. It can be generated from the Interview page after the interview.")
+            # Opening the interview on the Interview page shows its "Get my feedback report" button, so
+            # the judge (and its cost) only ever runs from there, on an explicit click.
+            st.info("No report yet. Open the interview to get one (about a minute).")
+            go_button(
+                "pages/interview.py",
+                "Open it to get feedback",
+                icon=":material/assessment:",
+                key=f"history_get_report_{summary.session_id}",
+                state={"viewing_session": summary.session_id},
+            )
 
     with st.expander("Delete this interview", icon=":material/delete:"):
         # Keyed per session, so a tick given for one interview never carries over to the next one opened.
@@ -177,6 +210,9 @@ app_id = st.selectbox(
     key="history_app",
 )
 sessions = list_sessions(engine, user_id, app_id)
+
+if sessions:
+    score_metrics(sessions)
 
 if app_id is not None:
     progress_block(app_id)

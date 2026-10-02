@@ -10,7 +10,7 @@ import math
 from collections import Counter
 
 import streamlit as st
-from ui_common import current_user_id, document_guard, get_engine, safe_md, short
+from ui_common import current_user_id, document_guard, get_engine, go_button, safe_md, short
 
 from interview_app.applications import (
     DocumentIn,
@@ -163,11 +163,30 @@ def _clear_new_form() -> None:
 
 # --- Create -----------------------------------------------------------------------------------
 
-with st.expander("Add a new application", expanded=not list_applications(engine, user_id)):
+first_visit = not list_applications(engine, user_id)
+with st.expander("Add a new application", icon=":material/add:", expanded=first_visit):
+    # The sample sits first: on a first visit it is the fastest way to see the whole flow.
+    hint, action = st.columns([3, 1], vertical_alignment="center")
+    hint.caption(
+        "No documents at hand? Load a fictional sample (a made-up company, job and CV) to try the app."
+    )
+    if action.button("Load sample application", icon=":material/science:", width="stretch"):
+        # One sample is enough: a second click (or a double click) would add an identical copy.
+        if any(
+            a.company == SAMPLE_COMPANY and a.role == SAMPLE_ROLE for a in list_applications(engine, user_id)
+        ):
+            st.toast("The sample application is already loaded.", icon=":material/info:")
+        else:
+            load_sample_application(engine, user_id, limits=limits)
+            st.toast("Sample application loaded.", icon=":material/check:")
+            st.rerun()
+    st.divider()
+    st.markdown("**Who and what**")
     col1, col2 = st.columns(2)
     company = col1.text_input("Company", key="new_company")
     role = col2.text_input("Role", key="new_role")
 
+    st.markdown("**Documents**: upload a PDF or paste the text. You can fix extracted text before saving.")
     left, right = st.columns(2)
     with left:
         _document_input(DocKind.JD)
@@ -200,23 +219,13 @@ with st.expander("Add a new application", expanded=not list_applications(engine,
             del st.session_state["new_flags"]
             _save(company, role, _collect_documents())
 
-    st.divider()
-    st.caption("No documents at hand? Load a fictional sample application.")
-    if st.button("Load sample application", icon=":material/science:"):
-        # One sample is enough: a second click (or a double click) would add an identical copy.
-        if any(
-            a.company == SAMPLE_COMPANY and a.role == SAMPLE_ROLE for a in list_applications(engine, user_id)
-        ):
-            st.toast("The sample application is already loaded.", icon=":material/info:")
-        else:
-            load_sample_application(engine, user_id, limits=limits)
-            st.rerun()
-
 # --- List / edit / delete ---------------------------------------------------------------------
 
 apps = list_applications(engine, user_id)
-if not apps:
-    st.info("No applications yet.")
+if apps:
+    st.subheader("Your applications")
+else:
+    st.info("No applications yet. Add one above, or load the sample.", icon=":material/folder_open:")
 running = active_session(engine, user_id)
 # One query for every application's interview count, instead of one list_sessions call per application.
 interview_counts = Counter(s.application_id for s in list_sessions(engine, user_id))
@@ -228,10 +237,21 @@ for summary in apps:
         if detail is None:  # deleted in another tab
             continue
         missing = [KIND_LABELS[k] for k in DocKind if k not in detail.documents]
-        st.caption(
-            f"Updated {detail.updated_at:%Y-%m-%d %H:%M}"
+        n = interview_counts[summary.id]
+        info, action = st.columns([3, 1], vertical_alignment="center")
+        info.caption(
+            f"Updated {detail.updated_at:%Y-%m-%d %H:%M} · {n} interview{'' if n == 1 else 's'}"
             + (f" · not provided: {', '.join(missing)}" if missing else "")
         )
+        with action:
+            go_button(
+                "pages/interview.py",
+                "Practise this application",
+                icon=":material/play_arrow:",
+                key=f"practise_{summary.id}",
+                primary=False,
+                state={"start_app_pick": summary.id},
+            )
 
         tabs = st.tabs([KIND_LABELS[k].capitalize() for k in DocKind])
         for tab, kind in zip(tabs, DocKind, strict=True):
@@ -268,7 +288,6 @@ for summary in apps:
                         _save_edit(summary.id, kind, st.session_state[key])
 
         # Interviews are deleted with their application (ON DELETE CASCADE), so the tick says so.
-        n = interview_counts[summary.id]
         consequence = f" (also deletes {n} interview{'' if n == 1 else 's'} and their reports)" if n else ""
         in_use = running is not None and running.application_id == summary.id
         if in_use:
