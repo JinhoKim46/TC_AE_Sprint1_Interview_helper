@@ -251,6 +251,8 @@ table.data td .chips { gap: 4px; }
 .findings { display: grid; gap: 10px; }
 .finding { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--muted); border-radius: 8px; padding: 10px 14px; display: grid; gap: 6px; }
 .finding.worth { border-left-color: var(--bad); } .finding.minor { border-left-color: var(--amber); } .finding.info { border-left-color: var(--l-ui); }
+.finding.fixed { border-left-color: var(--good); } .badge.good { border-color: var(--good); color: var(--good); }
+#fixed-head { margin-top: 18px; }
 .finding .top { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .warnbox { border: 1px solid var(--bad); background: var(--bad-soft); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; }
 footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
@@ -358,8 +360,11 @@ footer pre { background: var(--surface); border: 1px solid var(--line); border-r
   </section>
 
   <section id="findings">
-    <div class="section-head"><h2>Surprises and inconsistencies</h2><p>Things noticed while mapping the code. Generated ones come straight from the code map; the others were found by reading the code, and each is re-checked on every build (a fixed one disappears).</p></div>
+    <div class="section-head"><h2>Surprises and inconsistencies</h2><p>Things noticed while mapping the code. Generated ones come straight from the code map; the others were found by reading the code, and each is re-checked on every build (a fixed one disappears from this list). Fixed ones are recorded below with their pull request.</p></div>
     <div class="findings" id="finding-list"></div>
+    <h3 id="fixed-head">Fixed since earlier reports</h3>
+    <p class="note">Issues found by earlier versions of this report and by the audit before the review, with the pull request that fixed each one.</p>
+    <div class="findings" id="fixed-list"></div>
   </section>
 
   <footer id="regen"></footer>
@@ -1166,6 +1171,12 @@ function renderMermaid() {
       h("div", { class: "top" }, h("span", { class: "badge" + (f.severity === "worth fixing" ? " bad" : f.severity === "minor" ? " amber" : ""), text: f.severity }), h("h3", { text: f.title }), f.generated ? h("span", { class: "kind-tag", text: "generated" }) : null),
       h("p", { text: f.detail }),
       h("div", { class: "chips" }, f.refs.map((r) => (r.symbol ? h("span", { class: "chip mono", onclick: () => openInGraph(r.symbol), text: symLabel(r.symbol) }) : locLink(r.path, r.line))))));
+  }
+  const fixed = document.getElementById("fixed-list");
+  for (const f of X.fixed_findings || []) {
+    fixed.append(h("article", { class: "finding fixed" },
+      h("div", { class: "top" }, h("span", { class: "badge good", text: "fixed in " + f.pr }), h("h3", { text: f.title })),
+      h("p", { text: f.detail })));
   }
 })();
 (function footer() {
