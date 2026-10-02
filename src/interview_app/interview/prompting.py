@@ -11,7 +11,7 @@ Message roles, as the course asks us to explain them:
 
 import json
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
@@ -108,7 +108,6 @@ class PromptContext:
     persona: Persona
     guideline: str = ""
     plan: InterviewPlan | None = None
-    extra: dict = field(default_factory=dict)
 
 
 def interviewer_system_prompt(ctx: PromptContext) -> str:

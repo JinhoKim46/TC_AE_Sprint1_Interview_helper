@@ -5,9 +5,6 @@ import json
 from functools import lru_cache
 from pathlib import Path
 
-# Categories that A-items score. CQ (candidate questions) is judged once per session (S4), not per exchange.
-SCORED_CATEGORIES = ("OPEN", "MOT", "EXP", "TECH", "CASE", "RES", "BEH", "LOG", "CLOSE")
-
 
 class Rubric:
     def __init__(self, data: dict):

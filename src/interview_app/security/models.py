@@ -26,13 +26,11 @@ class GuardResult(BaseModel):
     method: str = METHOD_RULES
 
 
-def ok(method: str = METHOD_RULES, score: float | None = None) -> GuardResult:
+def ok() -> GuardResult:
     """A plain 'allowed, nothing found' result."""
-    return GuardResult(allowed=True, method=method, score=score)
+    return GuardResult(allowed=True)
 
 
-def blocked(
-    reason: str, checks: list[str], method: str = METHOD_RULES, score: float | None = None
-) -> GuardResult:
+def blocked(reason: str, checks: list[str]) -> GuardResult:
     """A 'not allowed' result."""
-    return GuardResult(allowed=False, reason=reason, checks=checks, method=method, score=score)
+    return GuardResult(allowed=False, reason=reason, checks=checks)

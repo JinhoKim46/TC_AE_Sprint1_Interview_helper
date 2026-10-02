@@ -116,11 +116,6 @@ class ScoreAnswer(BaseModel):
     probabilities: list[float]  # probabilities[i] = P(level i+1)
     confidence: float | None = None  # Jev's own confidence; reported, not required
 
-    @property
-    def most_likely_level(self) -> int:
-        """The single most probable level (1-based). Can differ from round(score) on split votes."""
-        return max(range(len(self.probabilities)), key=self.probabilities.__getitem__) + 1
-
 
 class ChoiceAnswer(BaseModel):
     choice: str
