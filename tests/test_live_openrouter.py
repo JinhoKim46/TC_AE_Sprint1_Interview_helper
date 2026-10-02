@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from interview_app.config import Settings
 from interview_app.llm.client import CallRecord, LLMClient
+from interview_app.llm.pricing import PriceCatalog
 
 pytestmark = pytest.mark.live
 
@@ -40,3 +41,12 @@ def test_chat_json_with_open_weight_model(client_and_records):
         model="google/gemma-4-31b-it",
     )
     assert color.name
+
+
+def test_price_catalog_has_interviewer_model(tmp_path):
+    settings = Settings(data_dir=tmp_path)
+    if not settings.openrouter_api_key.get_secret_value():
+        pytest.skip("OPENROUTER_API_KEY not set")
+    info = PriceCatalog(settings).get("openai/gpt-5-mini")
+    assert info is not None
+    assert info.prompt_price and info.prompt_price > 0
