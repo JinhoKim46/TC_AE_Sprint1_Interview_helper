@@ -14,6 +14,7 @@ st.set_page_config(page_title="Interview Helper", page_icon=":material/record_vo
 
 pages = [
     st.Page("pages/home.py", title="Home", icon=":material/home:", default=True),
+    st.Page("pages/interview.py", title="Interview", icon=":material/forum:"),
     st.Page("pages/applications.py", title="Applications", icon=":material/folder_open:"),
 ]
 st.navigation(pages).run()

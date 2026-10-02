@@ -28,3 +28,27 @@ def current_user_id() -> int:
     if "user_id" not in st.session_state:
         st.session_state.user_id = ensure_local_user(get_engine())
     return st.session_state.user_id
+
+
+@st.cache_resource
+def get_price_catalog():
+    from interview_app.llm.pricing import PriceCatalog
+
+    return PriceCatalog(get_settings())
+
+
+def engine_deps():
+    """Wire the interview engine to real models, the call log, pricing and the injection guard."""
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.llm.calllog import make_db_recorder
+    from interview_app.llm.client import LLMClient
+    from interview_app.llm.decide import DecisionClient
+    from interview_app.security import InjectionGuard
+
+    engine, cfg, user_id = get_engine(), get_settings(), current_user_id()
+
+    def make_llm(uid: int, session_id: int | None) -> LLMClient:
+        return LLMClient(cfg, recorder=make_db_recorder(engine, uid, session_id), pricing=get_price_catalog())
+
+    guard = InjectionGuard(cfg, DecisionClient(cfg, recorder=make_db_recorder(engine, user_id)))
+    return EngineDeps(engine=engine, settings=cfg, make_llm=make_llm, guard=guard)
