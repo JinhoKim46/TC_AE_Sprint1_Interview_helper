@@ -6,8 +6,8 @@ before starting a feature. The course brief and grading criteria are in `docs/00
 ## What this is
 
 A local, single-user Streamlit app for mock job interviews. Upload a JD + CV (cover letter optional) →
-an LLM interviewer runs a grounded multi-turn interview → Jev (decision model) scores each answer live →
-an LLM judge writes the final rubric report. It is a Sprint 1 capstone (review Fri 2026-10-09) **and** a
+an LLM interviewer runs a grounded multi-turn interview → an LLM judge writes the final rubric report.
+Jev (a decision model) guards answers against prompt injection and judges interviewer quality in `lab/`. It is a Sprint 1 capstone (review Fri 2026-10-09) **and** a
 tool the owner keeps using afterwards.
 
 ## Commands
@@ -30,6 +30,8 @@ uv add <pkg>    /    uv add --dev <pkg>   # never pip install
 4. Merge only when CI is green: `gh pr merge <n> --squash`. Then `git push origin --delete <branch>`,
    `git worktree remove .worktrees/<dir>`, `git branch -D <branch>`, and `git pull --ff-only` on `main`.
    (`gh pr merge --delete-branch` fails here because `main` is checked out in the main folder.)
+   `origin` uses SSH: the `gh` OAuth token lacks the `workflow` scope, so HTTPS pushes that touch
+   `.github/workflows/` are rejected.
 5. Before opening a PR: review your own diff, and scan it for secrets and personal data.
 
 ## Privacy (the repo is PUBLIC)
@@ -78,9 +80,10 @@ uv add <pkg>    /    uv add --dev <pkg>   # never pip install
 - Jev decisions: `POST https://openrouter.ai/api/alpha/decisions`, model `typesafe/jev-1.13-20260917`.
   Pin exact builds, not `-latest` aliases. Question types: `noul` (yes/no probability), `score`, `choice`.
 - Defaults: interviewer `openai/gpt-5-mini` (course requirement), judge `anthropic/claude-haiku-4.5`,
-  candidate simulator `google/gemini-2.5-flash`, open-weight option `google/gemma-4-31b-it`.
-- This account's OpenRouter guardrail blocks some providers (e.g. DeepSeek). Check a model with a tiny call
-  before making it a default.
+  candidate simulator `google/gemini-2.5-flash`. Open-weight options (H4): `google/gemma-4-31b-it`,
+  `minimax/minimax-m2.7`. The curated picker list and its guardrail check live in `config.py`.
+- This account's OpenRouter guardrail blocks some models (e.g. `openai/gpt-5`, DeepSeek, `z-ai/glm-5.2`).
+  Check a model with a tiny call before adding it.
 
 ## Course requirements to keep visible
 

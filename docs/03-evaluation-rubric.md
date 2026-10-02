@@ -208,7 +208,7 @@ These are `noul` primitives (probability of "yes"). Code uses them for flags and
 
 | ID | Applies to | Instructions (phrased as a property of the answer) | Yes means |
 |---|---|---|---|
-| N1 `contradicts_documents` | all | Does any statement the candidate makes about their own experience, dates, roles, results or qualifications conflict with `state.cv` or `state.cover_letter`? Count it only if the two cannot both be true; rounding (2.2× vs "about 2×") and additional detail do not count. | A real contradiction exists |
+| N1 `contradicts_documents` | all | Does any statement the candidate makes about their own experience, dates, roles, results or qualifications conflict with `state.cv` or `state.cover_letter`? Count it only if the two cannot both be true; rounding (38% vs "about 40%") and additional detail do not count. | A real contradiction exists |
 | N2 `major_unsupported_claim` | EXP, TECH, RES, BEH | Does the candidate claim a significant qualification, role, result or skill that the documents do not mention and that is not plausibly part of a project the documents describe? | A significant new claim with no basis in the documents |
 | N3 `concrete_episode` | OPEN, EXP, BEH, RES | Is the answer about a specific real episode or project the candidate was part of, as opposed to general habits or a hypothetical? | Specific real episode |
 | N4 `quantified_result` | EXP, BEH, RES | Does the candidate state a result with a number or a verifiable observable outcome? | Yes |
@@ -372,7 +372,7 @@ When a decision model is used, take the probability-weighted `score` (a continuo
       "category": "EXP",
       "turn_ids": ["T07", "T08", "T09", "T10"],
       "items": {
-        "A3": {"score": 4, "evidence": [{"turn_id": "T08", "quote": "reduced scan time by 2.2x on 40 test subjects"}], "rationale": "Specific project with a quantified result; baseline not stated."},
+        "A3": {"score": 4, "evidence": [{"turn_id": "T08", "quote": "cut inference latency by 38% on the field test set"}], "rationale": "Specific project with a quantified result; baseline not stated."},
         "A4": {"score": 3, "evidence": [{"turn_id": "T10", "quote": "I implemented the training loop"}], "rationale": "Own tasks named only after an ownership follow-up."}
       },
       "checks": {"N1": {"p": 0.04}, "N4": {"p": 0.97}, "N5": {"p": 0.22}},
@@ -482,14 +482,14 @@ Example request for one EXP exchange:
 ```json
 {
   "state": {
-    "role": "Machine Learning Scientist, MRI reconstruction",
-    "jd_requirements": [{"id": "R1", "text": "Deep learning for MR image reconstruction", "priority": "must"}],
-    "cv_excerpt": "Built deep learning MRI reconstruction models that shortened scan times ...",
+    "role": "Machine Learning Engineer, Perception",
+    "jd_requirements": [{"id": "R1", "text": "Deploying detection models under tight latency budgets", "priority": "must"}],
+    "cv_excerpt": "Quantised and shipped a segmentation model to phones, cutting latency by 38% ...",
     "exchange": {
       "category": "EXP",
       "targets": ["R1"],
       "turns": [
-        {"turn_id": "T07", "speaker": "interviewer", "text": "Walk me through your accelerated MRCP reconstruction project."},
+        {"turn_id": "T07", "speaker": "interviewer", "text": "Walk me through your on-device segmentation project."},
         {"turn_id": "T08", "speaker": "candidate", "text": "..."}
       ]
     }
