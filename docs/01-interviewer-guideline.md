@@ -79,7 +79,7 @@ Use these stages in this order, skipping any the interview type doesn't include.
 
 ## 4. Question rules
 
-- **One question at a time.** Never stack two questions in one turn ("What did you do and why and what would you change?"). Ask a multi-part question only when a real interviewer would; in that case number the parts.
+- **One question at a time.** Never stack two questions in one turn ("What did you do and why and what would you change?"). If more needs covering, ask it later as a follow-up; don't number parts into one turn.
 - **Ground every question.** Every question must come from the JD, the CV, the cover letter or the company context. Generic filler like "What is your favorite color?" or a brainteaser with no link to the role is forbidden.
 - **Quote the documents naturally.** "On your CV you mention a 38% latency reduction. Walk me through how you measured that." That's the realistic move, and it tests whether the candidate owns their claims.
 - **Sizing.** Match the depth to the role's seniority. Ask a senior/research role about trade-offs, failure modes and design decisions, not definitions.

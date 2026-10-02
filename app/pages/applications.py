@@ -102,6 +102,15 @@ def _save(company: str, role: str, documents: list[DocumentIn]) -> None:
         st.rerun()
 
 
+def _save_edit(application_id: int, kind: DocKind, text: str) -> None:
+    try:
+        for warning in update_document(engine, user_id, application_id, kind, text, limits=limits):
+            st.warning(warning)
+        st.toast("Saved.", icon=":material/check:")
+    except IngestError as e:
+        st.error(str(e))
+
+
 def _clear_new_form() -> None:
     for key in list(st.session_state):
         if key.startswith("new_"):
@@ -176,15 +185,19 @@ for summary in apps:
                     height=250,
                     label_visibility="collapsed",
                 )
+                flag_key = f"edit_flag_{summary.id}_{kind}"
                 if st.button("Save changes", key=f"save_{summary.id}_{kind}"):
-                    try:
-                        for warning in update_document(
-                            engine, user_id, summary.id, kind, st.session_state[key], limits=limits
-                        ):
-                            st.warning(warning)
-                        st.toast("Saved.", icon=":material/check:")
-                    except IngestError as e:
-                        st.error(str(e))
+                    # Edited text is as untrusted as uploaded text, so it passes the same document check.
+                    verdict = document_guard().check_document(KIND_LABELS[kind], st.session_state[key])
+                    if verdict.flagged:
+                        st.session_state[flag_key] = verdict.reason
+                    else:
+                        _save_edit(summary.id, kind, st.session_state[key])
+                if reason := st.session_state.get(flag_key):
+                    st.warning(reason, icon=":material/shield:")
+                    if st.button("Save anyway", key=f"save_anyway_{summary.id}_{kind}"):
+                        del st.session_state[flag_key]
+                        _save_edit(summary.id, kind, st.session_state[key])
 
         confirm = st.checkbox("I want to delete this application", key=f"confirm_{summary.id}")
         if st.button("Delete", key=f"delete_{summary.id}", disabled=not confirm, icon=":material/delete:"):

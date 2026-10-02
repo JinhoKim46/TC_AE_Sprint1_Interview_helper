@@ -24,14 +24,13 @@ from interview_app.evaluation.schemas import (
     Strength,
 )
 
-NEEDS_EVIDENCE = True  # rubric judge_settings.evidence_required: a score without cited turns is ignored
 QUOTE_MATCH = 0.8  # share of a quote's words that must appear in the cited candidate turns
 
 
-def usable(item: ItemScore, allowed: set[str], valid_turns: set[str]) -> bool:
+def usable(item: ItemScore, allowed: set[str], valid_turns: set[str], evidence_required: bool = True) -> bool:
     if item.item not in allowed or item.score is None:
         return False
-    return not NEEDS_EVIDENCE or any(e in valid_turns for e in item.evidence)
+    return not evidence_required or any(e in valid_turns for e in item.evidence)
 
 
 def _words(text: str) -> list[str]:
@@ -103,7 +102,11 @@ def aggregate(
     for ex in exchanges:
         weights = rubric.weights_for(ex.category, ex.question_id)
         judged = by_id.get(ex.exchange_id)
-        items = [i for i in (judged.items if judged else []) if usable(i, set(weights), valid_turns)]
+        items = [
+            i
+            for i in (judged.items if judged else [])
+            if usable(i, set(weights), valid_turns, rubric.evidence_required)
+        ]
         m = metric_by_id[ex.exchange_id]
         flags = (["long answer"] if m.long_answer else []) + (["short answer"] if m.short_answer else [])
         reports.append(

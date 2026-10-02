@@ -6,7 +6,7 @@ A mock-interview practice app tailored to **one specific job application** (Turi
 
 ```bash
 uv sync
-cp .env.example .env          # set OPENROUTER_API_KEY (APP_SECRET_KEY is only for the parked MFA work)
+cp .env.example .env          # set OPENROUTER_API_KEY
 uv run streamlit run app/main.py
 ```
 

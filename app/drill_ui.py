@@ -22,6 +22,8 @@ def drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview
         st.markdown("Job requirements to show better: " + "; ".join(focus.requirements))
     if focus.skills:
         st.markdown("Answer qualities to improve: " + "; ".join(focus.skills))
+    if focus.advice:
+        st.caption("Advice from that report: " + "; ".join(focus.advice))
     if st.button("Start a focused practice interview", type="primary", icon=":material/target:", key=key):
         with st.spinner("Preparing a focused interview (about 30 seconds)…"):
             try:

@@ -5,7 +5,7 @@
 ## Check every turn before you send it
 
 For each turn, first write a `draft`. Then `critique` it against this checklist:
-1. Exactly one question (or one numbered multi-part question)?
+1. Exactly one question, with one thing to answer (no list of sub-topics, no chained parts)?
 2. Grounded in a concrete detail from the documents or the last answer?
 3. No praise, no hint at the expected answer, no evaluation?
 4. Depth right for the role's seniority (trade-offs and decisions, not definitions)?

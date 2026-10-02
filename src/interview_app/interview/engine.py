@@ -71,6 +71,19 @@ class EngineDeps:
     guard: InjectionGuard | None = None
     # Jev client for live scores in coaching mode. None -> coaching still works, just without scores.
     decider: DecisionClient | None = None
+    # Builds a Jev client whose call log is bound to (user_id, session_id), like make_llm. When set, the
+    # guard and live scoring use it, so their (small) cost counts towards that interview's cost and budget.
+    make_decider: Callable[[int, int | None], DecisionClient] | None = None
+
+
+def _session_guard(deps: EngineDeps, user_id: int, session_id: int) -> InjectionGuard | None:
+    if deps.guard is not None and deps.make_decider is not None:
+        return InjectionGuard(deps.settings, deps.make_decider(user_id, session_id))
+    return deps.guard
+
+
+def _session_decider(deps: EngineDeps, user_id: int, session_id: int) -> DecisionClient | None:
+    return deps.make_decider(user_id, session_id) if deps.make_decider is not None else deps.decider
 
 
 @dataclass
@@ -418,13 +431,14 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
     return session_id
 
 
-def _check_answer(deps: EngineDeps, session_id: int, text: str) -> GuardResult | None:
+def _check_answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> GuardResult | None:
     """Run the limits and the injection guard. Returns the blocking result, or None if the answer is ok."""
     length = check_answer_length(text, deps.settings.limits)
     if not length.allowed:
         return length
-    if deps.guard is not None:
-        verdict = deps.guard.check_answer(text)
+    guard = _session_guard(deps, user_id, session_id)
+    if guard is not None:
+        verdict = guard.check_answer(text)
         if not verdict.allowed:
             # The blocked text is never stored or sent to any model.
             log.info("Blocked answer in session %s: %s", session_id, verdict.checks)
@@ -440,7 +454,8 @@ def _live_feedback(
     deps: EngineDeps, row: InterviewSession, turns: list[Turn], text: str
 ) -> LiveFeedback | None:
     """Live scores for the answer to the latest interviewer turn, or None if scoring is off or fails."""
-    if deps.decider is None or not deps.settings.features.live_scoring:
+    decider = _session_decider(deps, row.user_id, row.id)
+    if decider is None or not deps.settings.features.live_scoring:
         return None
     # Imported here, not at the top: exchanges.py imports this module (for TurnView), so a top-level
     # import would be circular.
@@ -454,7 +469,7 @@ def _live_feedback(
     question = next(t.text for t in reversed(turns) if t.speaker == "interviewer")
     documents = json.loads(row.documents_json)
     return live_score(
-        deps.decider,
+        decider,
         load_rubric(deps.settings.rubric_path),
         category=exchanges[-1].category,
         question=question,
@@ -503,7 +518,7 @@ def answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> Answer
         raise InterviewError("This interview is not active.")
     row, turns = loaded
 
-    if (blocked := _check_answer(deps, session_id, text)) is not None:
+    if (blocked := _check_answer(deps, user_id, session_id, text)) is not None:
         return AnswerOutcome(False, blocked, None, False)
 
     if _is_coaching(row):
@@ -530,7 +545,7 @@ def retry(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerO
     if _retries_used(all_turns) >= deps.settings.limits.max_retries_per_answer:
         raise InterviewError("You've used all retries for this answer. Press Continue.")
 
-    if (blocked := _check_answer(deps, session_id, text)) is not None:
+    if (blocked := _check_answer(deps, user_id, session_id, text)) is not None:
         return AnswerOutcome(False, blocked, None, False)  # the earlier attempt stays as it was
 
     return _store_scored_answer(deps, row, turns[:-1], text.strip(), replaces=turns[-1])

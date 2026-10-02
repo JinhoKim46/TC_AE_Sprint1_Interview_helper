@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from interview_app.db import LLMCall, RecoveryCode, User, make_engine, session_scope
+from interview_app.db import Application, LLMCall, User, make_engine, session_scope
 from interview_app.llm.calllog import make_db_recorder
 from interview_app.llm.client import CallRecord
 
@@ -22,9 +22,9 @@ def test_usernames_are_unique(engine):
 
 
 def test_foreign_keys_are_enforced(engine):
-    # A recovery code for a user that doesn't exist must be rejected (PRAGMA foreign_keys=ON).
+    # An application for a user that doesn't exist must be rejected (PRAGMA foreign_keys=ON).
     with pytest.raises(IntegrityError), session_scope(engine) as s:
-        s.add(RecoveryCode(user_id=999, code_hash="x"))
+        s.add(Application(user_id=999, company="Acme", role="Engineer"))
 
 
 def test_session_scope_rolls_back_on_error(engine):

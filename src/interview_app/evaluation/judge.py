@@ -79,14 +79,15 @@ def judge_messages(
 
 
 def run_judge(
-    llm: LLMClient, settings: Settings, messages: list[dict], model: str | None = None
+    llm: LLMClient, settings: Settings, messages: list[dict], model: str | None = None, temperature: float = 0
 ) -> Judgement:
+    """`temperature` comes from rubric.json judge_settings (0: the same transcript should score the same)."""
     judgement, _ = llm.chat_json(
         "judge",
         messages,
         Judgement,
         model=model or settings.models.judge,
-        temperature=0,
+        temperature=temperature,
         max_tokens=8000,
     )
     return judgement

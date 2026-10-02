@@ -1,11 +1,12 @@
-"""Render a feedback report (shared by the Interview page and, later, History)."""
+"""Render a feedback report (shared by the Interview and History pages)."""
 
 import streamlit as st
 
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
 
-# Above this spread between judge runs (on the 0-100 scale) the overall score is flagged as approximate.
+# Above this spread between judge runs, the overall score (0-100) is flagged as approximate. This is not a
+# copy of rubric.json's `unstable_spread` (2 levels on one item's 1-5 scale); it measures whole runs.
 UNSTABLE_SPREAD = 15
 
 BAND_LABELS = {

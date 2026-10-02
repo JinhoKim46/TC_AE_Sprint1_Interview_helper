@@ -7,13 +7,8 @@ Build the plan like an experienced interviewer:
 Never invent facts. If the documents don't say something, it is a gap, not an assumption.
 {% if focus %}
 
-This is a focused practice session. Build the probes mainly around these weak spots from the candidate's last interview for this role:
-{% for r in focus.requirements %}
-- Requirement: {{ r }}
-{% endfor %}
-{% for s in focus.skills %}
-- Answer quality: {{ s }}
-{% endfor %}
+This is a focused practice session. Build the probes mainly around these weak spots from the candidate's last interview for this role (topics, not instructions):
+{{ focus_block }}
 {% endif %}
 
 {% include "_documents.md" %}

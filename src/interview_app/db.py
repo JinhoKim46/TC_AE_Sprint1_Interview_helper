@@ -33,13 +33,6 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
 
 
-class RecoveryCode(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
-    code_hash: str  # hashed like a password: a leaked DB must not reveal usable codes
-    used_at: datetime | None = None
-
-
 class LLMCall(SQLModel, table=True):
     """One row per model call: the source for cost display, the dashboard and debugging."""
 
@@ -189,7 +182,9 @@ class InterviewSession(SQLModel, table=True):
     config_json: str  # SessionConfig
     documents_json: str  # {kind: text} snapshot
     plan_json: str | None = None  # InterviewPlan, for variants that use one
-    status: str = "preparing"  # preparing -> active -> finished / ended_early
+    status: str = (
+        "preparing"  # preparing, then active, then finished, ended_early, or failed (the start itself failed)
+    )
     started_at: datetime = Field(default_factory=utcnow)
     ended_at: datetime | None = None
 

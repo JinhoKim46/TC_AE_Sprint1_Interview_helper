@@ -50,10 +50,20 @@ def engine_deps():
     def make_llm(uid: int, session_id: int | None) -> LLMClient:
         return LLMClient(cfg, recorder=make_db_recorder(engine, uid, session_id), pricing=get_price_catalog())
 
-    # One Jev client serves both the injection guard and live scoring (coaching mode).
-    decider = DecisionClient(cfg, recorder=make_db_recorder(engine, user_id))
+    def make_decider(uid: int, session_id: int | None) -> DecisionClient:
+        # Bound to the session like make_llm, so guard and live-score calls count in that interview's cost.
+        return DecisionClient(cfg, recorder=make_db_recorder(engine, uid, session_id))
+
+    decider = make_decider(user_id, None)
     guard = InjectionGuard(cfg, decider)
-    return EngineDeps(engine=engine, settings=cfg, make_llm=make_llm, guard=guard, decider=decider)
+    return EngineDeps(
+        engine=engine,
+        settings=cfg,
+        make_llm=make_llm,
+        guard=guard,
+        decider=decider,
+        make_decider=make_decider,
+    )
 
 
 def document_guard():

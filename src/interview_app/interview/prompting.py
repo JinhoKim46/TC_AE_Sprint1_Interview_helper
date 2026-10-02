@@ -75,6 +75,16 @@ def document_blocks(company: str, role: str, documents: dict[DocKind, str]) -> t
     return blocks, missing
 
 
+def focus_block(focus) -> str:
+    """Drill targets as a data block. They come from the judge's reading of the JD and the answers,
+    so text that started in an untrusted document could reach them: they are wrapped like any document."""
+    if focus is None:
+        return ""
+    lines = [f"- Requirement to probe: {r}" for r in focus.requirements]
+    lines += [f"- Answer quality to test: {s}" for s in focus.skills]
+    return wrap_untrusted("practice_targets", "\n".join(lines))
+
+
 def _contract_fields(schema: type) -> list[tuple[str, str]]:
     props = schema.model_json_schema()["properties"]
     return [(name, prop.get("description", name.replace("_", " "))) for name, prop in props.items()]
@@ -110,9 +120,9 @@ def interviewer_system_prompt(ctx: PromptContext) -> str:
         fields=_contract_fields(TURN_SCHEMA[variant]),
         guideline=ctx.guideline,
         plan_json=ctx.plan.model_dump_json(indent=1) if ctx.plan else "",
-        # A weak-spot drill's targets (None for a normal interview). They come from our own validated
-        # report, not from the user, so they sit in the instructions; every variant gets them via _base.md.
+        # A weak-spot drill's targets (None for a normal interview); every variant gets them via _base.md.
         focus=ctx.config.focus,
+        focus_block=focus_block(ctx.config.focus),
     )
 
 
@@ -149,6 +159,7 @@ def plan_messages(
         documents=blocks,
         missing=missing,
         focus=config.focus,
+        focus_block=focus_block(config.focus),
     )
     return [
         {"role": "system", "content": "You are an experienced interviewer preparing for an interview."},
