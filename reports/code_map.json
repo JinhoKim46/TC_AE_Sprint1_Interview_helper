@@ -774,10 +774,29 @@
  },
  "edges": [
   {
+   "from": "app.drill_ui:_joined",
+   "kind": "call",
+   "lines": [
+    14
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    32
+    27,
+    29,
+    31
+   ],
+   "to": "app.drill_ui:_joined"
+  },
+  {
+   "from": "app.drill_ui:drill_offer",
+   "kind": "call",
+   "lines": [
+    35,
+    60
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -785,7 +804,7 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    32
+    60
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -793,7 +812,23 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    16
+    35
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.drill_ui:drill_offer",
+   "kind": "call",
+   "lines": [
+    38
+   ],
+   "to": "app.ui_common:page_link"
+  },
+  {
+   "from": "app.drill_ui:drill_offer",
+   "kind": "call",
+   "lines": [
+    21
    ],
    "to": "app.ui_common:settings"
   },
@@ -801,7 +836,7 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    16
+    21
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -809,7 +844,7 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    30
+    58
    ],
    "to": "interview_app.interview.drill:drill_config"
   },
@@ -817,7 +852,7 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    15
+    20
    ],
    "to": "interview_app.interview.drill:focus_from_report"
   },
@@ -825,7 +860,15 @@
    "from": "app.drill_ui:drill_offer",
    "kind": "call",
    "lines": [
-    31
+    35
+   ],
+   "to": "interview_app.interview.engine:active_session"
+  },
+  {
+   "from": "app.drill_ui:drill_offer",
+   "kind": "call",
+   "lines": [
+    59
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -833,8 +876,16 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    136,
-    151
+    250
+   ],
+   "to": "app.pages.applications:_check_length"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    178,
+    199
    ],
    "to": "app.pages.applications:_collect_documents"
   },
@@ -842,10 +893,10 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    129,
-    130,
-    132,
-    133
+    171,
+    172,
+    174,
+    175
    ],
    "to": "app.pages.applications:_document_input"
   },
@@ -853,7 +904,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    139
+    182
    ],
    "to": "app.pages.applications:_flag_documents"
   },
@@ -861,8 +912,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    143,
-    151
+    191,
+    199
    ],
    "to": "app.pages.applications:_save"
   },
@@ -870,8 +921,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    195,
-    200
+    259,
+    264
    ],
    "to": "app.pages.applications:_save_edit"
   },
@@ -879,7 +930,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    30
+    37
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -887,7 +938,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    191
+    254
    ],
    "to": "app.ui_common:document_guard"
   },
@@ -895,7 +946,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    29
+    36
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -903,7 +954,16 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    31
+    221,
+    222
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    38
    ],
    "to": "app.ui_common:settings"
   },
@@ -911,7 +971,16 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    204
+    221,
+    222
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    278
    ],
    "to": "interview_app.applications:delete_application"
   },
@@ -919,7 +988,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    167
+    223
    ],
    "to": "interview_app.applications:get_application"
   },
@@ -927,8 +996,9 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    122,
-    161
+    164,
+    206,
+    215
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -936,7 +1006,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    156
+    210
    ],
    "to": "interview_app.demo:load_sample_application"
   },
@@ -944,16 +1014,48 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    191
+    267
+   ],
+   "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    218
+   ],
+   "to": "interview_app.interview.engine:active_session"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    254
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_document"
+  },
+  {
+   "from": "app.pages.applications:_check_length",
+   "kind": "call",
+   "lines": [
+    108
+   ],
+   "to": "interview_app.ingest:clean_text"
+  },
+  {
+   "from": "app.pages.applications:_check_length",
+   "kind": "call",
+   "lines": [
+    108
+   ],
+   "to": "interview_app.ingest:validate_document"
   },
   {
    "from": "app.pages.applications:_collect_documents",
    "kind": "call",
    "lines": [
-    80,
-    84
+    97,
+    101
    ],
    "to": "app.pages.applications:_text_key"
   },
@@ -961,7 +1063,7 @@
    "from": "app.pages.applications:_collect_documents",
    "kind": "construct",
    "lines": [
-    77
+    94
    ],
    "to": "interview_app.applications:DocumentIn"
   },
@@ -969,8 +1071,16 @@
    "from": "app.pages.applications:_document_input",
    "kind": "call",
    "lines": [
-    57,
-    68
+    72
+   ],
+   "to": "app.pages.applications:_check_length"
+  },
+  {
+   "from": "app.pages.applications:_document_input",
+   "kind": "call",
+   "lines": [
+    73,
+    84
    ],
    "to": "app.pages.applications:_text_key"
   },
@@ -978,7 +1088,7 @@
    "from": "app.pages.applications:_document_input",
    "kind": "call",
    "lines": [
-    56
+    69
    ],
    "to": "interview_app.ingest:extract_pdf_text"
   },
@@ -986,7 +1096,15 @@
    "from": "app.pages.applications:_flag_documents",
    "kind": "call",
    "lines": [
-    89
+    114
+   ],
+   "to": "app.pages.applications:_check_length"
+  },
+  {
+   "from": "app.pages.applications:_flag_documents",
+   "kind": "call",
+   "lines": [
+    115
    ],
    "to": "app.ui_common:document_guard"
   },
@@ -994,7 +1112,7 @@
    "from": "app.pages.applications:_flag_documents",
    "kind": "call",
    "lines": [
-    90
+    116
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_document"
   },
@@ -1002,7 +1120,7 @@
    "from": "app.pages.applications:_save",
    "kind": "call",
    "lines": [
-    100
+    141
    ],
    "to": "app.pages.applications:_clear_new_form"
   },
@@ -1010,7 +1128,15 @@
    "from": "app.pages.applications:_save",
    "kind": "call",
    "lines": [
-    96
+    130
+   ],
+   "to": "app.pages.applications:_fingerprint"
+  },
+  {
+   "from": "app.pages.applications:_save",
+   "kind": "call",
+   "lines": [
+    136
    ],
    "to": "interview_app.applications:create_application"
   },
@@ -1018,7 +1144,7 @@
    "from": "app.pages.applications:_save_edit",
    "kind": "call",
    "lines": [
-    107
+    148
    ],
    "to": "interview_app.applications:update_document"
   },
@@ -1026,7 +1152,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    175
+    181
    ],
    "to": "app.pages.history:progress_block"
   },
@@ -1034,7 +1160,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    196
+    202
    ],
    "to": "app.pages.history:session_detail"
   },
@@ -1042,7 +1168,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    191
+    197
    ],
    "to": "app.pages.history:session_label"
   },
@@ -1050,7 +1176,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    183
+    189
    ],
    "to": "app.pages.history:sessions_table"
   },
@@ -1074,7 +1200,15 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    165
+    164
+   ],
+   "to": "app.ui_common:page_link"
+  },
+  {
+   "from": "app.pages.history:<module>",
+   "kind": "call",
+   "lines": [
+    167
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1082,10 +1216,18 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    159,
-    172
+    161,
+    178
    ],
    "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.pages.history:progress_block",
+   "kind": "call",
+   "lines": [
+    113
+   ],
+   "to": "app.ui_common:safe_md"
   },
   {
    "from": "app.pages.history:progress_block",
@@ -1131,6 +1273,16 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
+    121,
+    133,
+    136
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.pages.history:session_detail",
+   "kind": "call",
+   "lines": [
     142
    ],
    "to": "app.ui_common:settings"
@@ -1139,7 +1291,7 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    152
+    154
    ],
    "to": "interview_app.history:delete_session"
   },
@@ -1203,6 +1355,14 @@
    "from": "app.pages.home:<module>",
    "kind": "call",
    "lines": [
+    19
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
     12
    ],
    "to": "interview_app.applications:list_applications"
@@ -1211,8 +1371,8 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    262,
-    264
+    328,
+    334
    ],
    "to": "app.pages.interview:chat"
   },
@@ -1220,7 +1380,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    266
+    336
    ],
    "to": "app.pages.interview:start_form"
   },
@@ -1228,7 +1388,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    27
+    26
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1236,7 +1396,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    26
+    25
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1244,7 +1404,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    259
+    325
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1252,15 +1412,47 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    263
+    331
    ],
    "to": "interview_app.interview.engine:get_session"
+  },
+  {
+   "from": "app.pages.interview:blocked_answer_editor",
+   "kind": "call",
+   "lines": [
+    172
+   ],
+   "to": "app.pages.interview:submit"
+  },
+  {
+   "from": "app.pages.interview:blocked_answer_editor",
+   "kind": "ref",
+   "lines": [
+    172
+   ],
+   "to": "interview_app.interview.engine:answer"
+  },
+  {
+   "from": "app.pages.interview:blocked_answer_editor",
+   "kind": "ref",
+   "lines": [
+    172
+   ],
+   "to": "interview_app.interview.engine:retry"
   },
   {
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    203
+    262
+   ],
+   "to": "app.pages.interview:blocked_answer_editor"
+  },
+  {
+   "from": "app.pages.interview:chat",
+   "kind": "call",
+   "lines": [
+    265
    ],
    "to": "app.pages.interview:coaching_choice"
   },
@@ -1268,7 +1460,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    198
+    258
    ],
    "to": "app.pages.interview:earlier_attempts"
   },
@@ -1276,7 +1468,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    228
+    292
    ],
    "to": "app.pages.interview:feedback"
   },
@@ -1284,7 +1476,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    197
+    257
    ],
    "to": "app.pages.interview:live_chips"
   },
@@ -1292,7 +1484,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    216
+    278
    ],
    "to": "app.pages.interview:submit"
   },
@@ -1300,16 +1492,28 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    210,
-    224
+    231,
+    272,
+    288
    ],
    "to": "app.ui_common:engine_deps"
   },
   {
    "from": "app.pages.interview:chat",
+   "kind": "call",
+   "lines": [
+    219,
+    238,
+    251,
+    254
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.pages.interview:chat",
    "kind": "ref",
    "lines": [
-    216
+    278
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1317,7 +1521,8 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    224
+    231,
+    288
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -1325,7 +1530,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    210
+    272
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1333,7 +1538,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    149
+    190
    ],
    "to": "app.pages.interview:submit"
   },
@@ -1341,7 +1546,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    164
+    205
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1349,7 +1554,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    151
+    181
    ],
    "to": "app.ui_common:settings"
   },
@@ -1357,7 +1562,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    164
+    205
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1365,7 +1570,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "ref",
    "lines": [
-    149
+    190
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1373,15 +1578,23 @@
    "from": "app.pages.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    122
+    125
    ],
    "to": "app.pages.interview:live_chips"
+  },
+  {
+   "from": "app.pages.interview:earlier_attempts",
+   "kind": "call",
+   "lines": [
+    123
+   ],
+   "to": "app.ui_common:safe_md"
   },
   {
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    256
+    322
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -1389,7 +1602,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    254
+    320
    ],
    "to": "app.report_view:render_report"
   },
@@ -1397,8 +1610,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    241,
-    249
+    315
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1406,8 +1618,8 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    249,
-    254
+    315,
+    320
    ],
    "to": "app.ui_common:settings"
   },
@@ -1415,7 +1627,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    248
+    314
    ],
    "to": "interview_app.evaluation.service:evaluate_session"
   },
@@ -1423,15 +1635,15 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    241
+    307
    ],
-   "to": "interview_app.evaluation.service:stored_report"
+   "to": "interview_app.history:load_report"
   },
   {
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    255
+    321
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -1439,7 +1651,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    249
+    315
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -1447,15 +1659,23 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    247
+    313
    ],
    "to": "interview_app.preferences:load_preferences"
+  },
+  {
+   "from": "app.pages.interview:live_chips",
+   "kind": "call",
+   "lines": [
+    114
+   ],
+   "to": "app.ui_common:safe_md"
   },
   {
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    95
+    98
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1463,7 +1683,24 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    39
+    69
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.pages.interview:start_form",
+   "kind": "call",
+   "lines": [
+    41,
+    86
+   ],
+   "to": "app.ui_common:page_link"
+  },
+  {
+   "from": "app.pages.interview:start_form",
+   "kind": "call",
+   "lines": [
+    38
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1471,7 +1708,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    95
+    98
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -1479,7 +1716,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    89
+    92
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -1487,8 +1724,8 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    54,
-    58
+    53,
+    57
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1496,7 +1733,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    91
+    94
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -1504,7 +1741,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    47
+    46
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -1512,7 +1749,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    86
+    89
    ],
    "to": "interview_app.preferences:to_session_config"
   },
@@ -1520,16 +1757,24 @@
    "from": "app.pages.interview:submit",
    "kind": "call",
    "lines": [
-    132
+    135
    ],
    "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.pages.interview:submit",
+   "kind": "ref",
+   "lines": [
+    150
+   ],
+   "to": "interview_app.interview.engine:retry"
   },
   {
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    166,
-    219
+    168,
+    231
    ],
    "to": "app.pages.settings:_model_picker"
   },
@@ -1537,8 +1782,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    281,
-    282
+    293,
+    294
    ],
    "to": "app.pages.settings:_price"
   },
@@ -1546,8 +1791,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    271,
-    273
+    283,
+    285
    ],
    "to": "app.pages.settings:_rows"
   },
@@ -1579,6 +1824,19 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
+    156,
+    177,
+    182,
+    194,
+    199,
+    212
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.pages.settings:<module>",
+   "kind": "call",
+   "lines": [
     28
    ],
    "to": "app.ui_common:settings"
@@ -1587,7 +1845,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    234
+    246
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -1604,7 +1862,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    211
+    223
    ],
    "to": "interview_app.interview.persona:LLMSettings"
   },
@@ -1612,7 +1870,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    235
+    247
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -1621,7 +1879,7 @@
    "kind": "construct",
    "lines": [
     155,
-    159
+    162
    ],
    "to": "interview_app.interview.persona:PromptVariant"
   },
@@ -1661,7 +1919,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    228
+    240
    ],
    "to": "interview_app.preferences:save_preferences"
   },
@@ -1669,7 +1927,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    249
+    261
    ],
    "to": "interview_app.usage:usage_summary"
   },
@@ -1690,18 +1948,112 @@
    "to": "app.pages.settings:_model_label"
   },
   {
+   "from": "app.pages.settings:_model_picker",
+   "kind": "call",
+   "lines": [
+    132
+   ],
+   "to": "app.ui_common:kept_widget"
+  },
+  {
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    38
+    46,
+    57,
+    70,
+    72,
+    79,
+    80,
+    84,
+    87,
+    88,
+    109,
+    112,
+    115,
+    116,
+    119
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.report_view:render_report",
+   "kind": "call",
+   "lines": [
+    84,
+    108
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.report_view:render_report",
+   "kind": "call",
+   "lines": [
+    39
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
+  },
+  {
+   "from": "app.ui_common:_document_guard_for",
+   "kind": "call",
+   "lines": [
+    153
+   ],
+   "to": "app.ui_common:_user_decider"
+  },
+  {
+   "from": "app.ui_common:_document_guard_for",
+   "kind": "call",
+   "lines": [
+    153
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.ui_common:_document_guard_for",
+   "kind": "construct",
+   "lines": [
+    153
+   ],
+   "to": "interview_app.security.injection:InjectionGuard"
+  },
+  {
+   "from": "app.ui_common:_user_decider",
+   "kind": "call",
+   "lines": [
+    113
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.ui_common:_user_decider",
+   "kind": "call",
+   "lines": [
+    113
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.ui_common:_user_decider",
+   "kind": "call",
+   "lines": [
+    113
+   ],
+   "to": "interview_app.llm.calllog:make_db_recorder"
+  },
+  {
+   "from": "app.ui_common:_user_decider",
+   "kind": "construct",
+   "lines": [
+    113
+   ],
+   "to": "interview_app.llm.decide:DecisionClient"
   },
   {
    "from": "app.ui_common:current_user_id",
    "kind": "call",
    "lines": [
-    29
+    32
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1709,7 +2061,7 @@
    "from": "app.ui_common:current_user_id",
    "kind": "call",
    "lines": [
-    29
+    32
    ],
    "to": "interview_app.users:ensure_local_user"
   },
@@ -1717,55 +2069,15 @@
    "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    77
+    158
    ],
-   "to": "app.ui_common:current_user_id"
+   "to": "app.ui_common:_document_guard_for"
   },
   {
    "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    77
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "call",
-   "lines": [
-    75
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "call",
-   "lines": [
-    77
-   ],
-   "to": "interview_app.llm.calllog:make_db_recorder"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "construct",
-   "lines": [
-    77
-   ],
-   "to": "interview_app.llm.decide:DecisionClient"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "construct",
-   "lines": [
-    76
-   ],
-   "to": "interview_app.security.injection:InjectionGuard"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "call",
-   "lines": [
-    48
+    158
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1773,7 +2085,23 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    57
+    136
+   ],
+   "to": "app.ui_common:_user_decider"
+  },
+  {
+   "from": "app.ui_common:engine_deps",
+   "kind": "call",
+   "lines": [
+    127
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.ui_common:engine_deps",
+   "kind": "ref",
+   "lines": [
+    143
    ],
    "to": "app.ui_common:engine_deps.make_decider"
   },
@@ -1781,15 +2109,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "ref",
    "lines": [
-    65
-   ],
-   "to": "app.ui_common:engine_deps.make_decider"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "ref",
-   "lines": [
-    62
+    140
    ],
    "to": "app.ui_common:engine_deps.make_llm"
   },
@@ -1797,7 +2117,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    48
+    127
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1805,7 +2125,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    48
+    127
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1813,7 +2133,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "construct",
    "lines": [
-    59
+    137
    ],
    "to": "interview_app.interview.engine:EngineDeps"
   },
@@ -1821,7 +2141,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "construct",
    "lines": [
-    58
+    141
    ],
    "to": "interview_app.security.injection:InjectionGuard"
   },
@@ -1829,7 +2149,7 @@
    "from": "app.ui_common:engine_deps.make_decider",
    "kind": "call",
    "lines": [
-    55
+    134
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -1837,7 +2157,7 @@
    "from": "app.ui_common:engine_deps.make_decider",
    "kind": "construct",
    "lines": [
-    55
+    134
    ],
    "to": "interview_app.llm.decide:DecisionClient"
   },
@@ -1845,7 +2165,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "call",
    "lines": [
-    51
+    130
    ],
    "to": "app.ui_common:get_price_catalog"
   },
@@ -1853,7 +2173,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "call",
    "lines": [
-    51
+    130
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -1861,7 +2181,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "construct",
    "lines": [
-    51
+    130
    ],
    "to": "interview_app.llm.client:LLMClient"
   },
@@ -1869,7 +2189,7 @@
    "from": "app.ui_common:get_engine",
    "kind": "call",
    "lines": [
-    17
+    20
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1877,7 +2197,7 @@
    "from": "app.ui_common:get_engine",
    "kind": "call",
    "lines": [
-    18
+    21
    ],
    "to": "interview_app.db:init_db"
   },
@@ -1885,7 +2205,7 @@
    "from": "app.ui_common:get_engine",
    "kind": "call",
    "lines": [
-    17
+    20
    ],
    "to": "interview_app.db:make_engine"
   },
@@ -1893,7 +2213,7 @@
    "from": "app.ui_common:get_price_catalog",
    "kind": "call",
    "lines": [
-    37
+    40
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1901,7 +2221,7 @@
    "from": "app.ui_common:get_price_catalog",
    "kind": "construct",
    "lines": [
-    37
+    40
    ],
    "to": "interview_app.llm.pricing:PriceCatalog"
   },
@@ -1909,7 +2229,7 @@
    "from": "app.ui_common:settings",
    "kind": "call",
    "lines": [
-    23
+    26
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -3047,7 +3367,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_decider",
    "kind": "binds",
    "lines": [
-    59
+    137
    ],
    "to": "app.ui_common:engine_deps.make_decider"
   },
@@ -3055,7 +3375,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_llm",
    "kind": "binds",
    "lines": [
-    59
+    137
    ],
    "to": "app.ui_common:engine_deps.make_llm"
   },
@@ -5642,9 +5962,10 @@
     "interview_app.interview.engine"
    ],
    "layer": "ui",
-   "lines": 41,
+   "lines": 70,
    "path": "app/drill_ui.py",
    "symbols": [
+    "app.drill_ui:_joined",
     "app.drill_ui:drill_offer"
    ]
   },
@@ -5666,6 +5987,8 @@
    "doc": "Applications page: create an application from a JD + CV (+ optional cover letter / notes), review the extracted text, edit it, or delete the application.",
    "doc_more": "Each document can be uploaded as a PDF or pasted. PDF text is extracted into an editable box, so extraction mistakes (columns, headers, hyphenation) can be fixed before saving.",
    "external_imports": [
+    "hashlib",
+    "math",
     "streamlit"
    ],
    "imported_by": [],
@@ -5673,16 +5996,20 @@
     "app.ui_common",
     "interview_app.applications",
     "interview_app.demo",
-    "interview_app.ingest"
+    "interview_app.history",
+    "interview_app.ingest",
+    "interview_app.interview.engine"
    ],
    "layer": "ui",
-   "lines": 206,
+   "lines": 280,
    "path": "app/pages/applications.py",
    "symbols": [
     "app.pages.applications:<module>",
+    "app.pages.applications:_check_length",
     "app.pages.applications:_clear_new_form",
     "app.pages.applications:_collect_documents",
     "app.pages.applications:_document_input",
+    "app.pages.applications:_fingerprint",
     "app.pages.applications:_flag_documents",
     "app.pages.applications:_save",
     "app.pages.applications:_save_edit",
@@ -5706,7 +6033,7 @@
     "interview_app.interview.persona"
    ],
    "layer": "ui",
-   "lines": 197,
+   "lines": 203,
    "path": "app/pages/history.py",
    "symbols": [
     "app.pages.history:<module>",
@@ -5739,8 +6066,7 @@
    "doc": "Interview page: pick an application, configure the interview, then talk to the interviewer.",
    "doc_more": "The page holds no interview state of its own: the engine stores every turn in the database and the page re-reads it on each rerun, so refreshing the browser resumes the interview where it was.",
    "external_imports": [
-    "streamlit",
-    "time"
+    "streamlit"
    ],
    "imported_by": [],
    "imports": [
@@ -5749,15 +6075,17 @@
     "app.ui_common",
     "interview_app.applications",
     "interview_app.evaluation.service",
+    "interview_app.history",
     "interview_app.interview.engine",
     "interview_app.interview.persona",
     "interview_app.preferences"
    ],
    "layer": "ui",
-   "lines": 267,
+   "lines": 337,
    "path": "app/pages/interview.py",
    "symbols": [
     "app.pages.interview:<module>",
+    "app.pages.interview:blocked_answer_editor",
     "app.pages.interview:chat",
     "app.pages.interview:coaching_choice",
     "app.pages.interview:earlier_attempts",
@@ -5782,7 +6110,7 @@
     "interview_app.usage"
    ],
    "layer": "ui",
-   "lines": 286,
+   "lines": 298,
    "path": "app/pages/settings.py",
    "symbols": [
     "app.pages.settings:<module>",
@@ -5803,11 +6131,12 @@
     "app.pages.interview"
    ],
    "imports": [
+    "app.ui_common",
     "interview_app.evaluation.rubric",
     "interview_app.evaluation.schemas"
    ],
    "layer": "ui",
-   "lines": 117,
+   "lines": 123,
    "path": "app/report_view.py",
    "symbols": [
     "app.report_view:render_report"
@@ -5815,8 +6144,9 @@
   },
   "app.ui_common": {
    "doc": "Shared UI plumbing: cached resources and small helpers used by every page.",
-   "doc_more": "Streamlit reruns the whole script on every click, so expensive objects (the DB engine) are created once with st.cache_resource and reused across reruns.",
+   "doc_more": "Streamlit reruns the whole script on every click, so expensive objects (the DB engine, API clients) are created once with st.cache_resource and reused across reruns.",
    "external_imports": [
+    "re",
     "sqlalchemy",
     "streamlit"
    ],
@@ -5826,7 +6156,8 @@
     "app.pages.history",
     "app.pages.home",
     "app.pages.interview",
-    "app.pages.settings"
+    "app.pages.settings",
+    "app.report_view"
    ],
    "imports": [
     "interview_app.config",
@@ -5840,9 +6171,11 @@
     "interview_app.users"
    ],
    "layer": "ui",
-   "lines": 79,
+   "lines": 159,
    "path": "app/ui_common.py",
    "symbols": [
+    "app.ui_common:_document_guard_for",
+    "app.ui_common:_user_decider",
     "app.ui_common:current_user_id",
     "app.ui_common:document_guard",
     "app.ui_common:engine_deps",
@@ -5850,7 +6183,11 @@
     "app.ui_common:engine_deps.make_llm",
     "app.ui_common:get_engine",
     "app.ui_common:get_price_catalog",
-    "app.ui_common:settings"
+    "app.ui_common:kept_widget",
+    "app.ui_common:page_link",
+    "app.ui_common:safe_md",
+    "app.ui_common:settings",
+    "app.ui_common:short"
    ]
   },
   "interview_app": {
@@ -6301,7 +6638,9 @@
     "sqlmodel"
    ],
    "imported_by": [
-    "app.pages.history"
+    "app.pages.applications",
+    "app.pages.history",
+    "app.pages.interview"
    ],
    "imports": [
     "interview_app.config",
@@ -6419,6 +6758,7 @@
    ],
    "imported_by": [
     "app.drill_ui",
+    "app.pages.applications",
     "app.pages.history",
     "app.pages.interview",
     "app.ui_common",
@@ -9622,46 +9962,58 @@
    ]
   }
  },
- "source_sha256": "729ec686cf2249a9c285c3a36bc4060c10d4f8680b25f7516ed7d05a57fb9de6",
+ "source_sha256": "8a08038def7822e0fad169ab102881c091e5812fb69a326ea7d3567ef9a2156f",
  "stats": {
   "agents": 7,
   "call_sites": {
-   "builtin": 466,
-   "external": 681,
-   "resolved": 624,
-   "unresolved": 37
+   "builtin": 477,
+   "external": 717,
+   "resolved": 693,
+   "unresolved": 38
   },
   "classes": 101,
   "edges": {
    "binds": 3,
-   "call": 391,
+   "call": 424,
    "construct": 129,
-   "ref": 23
+   "ref": 26
   },
-  "functions": 230,
+  "functions": 240,
   "model_call_sites": 9,
   "modules": 52,
   "tables": 8,
   "templates": 12,
-  "unresolved_listed": 37
+  "unresolved_listed": 38
  },
  "symbols": {
+  "app.drill_ui:_joined": {
+   "doc": "",
+   "end_line": 14,
+   "kind": "function",
+   "line": 13,
+   "module": "app.drill_ui",
+   "name": "_joined",
+   "qualname": "_joined",
+   "signature": "_joined(items: list[str]) -> str"
+  },
   "app.drill_ui:drill_offer": {
    "doc": "Turn the report's weak spots into the next practice interview for the same application. `go_to_interview`: from another page (History), jump to the Interview page once it has started.",
-   "end_line": 40,
+   "end_line": 69,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.error",
+    "streamlit.info",
     "streamlit.markdown",
     "streamlit.rerun",
+    "streamlit.session_state.get",
     "streamlit.session_state.pop",
     "streamlit.spinner",
     "streamlit.subheader",
     "streamlit.switch_page"
    ],
    "kind": "function",
-   "line": 12,
+   "line": 17,
    "module": "app.drill_ui",
    "name": "drill_offer",
    "qualname": "drill_offer",
@@ -9671,6 +10023,7 @@
    "doc": "",
    "end_line": 1,
    "externals": [
+    "math.ceil",
     "streamlit.button",
     "streamlit.caption",
     "streamlit.checkbox",
@@ -9678,13 +10031,16 @@
     "streamlit.columns()[0].text_input",
     "streamlit.columns()[1].text_input",
     "streamlit.divider",
+    "streamlit.error",
     "streamlit.expander",
     "streamlit.info",
     "streamlit.rerun",
     "streamlit.session_state.get",
+    "streamlit.session_state.pop",
     "streamlit.tabs",
     "streamlit.text_area",
     "streamlit.title",
+    "streamlit.toast",
     "streamlit.warning"
    ],
    "kind": "module",
@@ -9694,11 +10050,21 @@
    "qualname": "<module>",
    "signature": "module-level code"
   },
+  "app.pages.applications:_check_length": {
+   "doc": "The same limits the save applies (raises IngestError). Run before the guard, so an oversize document is refused for free instead of being sent to Jev first.",
+   "end_line": 108,
+   "kind": "function",
+   "line": 105,
+   "module": "app.pages.applications",
+   "name": "_check_length",
+   "qualname": "_check_length",
+   "signature": "_check_length(kind: DocKind, text: str) -> None"
+  },
   "app.pages.applications:_clear_new_form": {
    "doc": "",
-   "end_line": 117,
+   "end_line": 159,
    "kind": "function",
-   "line": 114,
+   "line": 156,
    "module": "app.pages.applications",
    "name": "_clear_new_form",
    "qualname": "_clear_new_form",
@@ -9706,13 +10072,13 @@
   },
   "app.pages.applications:_collect_documents": {
    "doc": "",
-   "end_line": 85,
+   "end_line": 102,
    "externals": [
     "streamlit.session_state.get",
     "streamlit.session_state.get().strip"
    ],
    "kind": "function",
-   "line": 75,
+   "line": 92,
    "module": "app.pages.applications",
    "name": "_collect_documents",
    "qualname": "_collect_documents",
@@ -9720,7 +10086,7 @@
   },
   "app.pages.applications:_document_input": {
    "doc": "Upload-or-paste widget for one document. The text always ends up in st.session_state[_text_key].",
-   "end_line": 72,
+   "end_line": 89,
    "externals": [
     "streamlit.error",
     "streamlit.file_uploader",
@@ -9731,17 +10097,31 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 41,
+   "line": 50,
    "module": "app.pages.applications",
    "name": "_document_input",
    "qualname": "_document_input",
    "signature": "_document_input(kind: DocKind) -> None"
   },
-  "app.pages.applications:_flag_documents": {
+  "app.pages.applications:_fingerprint": {
    "doc": "",
-   "end_line": 91,
+   "end_line": 122,
+   "externals": [
+    "hashlib.sha256",
+    "hashlib.sha256().hexdigest"
+   ],
    "kind": "function",
-   "line": 88,
+   "line": 120,
+   "module": "app.pages.applications",
+   "name": "_fingerprint",
+   "qualname": "_fingerprint",
+   "signature": "_fingerprint(company: str, role: str, documents: list[DocumentIn]) -> str"
+  },
+  "app.pages.applications:_flag_documents": {
+   "doc": "Injection-check the documents. Raises IngestError first if one is unusable (e.g. too long).",
+   "end_line": 117,
+   "kind": "function",
+   "line": 111,
    "module": "app.pages.applications",
    "name": "_flag_documents",
    "qualname": "_flag_documents",
@@ -9749,14 +10129,16 @@
   },
   "app.pages.applications:_save": {
    "doc": "",
-   "end_line": 102,
+   "end_line": 143,
    "externals": [
     "streamlit.error",
     "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
     "streamlit.toast"
    ],
    "kind": "function",
-   "line": 94,
+   "line": 125,
    "module": "app.pages.applications",
    "name": "_save",
    "qualname": "_save",
@@ -9764,14 +10146,15 @@
   },
   "app.pages.applications:_save_edit": {
    "doc": "",
-   "end_line": 111,
+   "end_line": 153,
    "externals": [
     "streamlit.error",
+    "streamlit.session_state.pop",
     "streamlit.toast",
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 105,
+   "line": 146,
    "module": "app.pages.applications",
    "name": "_save_edit",
    "qualname": "_save_edit",
@@ -9779,9 +10162,9 @@
   },
   "app.pages.applications:_text_key": {
    "doc": "",
-   "end_line": 38,
+   "end_line": 47,
    "kind": "function",
-   "line": 37,
+   "line": 46,
    "module": "app.pages.applications",
    "name": "_text_key",
    "qualname": "_text_key",
@@ -9795,7 +10178,6 @@
     "streamlit.divider",
     "streamlit.header",
     "streamlit.info",
-    "streamlit.page_link",
     "streamlit.selectbox",
     "streamlit.session_state.get",
     "streamlit.stop",
@@ -9829,7 +10211,7 @@
   },
   "app.pages.history:session_detail": {
    "doc": "",
-   "end_line": 156,
+   "end_line": 158,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -9921,9 +10303,28 @@
    "qualname": "<module>",
    "signature": "module-level code"
   },
+  "app.pages.interview:blocked_answer_editor": {
+   "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
+   "end_line": 176,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.columns()[0].button",
+    "streamlit.columns()[1].button",
+    "streamlit.rerun",
+    "streamlit.session_state.get",
+    "streamlit.session_state.pop",
+    "streamlit.text_area"
+   ],
+   "kind": "function",
+   "line": 159,
+   "module": "app.pages.interview",
+   "name": "blocked_answer_editor",
+   "qualname": "blocked_answer_editor",
+   "signature": "blocked_answer_editor(view: eng.SessionView) -> bool"
+  },
   "app.pages.interview:chat": {
    "doc": "",
-   "end_line": 231,
+   "end_line": 295,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -9935,13 +10336,14 @@
     "streamlit.metric",
     "streamlit.progress",
     "streamlit.rerun",
+    "streamlit.session_state.get",
     "streamlit.session_state.pop",
     "streamlit.spinner",
     "streamlit.success",
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 171,
+   "line": 212,
    "module": "app.pages.interview",
    "name": "chat",
    "qualname": "chat",
@@ -9949,8 +10351,10 @@
   },
   "app.pages.interview:coaching_choice": {
    "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
-   "end_line": 168,
+   "end_line": 209,
    "externals": [
+    "streamlit.button",
+    "streamlit.caption",
     "streamlit.chat_input",
     "streamlit.columns",
     "streamlit.columns()[0].button",
@@ -9962,7 +10366,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 144,
+   "line": 179,
    "module": "app.pages.interview",
    "name": "coaching_choice",
    "qualname": "coaching_choice",
@@ -9970,13 +10374,13 @@
   },
   "app.pages.interview:earlier_attempts": {
    "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
-   "end_line": 122,
+   "end_line": 125,
    "externals": [
     "streamlit.expander",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 114,
+   "line": 117,
    "module": "app.pages.interview",
    "name": "earlier_attempts",
    "qualname": "earlier_attempts",
@@ -9984,7 +10388,7 @@
   },
   "app.pages.interview:feedback": {
    "doc": "The report for a finished interview: generated once on request, then stored.",
-   "end_line": 256,
+   "end_line": 322,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -9994,7 +10398,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 234,
+   "line": 298,
    "module": "app.pages.interview",
    "name": "feedback",
    "qualname": "feedback",
@@ -10002,13 +10406,13 @@
   },
   "app.pages.interview:live_chips": {
    "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
-   "end_line": 111,
+   "end_line": 114,
    "externals": [
     "streamlit.caption",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 102,
+   "line": 105,
    "module": "app.pages.interview",
    "name": "live_chips",
    "qualname": "live_chips",
@@ -10016,24 +10420,21 @@
   },
   "app.pages.interview:start_form": {
    "doc": "",
-   "end_line": 99,
+   "end_line": 102,
    "externals": [
     "streamlit.button",
-    "streamlit.caption",
     "streamlit.columns",
     "streamlit.columns()[0].selectbox",
     "streamlit.columns()[1].segmented_control",
     "streamlit.error",
     "streamlit.info",
-    "streamlit.page_link",
     "streamlit.radio",
     "streamlit.rerun",
     "streamlit.selectbox",
-    "streamlit.slider",
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 38,
+   "line": 37,
    "module": "app.pages.interview",
    "name": "start_form",
    "qualname": "start_form",
@@ -10041,15 +10442,16 @@
   },
   "app.pages.interview:submit": {
    "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
-   "end_line": 141,
+   "end_line": 156,
    "externals": [
-    "streamlit.error",
     "streamlit.rerun",
-    "streamlit.spinner",
-    "time.sleep"
+    "streamlit.session_state.get",
+    "streamlit.session_state.get().get",
+    "streamlit.session_state.pop",
+    "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 125,
+   "line": 128,
    "module": "app.pages.interview",
    "name": "submit",
    "qualname": "submit",
@@ -10057,7 +10459,7 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 132,
+     "line": 135,
      "text": "action"
     }
    ]
@@ -10081,9 +10483,7 @@
     "streamlit.columns()[1].segmented_control",
     "streamlit.dataframe",
     "streamlit.divider",
-    "streamlit.number_input",
     "streamlit.radio",
-    "streamlit.segmented_control",
     "streamlit.slider",
     "streamlit.subheader",
     "streamlit.title",
@@ -10111,8 +10511,7 @@
    "doc": "",
    "end_line": 145,
    "externals": [
-    "streamlit.markdown",
-    "streamlit.selectbox"
+    "streamlit.markdown"
    ],
    "kind": "function",
    "line": 130,
@@ -10133,9 +10532,9 @@
   },
   "app.pages.settings:_rows": {
    "doc": "",
-   "end_line": 265,
+   "end_line": 277,
    "kind": "function",
-   "line": 255,
+   "line": 267,
    "module": "app.pages.settings",
    "name": "_rows",
    "qualname": "_rows",
@@ -10143,13 +10542,12 @@
   },
   "app.report_view:render_report": {
    "doc": "",
-   "end_line": 116,
+   "end_line": 122,
    "externals": [
     "streamlit.caption",
     "streamlit.columns",
     "streamlit.columns()[0].metric",
     "streamlit.columns()[1].markdown",
-    "streamlit.columns()[1].write",
     "streamlit.dataframe",
     "streamlit.expander",
     "streamlit.markdown",
@@ -10158,17 +10556,46 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 37,
+   "line": 38,
    "module": "app.report_view",
    "name": "render_report",
    "qualname": "render_report",
    "signature": "render_report(report: Report, rubric_path) -> None"
   },
+  "app.ui_common:_document_guard_for": {
+   "decorators": [
+    "st.cache_resource"
+   ],
+   "doc": "",
+   "end_line": 153,
+   "kind": "function",
+   "line": 148,
+   "module": "app.ui_common",
+   "name": "_document_guard_for",
+   "qualname": "_document_guard_for",
+   "signature": "_document_guard_for(user_id: int)",
+   "tested_by": [
+    "tests.test_app_ui"
+   ]
+  },
+  "app.ui_common:_user_decider": {
+   "decorators": [
+    "st.cache_resource"
+   ],
+   "doc": "",
+   "end_line": 113,
+   "kind": "function",
+   "line": 107,
+   "module": "app.ui_common",
+   "name": "_user_decider",
+   "qualname": "_user_decider",
+   "signature": "_user_decider(user_id: int)"
+  },
   "app.ui_common:current_user_id": {
    "doc": "Single local user for now (see interview_app/users.py).",
-   "end_line": 30,
+   "end_line": 33,
    "kind": "function",
-   "line": 26,
+   "line": 29,
    "module": "app.ui_common",
    "name": "current_user_id",
    "qualname": "current_user_id",
@@ -10176,9 +10603,9 @@
   },
   "app.ui_common:document_guard": {
    "doc": "Injection guard for uploaded documents (rules first, then Jev).",
-   "end_line": 78,
+   "end_line": 158,
    "kind": "function",
-   "line": 69,
+   "line": 156,
    "module": "app.ui_common",
    "name": "document_guard",
    "qualname": "document_guard",
@@ -10186,9 +10613,9 @@
   },
   "app.ui_common:engine_deps": {
    "doc": "Wire the interview engine to real models, the call log, pricing and the injection guard.",
-   "end_line": 66,
+   "end_line": 144,
    "kind": "function",
-   "line": 40,
+   "line": 116,
    "module": "app.ui_common",
    "name": "engine_deps",
    "qualname": "engine_deps",
@@ -10196,9 +10623,9 @@
   },
   "app.ui_common:engine_deps.make_decider": {
    "doc": "",
-   "end_line": 55,
+   "end_line": 134,
    "kind": "nested",
-   "line": 53,
+   "line": 132,
    "module": "app.ui_common",
    "name": "make_decider",
    "parent": "app.ui_common:engine_deps",
@@ -10207,9 +10634,9 @@
   },
   "app.ui_common:engine_deps.make_llm": {
    "doc": "",
-   "end_line": 51,
+   "end_line": 130,
    "kind": "nested",
-   "line": 50,
+   "line": 129,
    "module": "app.ui_common",
    "name": "make_llm",
    "parent": "app.ui_common:engine_deps",
@@ -10221,9 +10648,9 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 19,
+   "end_line": 22,
    "kind": "function",
-   "line": 16,
+   "line": 19,
    "module": "app.ui_common",
    "name": "get_engine",
    "qualname": "get_engine",
@@ -10237,23 +10664,88 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 37,
+   "end_line": 40,
    "kind": "function",
-   "line": 34,
+   "line": 37,
    "module": "app.ui_common",
    "name": "get_price_catalog",
    "qualname": "get_price_catalog",
    "signature": "get_price_catalog()"
   },
+  "app.ui_common:kept_widget": {
+   "doc": "Draw a widget whose value survives runs in which it isn't drawn (a hidden section, a slider that only shows for one interview type).",
+   "end_line": 100,
+   "externals": [
+    "streamlit.session_state.get"
+   ],
+   "kind": "function",
+   "line": 86,
+   "module": "app.ui_common",
+   "name": "kept_widget",
+   "qualname": "kept_widget",
+   "signature": "kept_widget(widget, key: str, default, *args, **kwargs)",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 98,
+     "text": "widget"
+    }
+   ]
+  },
+  "app.ui_common:page_link": {
+   "doc": "st.page_link, falling back to plain text when the page runs on its own (tests run one page file without main.py's st.navigation, and then Streamlit can't resolve the page path).",
+   "end_line": 83,
+   "externals": [
+    "streamlit.caption",
+    "streamlit.page_link"
+   ],
+   "kind": "function",
+   "line": 77,
+   "module": "app.ui_common",
+   "name": "page_link",
+   "qualname": "page_link",
+   "signature": "page_link(page: str, label: str, icon: str | None=None) -> None"
+  },
+  "app.ui_common:safe_md": {
+   "doc": "Make model or user text safe to pass to st.markdown, chat messages, labels and alerts.",
+   "end_line": 65,
+   "externals": [
+    "re.compile().sub",
+    "re.compile().sub().replace",
+    "re.compile().sub().split"
+   ],
+   "kind": "function",
+   "line": 52,
+   "module": "app.ui_common",
+   "name": "safe_md",
+   "qualname": "safe_md",
+   "signature": "safe_md(text: str | None, inline: bool=False) -> str",
+   "tested_by": [
+    "tests.test_app_ui"
+   ]
+  },
   "app.ui_common:settings": {
    "doc": "",
-   "end_line": 23,
+   "end_line": 26,
    "kind": "function",
-   "line": 22,
+   "line": 25,
    "module": "app.ui_common",
    "name": "settings",
    "qualname": "settings",
    "signature": "settings() -> Settings"
+  },
+  "app.ui_common:short": {
+   "doc": "Shorten text for a label, cutting at a word boundary so no word is chopped in half.",
+   "end_line": 74,
+   "kind": "function",
+   "line": 68,
+   "module": "app.ui_common",
+   "name": "short",
+   "qualname": "short",
+   "signature": "short(text: str | None, limit: int=90) -> str",
+   "tested_by": [
+    "tests.test_app_ui"
+   ]
   },
   "interview_app.applications:ApplicationDetail": {
    "doc": "",
@@ -10418,6 +10910,7 @@
    "qualname": "delete_application",
    "signature": "delete_application(engine: Engine, user_id: int, application_id: int) -> bool",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_applications"
    ]
   },
@@ -11568,7 +12061,10 @@
    "name": "BetterAnswer",
    "qualname": "BetterAnswer",
    "schema": true,
-   "signature": "class BetterAnswer(BaseModel)"
+   "signature": "class BetterAnswer(BaseModel)",
+   "tested_by": [
+    "tests.test_app_ui"
+   ]
   },
   "interview_app.evaluation.schemas:ExchangeJudgement": {
    "doc": "",
@@ -11596,6 +12092,7 @@
    "schema": true,
    "signature": "class ExchangeReport(BaseModel)",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_drill",
     "tests.test_history"
    ]
@@ -11611,6 +12108,7 @@
    "schema": true,
    "signature": "class Improvement(BaseModel)",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_drill",
     "tests.test_history"
    ]
@@ -12657,6 +13155,7 @@
    "qualname": "get_session",
    "signature": "get_session(engine: Engine, user_id: int, session_id: int) -> SessionView | None",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_engine",
     "tests.test_lab"
    ]
@@ -12803,7 +13302,10 @@
    "module": "interview_app.interview.persona",
    "name": "InterviewType",
    "qualname": "InterviewType",
-   "signature": "class InterviewType(StrEnum)"
+   "signature": "class InterviewType(StrEnum)",
+   "tested_by": [
+    "tests.test_app_ui"
+   ]
   },
   "interview_app.interview.persona:LLMSettings": {
    "doc": "Per-session model settings for the interviewer (developer options, course task M1).",

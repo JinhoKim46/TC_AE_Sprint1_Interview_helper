@@ -1079,9 +1079,8 @@ def test_stuck_preparing_interview_can_be_ended():
     from interview_app.interview.engine import get_session
 
     engine, uid, app_id = sample_with_p1()
-    sid = seed_scored_session(
-        engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 0.0, "", status="preparing"
-    )
+    # A fresh start: an old "preparing" session is marked failed by the engine on its own.
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "", status="preparing")
     at = run_page("interview.py")
     assert any("being prepared" in w.value for w in at.warning)
     next(b for b in at.button if b.label == "End this interview").click().run()
