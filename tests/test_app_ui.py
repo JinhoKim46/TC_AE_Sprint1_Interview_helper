@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import streamlit as st
 from streamlit.testing.v1 import AppTest
 
 from interview_app.config import PROJECT_ROOT, get_settings
@@ -16,14 +17,18 @@ def temp_database(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'ui.db'}")
     monkeypatch.syspath_prepend(str(APP_DIR))  # pages import ui_common like Streamlit does
     get_settings.cache_clear()
+    # st.cache_resource is keyed by the function's source, not the module object, so a cached engine
+    # would otherwise survive re-importing ui_common and point at the previous test's database.
+    st.cache_resource.clear()
     yield
     get_settings.cache_clear()
-    sys.modules.pop("ui_common", None)  # fresh st.cache_resource engine per test
+    st.cache_resource.clear()
+    sys.modules.pop("ui_common", None)
 
 
-def run_page(name: str) -> AppTest:
+def run_page(name: str, timeout: float = 30) -> AppTest:
     """Run one page directly (no navigation context)."""
-    at = AppTest.from_file(str(APP_DIR / "pages" / name), default_timeout=30)
+    at = AppTest.from_file(str(APP_DIR / "pages" / name), default_timeout=timeout)
     at.run()
     assert not at.exception, at.exception
     return at
@@ -113,9 +118,15 @@ def test_interview_page_start_answer_and_reply(monkeypatch):
     monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
     load_sample_application(ui_common.get_engine(), ui_common.ensure_local_user(ui_common.get_engine()))
 
+    from interview_app.interview.persona import PromptVariant
+    from interview_app.preferences import Preferences, save_preferences
+
+    # Developer setting saved on the Settings page: P1 needs no separate planning call.
+    uid = ui_common.ensure_local_user(ui_common.get_engine())
+    save_preferences(ui_common.get_engine(), uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
+
     at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
     at.run()
-    at.selectbox[2].select_index(0)  # developer option: P1 needs no separate planning call
     next(b for b in at.button if b.label == "Start interview").click().run()
     assert not at.exception, at.exception
     assert "walk me through your background" in at.chat_message[0].markdown[0].value
@@ -124,3 +135,92 @@ def test_interview_page_start_answer_and_reply(monkeypatch):
     assert not at.exception, at.exception
     texts = [m.markdown[0].value for m in at.chat_message]
     assert "I improved mIoU" in texts[1] and "How did you measure that?" in texts[2]
+
+
+# --- Settings page ----------------------------------------------------------------------------------
+
+
+@pytest.fixture
+def offline_catalog(monkeypatch, tmp_path):
+    """The Settings page shows prices; give it a fixed catalog instead of calling OpenRouter."""
+    import ui_common
+
+    from interview_app.llm.pricing import PriceCatalog
+
+    payload = {
+        "data": [
+            {
+                "id": "openai/gpt-5-mini",
+                "name": "OpenAI: GPT-5 Mini",
+                "pricing": {"prompt": "0.00000025", "completion": "0.000002"},
+                "supported_parameters": ["reasoning", "structured_outputs"],
+            }
+        ]
+    }
+    settings = ui_common.get_settings()
+    catalog = PriceCatalog(settings.model_copy(update={"data_dir": tmp_path}), fetch=lambda: payload)
+    monkeypatch.setattr(ui_common, "get_price_catalog", lambda: catalog)
+
+
+def test_settings_page_renders_and_hides_developer_settings(offline_catalog):
+    # Longer timeout: the first st.dataframe imports pyarrow, which is slow on a cold start.
+    at = run_page("settings.py", timeout=90)
+    assert at.title[0].value == "Settings"
+    assert any(m.label == "Total spend" for m in at.metric)
+    assert not any(s.label == "Interviewer model" for s in at.selectbox)
+
+    at.toggle[0].set_value(True).run()
+    assert not at.exception, at.exception
+    picker = next(s for s in at.selectbox if s.label == "Interviewer model")
+    assert picker.value == "openai/gpt-5-mini"
+    assert "$0.25 in / $2.00 out per 1M tokens" in picker.format_func("openai/gpt-5-mini")
+    assert "open-weight" in picker.format_func("google/gemma-4-31b-it")
+
+
+def test_settings_page_saves_preferences(offline_catalog):
+    import ui_common
+
+    from interview_app.interview.persona import InterviewType, PromptVariant
+    from interview_app.preferences import load_preferences
+
+    # Longer timeout: the first st.dataframe imports pyarrow, which is slow on a cold start.
+    at = run_page("settings.py", timeout=90)
+    at.selectbox[0].set_value(InterviewType.BEHAVIORAL.value)
+    at.checkbox[0].uncheck().run()  # pick an explicit number of questions
+    at.slider(key="pref_main_questions").set_value(5)
+    at.toggle[0].set_value(True).run()
+    at.radio[0].set_value(PromptVariant.P3_COT_PLAN.value)
+    at.selectbox(key="pref_interviewer_model").set_value("google/gemma-4-31b-it")
+    next(b for b in at.button if b.label == "Save settings").click().run()
+    assert not at.exception, at.exception
+    assert at.toast[0].value == "Settings saved"
+
+    engine = ui_common.get_engine()
+    prefs = load_preferences(engine, ui_common.ensure_local_user(engine))
+    assert prefs.interview_type == InterviewType.BEHAVIORAL
+    assert prefs.main_questions == 5
+    assert prefs.prompt_variant == PromptVariant.P3_COT_PLAN
+    assert prefs.interviewer.model == "google/gemma-4-31b-it"
+    assert prefs.judge_model is None  # left at the config default
+
+
+def test_interview_form_starts_from_saved_preferences():
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.persona import Difficulty, InterviewType
+    from interview_app.preferences import Preferences, save_preferences
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    load_sample_application(engine, uid)
+    save_preferences(
+        engine,
+        uid,
+        Preferences(interview_type=InterviewType.ML_CASE, difficulty=Difficulty.TOUGH, main_questions=9),
+    )
+
+    at = run_page("interview.py")
+    assert at.slider[0].value == 9
+    assert next(s for s in at.selectbox if s.label == "Interview type").value == InterviewType.ML_CASE.value
+    assert not any(e.label == "Developer options" for e in at.expander)
