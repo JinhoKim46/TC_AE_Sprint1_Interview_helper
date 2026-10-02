@@ -18,6 +18,7 @@ from openai import OpenAI
 from pydantic import BaseModel, ValidationError
 
 from interview_app.config import Settings
+from interview_app.llm.pricing import PriceCatalog
 
 log = logging.getLogger(__name__)
 
@@ -62,9 +63,18 @@ def _strip_code_fence(text: str) -> str:
 
 
 class LLMClient:
-    def __init__(self, settings: Settings, recorder: Recorder | None = None, sdk: Any = None):
+    def __init__(
+        self,
+        settings: Settings,
+        recorder: Recorder | None = None,
+        sdk: Any = None,
+        *,
+        pricing: PriceCatalog | None = None,
+    ):
         self.settings = settings
         self.recorder = recorder or (lambda _record: None)
+        # Only used when the provider doesn't report the charged cost itself (see _cost).
+        self.pricing = pricing
         # The SDK already retries 429/5xx with exponential backoff; we only set how often.
         self.sdk = sdk or OpenAI(
             base_url=settings.openrouter_base_url,
@@ -110,18 +120,32 @@ class LLMClient:
             raise LLMError(f"The {role} model call failed. Please try again.") from e
 
         usage = response.usage
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
         record = CallRecord(
             role=role,
             model=response.model or model,
-            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
-            completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
-            # OpenRouter reports the real charged cost here; other providers don't.
-            cost_usd=float(getattr(usage, "cost", 0.0) or 0.0),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            cost_usd=self._cost(usage, model, prompt_tokens, completion_tokens),
             latency_s=time.perf_counter() - start,
         )
         self.recorder(record)
         text = response.choices[0].message.content or ""
         return ChatResult(text=text, model=record.model, record=record)
+
+    def _cost(self, usage: Any, model: str, prompt_tokens: int, completion_tokens: int) -> float:
+        # OpenRouter reports the real charged cost in `usage.cost`; prefer it whenever present.
+        cost = getattr(usage, "cost", None)
+        if cost is not None:
+            return float(cost)
+        # Other providers (OpenAI, Ollama, vLLM) don't, so estimate from the price list.
+        # Look up the requested id: it matches the catalog, while the reply's model may be a dated build.
+        if self.pricing is not None:
+            estimate = self.pricing.estimate_cost(model, prompt_tokens, completion_tokens)
+            if estimate is not None:
+                return estimate
+        return 0.0  # unknown; 0 keeps cost sums working
 
     def chat_json(
         self, role: str, messages: list[dict], schema: type[T], *, model: str, **settings
