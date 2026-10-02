@@ -7,9 +7,10 @@ extraction mistakes (columns, headers, hyphenation) can be fixed before saving.
 
 import hashlib
 import math
+from collections import Counter
 
 import streamlit as st
-from ui_common import current_user_id, document_guard, get_engine, safe_md, settings, short
+from ui_common import current_user_id, document_guard, get_engine, safe_md, short
 
 from interview_app.applications import (
     DocumentIn,
@@ -19,6 +20,7 @@ from interview_app.applications import (
     list_applications,
     update_document,
 )
+from interview_app.config import get_settings
 from interview_app.demo import SAMPLE_COMPANY, SAMPLE_ROLE, load_sample_application
 from interview_app.history import list_sessions
 from interview_app.ingest import (
@@ -35,7 +37,7 @@ from interview_app.interview.engine import active_session
 
 engine = get_engine()
 user_id = current_user_id()
-limits = settings().limits
+limits = get_settings().limits
 # st.file_uploader takes whole megabytes; rounding up keeps the stricter check in extract_pdf_text.
 UPLOAD_MB = max(1, math.ceil(limits.max_upload_mb))
 
@@ -216,6 +218,8 @@ apps = list_applications(engine, user_id)
 if not apps:
     st.info("No applications yet.")
 running = active_session(engine, user_id)
+# One query for every application's interview count, instead of one list_sessions call per application.
+interview_counts = Counter(s.application_id for s in list_sessions(engine, user_id))
 
 for summary in apps:
     company = safe_md(short(summary.company, 60), inline=True)
@@ -264,7 +268,7 @@ for summary in apps:
                         _save_edit(summary.id, kind, st.session_state[key])
 
         # Interviews are deleted with their application (ON DELETE CASCADE), so the tick says so.
-        n = len(list_sessions(engine, user_id, summary.id))
+        n = interview_counts[summary.id]
         consequence = f" (also deletes {n} interview{'' if n == 1 else 's'} and their reports)" if n else ""
         in_use = running is not None and running.application_id == summary.id
         if in_use:

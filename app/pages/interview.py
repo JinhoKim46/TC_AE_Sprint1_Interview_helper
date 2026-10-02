@@ -7,9 +7,10 @@ page re-reads it on each rerun, so refreshing the browser resumes the interview 
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import render_report
-from ui_common import current_user_id, engine_deps, get_engine, kept_widget, page_link, safe_md, settings
+from ui_common import current_user_id, engine_deps, get_engine, kept_widget, page_link, safe_md
 
 from interview_app.applications import list_applications
+from interview_app.config import get_settings
 from interview_app.evaluation.service import EvaluationError, evaluate_session
 from interview_app.history import load_report
 from interview_app.interview import engine as eng
@@ -178,7 +179,7 @@ def blocked_answer_editor(view: eng.SessionView) -> bool:
 
 def coaching_choice(view: eng.SessionView) -> None:
     """Coaching mode, after an answer: retry it (up to the limit) or continue to the next question."""
-    left = settings().limits.max_retries_per_answer - view.retries_used
+    left = get_settings().limits.max_retries_per_answer - view.retries_used
     retries_left = f"{left} retr{'y' if left == 1 else 'ies'} left for this answer."
     if st.session_state.get("retrying") == view.id:
         st.caption(retries_left + " The last attempt counts.")
@@ -312,12 +313,12 @@ def feedback(view: eng.SessionView) -> None:
             try:
                 prefs = load_preferences(engine, user_id)
                 report = evaluate_session(
-                    engine_deps(), user_id, view.id, judge_model=judge_model(prefs, settings())
+                    engine_deps(), user_id, view.id, judge_model=judge_model(prefs, get_settings())
                 )
             except EvaluationError as e:
                 st.error(str(e))
                 return
-    render_report(report, settings().rubric_path)
+    render_report(report, get_settings().rubric_path)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
     drill_offer(view, report, key="drill-interview")
 

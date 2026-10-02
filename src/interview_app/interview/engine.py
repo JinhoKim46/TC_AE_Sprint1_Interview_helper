@@ -24,8 +24,9 @@ from sqlalchemy.engine import Engine
 from sqlmodel import col, func, select
 
 from interview_app.applications import get_application
-from interview_app.config import Settings
+from interview_app.config import Settings, get_settings
 from interview_app.db import InterviewSession, LLMCall, Turn, session_scope, utcnow
+from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.live import LiveFeedback, live_score
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.ingest import DocKind
@@ -211,8 +212,26 @@ def _turn_view(t: Turn) -> TurnView:
     return TurnView(t.idx, t.speaker, t.text, t.stage, t.question_id, t.is_followup, t.is_final, live)
 
 
+def _config(row: InterviewSession) -> SessionConfig:
+    return SessionConfig.model_validate_json(row.config_json)
+
+
+def session_documents(row: InterviewSession) -> dict[DocKind, str]:
+    """The documents snapshot the session was started with (later edits to the application don't count)."""
+    return {DocKind(k): v for k, v in json.loads(row.documents_json).items()}
+
+
+def session_plan(row: InterviewSession) -> InterviewPlan | None:
+    return InterviewPlan.model_validate_json(row.plan_json) if row.plan_json else None
+
+
+def _kept(turns: list[Turn]) -> list[Turn]:
+    return [t for t in turns if not t.superseded]
+
+
 def _load_all(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSession, list[Turn]] | None:
-    """The session and ALL its turns, superseded attempts included. Only for display and numbering."""
+    """The session and ALL its turns, superseded attempts included. Callers that reason about the
+    interview filter them with _kept (or use _load)."""
     with session_scope(engine) as s:
         row = s.exec(
             select(InterviewSession).where(
@@ -229,13 +248,22 @@ def _load(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSessi
     """The session and its transcript *without* superseded attempts.
 
     Everything that reasons about the interview (the interviewer's messages, progress counting, limits,
-    the final evaluation via get_session) goes through here, so a discarded attempt can never leak in.
+    the final evaluation via get_session) uses _kept turns, here or after _load_active, so a discarded
+    attempt can never leak in.
     """
     loaded = _load_all(engine, user_id, session_id)
     if loaded is None:
         return None
     row, turns = loaded
-    return row, [t for t in turns if not t.superseded]
+    return row, _kept(turns)
+
+
+def _load_active(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSession, list[Turn]]:
+    """Like _load_all, but only for an active session: the check every answer/retry/respond starts with."""
+    loaded = _load_all(engine, user_id, session_id)
+    if loaded is None or loaded[0].status != "active":
+        raise InterviewError("This interview is not active.")
+    return loaded
 
 
 def _next_idx(engine: Engine, session_id: int) -> int:
@@ -266,8 +294,8 @@ def get_session(engine: Engine, user_id: int, session_id: int) -> SessionView | 
     if loaded is None:
         return None
     row, all_turns = loaded
-    config = SessionConfig.model_validate_json(row.config_json)
-    views = [_turn_view(t) for t in all_turns if not t.superseded]
+    config = _config(row)
+    views = [_turn_view(t) for t in _kept(all_turns)]
     return SessionView(
         id=row.id,
         application_id=row.application_id,
@@ -298,7 +326,7 @@ def active_session(engine: Engine, user_id: int, settings: Settings | None = Non
 
     An interrupted start would otherwise lock the user out forever, so it is marked failed here.
     """
-    settings = settings or Settings()
+    settings = settings or get_settings()
     with session_scope(engine) as s:
         rows = s.exec(
             select(InterviewSession)
@@ -341,18 +369,23 @@ def _set_status(engine: Engine, session_id: int, status: str) -> None:
 # --- Model calls --------------------------------------------------------------------------------
 
 
-def _messages(deps: EngineDeps, row: InterviewSession, turns: list[Turn], directive: str) -> list[dict]:
-    config = SessionConfig.model_validate_json(row.config_json)
-    documents = {DocKind(k): v for k, v in json.loads(row.documents_json).items()}
-    plan = InterviewPlan.model_validate_json(row.plan_json) if row.plan_json else None
+def _messages(
+    deps: EngineDeps,
+    row: InterviewSession,
+    config: SessionConfig,
+    turns: list[Turn],
+    progress: Progress,
+    directive: str,
+) -> list[dict]:
+    # `config` and `progress` come from the caller, which needs them too: parsed and counted once per turn.
     ctx = PromptContext(
         company=row.company,
         role=row.role,
-        documents=documents,
+        documents=session_documents(row),
         config=config,
         persona=derive_persona(config),
         guideline=guideline_excerpt(deps.settings.guideline_path),
-        plan=plan,
+        plan=session_plan(row),
     )
     messages = [{"role": "system", "content": interviewer_system_prompt(ctx)}]
     if not turns:
@@ -372,7 +405,6 @@ def _messages(deps: EngineDeps, row: InterviewSession, turns: list[Turn], direct
             messages.append({"role": "assistant", "content": assistant_turn_content(payload)})
         else:
             messages.append({"role": "user", "content": wrap_answer(t.text)})
-    progress = compute_progress([_turn_view(t) for t in turns])
     messages.append(
         control_message(
             main_asked=progress.main_asked,
@@ -389,7 +421,7 @@ def _messages(deps: EngineDeps, row: InterviewSession, turns: list[Turn], direct
 def _interviewer_turn(
     deps: EngineDeps, row: InterviewSession, turns: list[Turn], force_close: bool
 ) -> AnyTurn:
-    config = SessionConfig.model_validate_json(row.config_json)
+    config = _config(row)
     llm = deps.make_llm(row.user_id, row.id)
     schema = TURN_SCHEMA[config.prompt_variant]
     settings = config.llm
@@ -402,14 +434,18 @@ def _interviewer_turn(
     progress = compute_progress([_turn_view(t) for t in turns])
     directive = next_directive(progress, config, force_close)
     try:
-        turn, _ = llm.chat_json("interviewer", _messages(deps, row, turns, directive), schema, **call)
+        turn, _ = llm.chat_json(
+            "interviewer", _messages(deps, row, config, turns, progress, directive), schema, **call
+        )
         # Guideline rule: never end without offering the candidate a chance to ask questions.
         # One corrective retry; code, not the prompt alone, guarantees this.
         if turn.is_final and not progress.in_candidate_questions and not force_close:
             directive = (
                 "Do not close yet. First invite the candidate's own questions (stage candidate_questions)."
             )
-            turn, _ = llm.chat_json("interviewer", _messages(deps, row, turns, directive), schema, **call)
+            turn, _ = llm.chat_json(
+                "interviewer", _messages(deps, row, config, turns, progress, directive), schema, **call
+            )
             turn.is_final = False
     except (LLMError, ValidationError) as e:
         log.warning("Interviewer turn failed for session %s: %r", row.id, e)
@@ -484,10 +520,6 @@ def _check_answer(deps: EngineDeps, user_id: int, session_id: int, text: str) ->
     return None
 
 
-def _is_coaching(row: InterviewSession) -> bool:
-    return SessionConfig.model_validate_json(row.config_json).mode == Mode.COACHING
-
-
 def _live_feedback(
     deps: EngineDeps, row: InterviewSession, turns: list[Turn], text: str
 ) -> LiveFeedback | None:
@@ -495,26 +527,22 @@ def _live_feedback(
     decider = _session_decider(deps, row.user_id, row.id)
     if decider is None or not deps.settings.features.live_scoring:
         return None
-    # Imported here, not at the top: exchanges.py imports this module (for TurnView), so a top-level
-    # import would be circular.
-    from interview_app.evaluation.exchanges import build_exchanges
-
     exchanges = build_exchanges([_turn_view(t) for t in turns])
     if not exchanges:
         return None
     # The category comes from the exchange's *main* question (a follow-up on an EXP question is still
     # EXP); the question text is what the candidate is answering right now (the latest interviewer turn).
     question = next(t.text for t in reversed(turns) if t.speaker == "interviewer")
-    documents = json.loads(row.documents_json)
+    documents = session_documents(row)
     return live_score(
         decider,
         load_rubric(deps.settings.rubric_path),
         category=exchanges[-1].category,
         question=question,
         answer=text,
-        jd_text=documents.get(DocKind.JD.value, ""),
-        cv_text=documents.get(DocKind.CV.value, ""),
-        cover_letter_text=documents.get(DocKind.COVER_LETTER.value, ""),
+        jd_text=documents.get(DocKind.JD, ""),
+        cv_text=documents.get(DocKind.CV, ""),
+        cover_letter_text=documents.get(DocKind.COVER_LETTER, ""),
     )
 
 
@@ -551,10 +579,8 @@ def answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> Answer
 
     Coaching mode stops after storing (and live-scoring) the answer; see `retry` / `continue_interview`.
     """
-    loaded = _load(deps.engine, user_id, session_id)
-    if loaded is None or loaded[0].status != "active":
-        raise InterviewError("This interview is not active.")
-    row, turns = loaded
+    row, all_turns = _load_active(deps.engine, user_id, session_id)
+    turns = _kept(all_turns)
     if not turns or turns[-1].speaker != "interviewer":
         # e.g. a double submit, or coaching mode waiting for Retry / Continue: two answers in a row
         # would confuse the interviewer and the evaluation.
@@ -563,7 +589,7 @@ def answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> Answer
     if (blocked := _check_answer(deps, user_id, session_id, text)) is not None:
         return AnswerOutcome(False, blocked, None, False)
 
-    if _is_coaching(row):
+    if _config(row).mode == Mode.COACHING:
         return _store_scored_answer(deps, row, turns, text.strip())
     _add_turn(deps.engine, row, _next_idx(deps.engine, session_id), "candidate", text.strip())
     return respond(deps, user_id, session_id)
@@ -575,12 +601,9 @@ def retry(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerO
     The old attempt is kept but marked superseded, so the interviewer and the final judge only ever see
     the last attempt — like a real second take, not a transcript with two answers in a row.
     """
-    loaded = _load_all(deps.engine, user_id, session_id)
-    if loaded is None or loaded[0].status != "active":
-        raise InterviewError("This interview is not active.")
-    row, all_turns = loaded
-    turns = [t for t in all_turns if not t.superseded]
-    if not _is_coaching(row):
+    row, all_turns = _load_active(deps.engine, user_id, session_id)
+    turns = _kept(all_turns)
+    if _config(row).mode != Mode.COACHING:
         raise InterviewError("Retries are only available in coaching mode.")
     if not turns or turns[-1].speaker != "candidate":
         raise InterviewError("There is no answer to retry.")
@@ -596,10 +619,8 @@ def retry(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerO
 def respond(deps: EngineDeps, user_id: int, session_id: int, force_close: bool = False) -> AnswerOutcome:
     """Generate the interviewer's next turn. Also used to retry after a model failure, because the
     candidate's answer is already stored at that point."""
-    loaded = _load(deps.engine, user_id, session_id)
-    if loaded is None or loaded[0].status != "active":
-        raise InterviewError("This interview is not active.")
-    row, turns = loaded
+    row, all_turns = _load_active(deps.engine, user_id, session_id)
+    turns = _kept(all_turns)
     if not turns or turns[-1].speaker != "candidate":
         raise InterviewError("There is no answer to respond to.")  # e.g. Continue pressed twice
     force_close = force_close or must_close(len(turns), session_cost(deps.engine, session_id), deps.settings)

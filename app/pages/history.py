@@ -7,9 +7,10 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import BAND_LABELS, LEVEL_LABELS, render_report
-from ui_common import current_user_id, get_engine, page_link, safe_md, settings
+from ui_common import current_user_id, get_engine, page_link, safe_md
 
 from interview_app.applications import list_applications
+from interview_app.config import get_settings
 from interview_app.history import SessionSummary, delete_session, list_sessions, load_report, progress
 from interview_app.interview.engine import get_session
 from interview_app.interview.persona import TYPE_LABELS, InterviewType
@@ -64,7 +65,7 @@ def sessions_table(sessions: list[SessionSummary]) -> None:
 
 def progress_block(application_id: int) -> None:
     st.header("Progress")
-    prog = progress(engine, user_id, application_id, settings().rubric_path)
+    prog = progress(engine, user_id, application_id, get_settings().rubric_path)
 
     if len(prog.trend) >= 2:
         st.subheader("Overall score over time")
@@ -139,7 +140,7 @@ def session_detail(summary: SessionSummary) -> None:
     with report_tab:
         report = load_report(engine, user_id, summary.session_id)
         if report is not None:
-            render_report(report, settings().rubric_path)
+            render_report(report, get_settings().rubric_path)
             drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")

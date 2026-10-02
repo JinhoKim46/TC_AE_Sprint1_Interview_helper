@@ -79,14 +79,14 @@ payload = "\"I led the move of our detector to the phone: I quantised it to int8
 title = "The page wires the engine"
 lane = "ui"
 symbol = "app.ui_common:engine_deps"
-text = "submit() builds EngineDeps: the database engine, Settings, a make_llm factory (an LLMClient whose call log is bound to the user and session), and one Jev DecisionClient shared by the injection guard and live scoring."
+text = "submit() builds EngineDeps: the database engine, Settings, a make_llm factory (an LLMClient whose call log is bound to the user and session), and a make_decider factory: the injection guard and live scoring get a Jev DecisionClient bound to the same session, so their cost counts towards that interview."
 payload = "EngineDeps(engine, settings, make_llm=<LLMClient factory>, guard=InjectionGuard(decider), decider=DecisionClient)"
 
 [[journey]]
 title = "engine.answer loads the transcript"
 lane = "engine"
 symbol = "interview_app.interview.engine:answer"
-text = "The engine is stateless: it loads the session and its turns through _load, which drops superseded coaching attempts, and refuses unless the session is active."
+text = "The engine is stateless: it loads the session and its turns through _load_active (which refuses unless the session is active), drops superseded coaching attempts with _kept, and refuses unless the interviewer spoke last (no two answers in a row)."
 payload = '''
 row = InterviewSession(status='active', config_json=…, documents_json=…, plan_json=…)
 turns = [Turn(idx=0, speaker='interviewer', …)]'''
@@ -399,7 +399,7 @@ sequenceDiagram
   participant D as SQLite
   U->>P: chat_input(answer)
   P->>E: answer(deps, user, session, text)
-  E->>D: _load (turns without superseded attempts)
+  E->>D: _load_active + _kept (active session, turns without superseded attempts)
   E->>G: check_answer_length
   E->>G: InjectionGuard.check_answer
   alt a regex rule fires
