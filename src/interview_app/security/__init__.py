@@ -11,6 +11,7 @@ from interview_app.security.models import GuardResult
 from interview_app.security.spotlight import (
     ANSWER_DATA_NOTE,
     UNTRUSTED_DATA_NOTE,
+    canonical,
     wrap_answer,
     wrap_untrusted,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "UNTRUSTED_DATA_NOTE",
     "GuardResult",
     "InjectionGuard",
+    "canonical",
     "check_answer_length",
     "check_budget",
     "check_turns",
