@@ -52,6 +52,11 @@ class Rubric:
     def penalty(self, severity: str) -> float:
         return self.data["penalties"][severity]
 
+    @property
+    def judge_runs(self) -> int:
+        """How many independent judge runs a report uses (rubric judge_settings.runs)."""
+        return int(self.data.get("judge_settings", {}).get("runs", 1))
+
     def band(self, overall: float) -> str:
         return next(b["band"] for b in self.bands if overall >= b["min"])
 

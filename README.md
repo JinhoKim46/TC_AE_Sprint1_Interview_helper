@@ -163,8 +163,10 @@ the OWASP Top 10 for LLM applications:
 
 ## Known limitations
 
-- **Judge variance:** the same transcript can score several points apart between runs (observed 56.6 vs 71.5 on
-  one session). A median of 3 runs (as the rubric suggests) would reduce this, but costs 3× more.
+- **Judge variance:** a single judge run can score the same transcript several points apart (observed 56.6 vs
+  71.5). Reports now use the median of 3 parallel runs and show all three scores. On a real interview the runs
+  scored 54.7, 45.0 and 45.0, a median of 45.0. That takes about 60 s and $0.10 per report; set
+  `JUDGE_RUNS=1` in `.env` for the cheaper single run.
 - **Partial rubric:** the red-flag checks (N-items) and the logistics item (S5) are not judged yet. Their weight
   is redistributed, and only the "no company motivation" penalty applies.
 - **Simulated evaluation:** the prompt comparison uses a simulated candidate and a single fictional application,
@@ -174,7 +176,7 @@ the OWASP Top 10 for LLM applications:
 
 ## Next improvements
 
-- Median-of-3 judging, and the N-item red-flag checks with Jev.
+- The N-item red-flag checks with Jev.
 - Jev live scoring after each answer, plus a Coaching mode with tips and retries.
 - History and progress dashboard across sessions; voice (speech-to-text / text-to-speech); JD import from URL.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.

@@ -99,3 +99,7 @@ class Report(BaseModel):
     talk_ratio: float | None
     judge_model: str
     rubric_version: str
+    # Overall score of every judge run, in run order (the report shows the median run). Defaults keep
+    # reports stored before median-of-3 judging readable.
+    runs: list[float | None] = Field(default_factory=list)
+    spread: float | None = None  # max - min of `runs`: how much the judge disagreed with itself
