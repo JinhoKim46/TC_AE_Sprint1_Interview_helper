@@ -120,3 +120,24 @@ def test_empty_reply_counts_as_invalid_json():
     client, _, _ = make_client([completion(""), completion('{"score": 1, "reason": "r"}')])
     verdict, _ = client.chat_json("judge", [], Verdict, model="m")
     assert verdict.score == 1
+
+
+def test_empty_choices_are_recorded_as_a_failure_and_raised():
+    empty = completion("x")
+    empty.choices = []
+    client, _, records = make_client([empty])
+    with pytest.raises(LLMError, match="empty response"):
+        client.chat("judge", [{"role": "user", "content": "hi"}], model="m")
+    assert not records[0].ok and records[0].cost_usd == 0.001  # still billed, so still logged
+
+
+def test_truncated_json_is_not_repaired():
+    class Out(BaseModel):
+        a: int
+
+    cut = completion('{"a": ')
+    cut.choices[0].finish_reason = "length"
+    client, sdk, _ = make_client([cut])
+    with pytest.raises(LLMError, match="output tokens"):
+        client.chat_json("judge", [{"role": "user", "content": "hi"}], Out, model="m")
+    assert len(sdk.requests) == 1  # no repair round-trip

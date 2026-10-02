@@ -114,7 +114,8 @@ def live_score(
                 item=item_id,
                 name=rubric.exchange_items[item_id]["name"],
                 score=round(score, 2),
-                level=round(score),
+                # Half up (3.5 -> 4): Python's round() rounds half to even, so 2.5 would show as 2.
+                level=int(score + 0.5),
             )
         )
     return LiveFeedback(items=items, tip=build_tip(rubric, items))

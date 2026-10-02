@@ -67,6 +67,9 @@ class Limits(BaseModel):
     # Coaching mode: how many times one answer may be retried (so 1 + this many attempts in total).
     # A cap keeps a session from turning into an endless loop of re-answers (and Jev calls).
     max_retries_per_answer: int = 2
+    # A start (planning + opening turn) still "preparing" after this long was interrupted; it is marked
+    # failed so it can't block new interviews.
+    start_timeout_minutes: int = 5
 
 
 class GuardSettings(BaseModel):

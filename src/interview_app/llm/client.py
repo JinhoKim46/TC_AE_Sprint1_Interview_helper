@@ -44,6 +44,7 @@ class ChatResult:
     text: str
     model: str  # the model that actually answered (OpenRouter may resolve aliases)
     record: CallRecord
+    finish_reason: str | None = None  # "length" = the reply was cut off at max_tokens
 
 
 class LLMError(Exception):
@@ -122,17 +123,27 @@ class LLMClient:
         usage = response.usage
         prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
         completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        # Some providers answer HTTP 200 with no choices (e.g. a moderation block). It may still be
+        # billed, so it is recorded with its cost, but as a failure.
+        choices = getattr(response, "choices", None) or []
         record = CallRecord(
             role=role,
-            model=response.model or model,
+            model=getattr(response, "model", None) or model,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             cost_usd=self._cost(usage, model, prompt_tokens, completion_tokens),
             latency_s=time.perf_counter() - start,
+            ok=bool(choices),
+            error=None if choices else "empty response (no choices)",
         )
         self.recorder(record)
-        text = response.choices[0].message.content or ""
-        return ChatResult(text=text, model=record.model, record=record)
+        if not choices:
+            log.warning("LLM call returned no choices: role=%s model=%s", role, model)
+            raise LLMError(f"The {role} model returned an empty response. Please try again.")
+        choice = choices[0]
+        text = choice.message.content or ""
+        finish_reason = getattr(choice, "finish_reason", None)
+        return ChatResult(text=text, model=record.model, record=record, finish_reason=finish_reason)
 
     def _cost(self, usage: Any, model: str, prompt_tokens: int, completion_tokens: int) -> float:
         # OpenRouter reports the real charged cost in `usage.cost`; prefer it whenever present.
@@ -169,6 +180,10 @@ class LLMClient:
             try:
                 return schema.model_validate_json(_strip_code_fence(result.text)), result
             except (ValidationError, json.JSONDecodeError, ValueError) as e:
+                # A reply cut off at max_tokens would be cut off again by a repair attempt (which is
+                # longer still), so asking twice only doubles the cost.
+                if result.finish_reason == "length":
+                    raise LLMError(f"The {role} model ran out of output tokens (raise max_tokens).") from e
                 if attempt == 1:
                     raise LLMError(f"The {role} model returned output in the wrong format.") from e
                 attempt_messages = [
