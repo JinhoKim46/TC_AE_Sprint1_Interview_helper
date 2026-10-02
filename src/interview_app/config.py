@@ -41,6 +41,19 @@ class Limits(BaseModel):
     max_session_cost_usd: float = 1.00
 
 
+class GuardSettings(BaseModel):
+    """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
+
+    # Jev's probability at or above which text counts as an injection. The model only reports a
+    # probability; this threshold is where *our code* draws the line. Tune it with lab/tune_guard.py.
+    injection_threshold: float = 0.7
+    # Switch off the Jev check (rules still run), e.g. to save cost or when offline.
+    use_model_check: bool = True
+    # Long documents are split into chunks of about this many characters, so a short injected line
+    # is not diluted by pages of normal text. All chunks still go in one Jev request.
+    document_chunk_chars: int = 3000
+
+
 class Features(BaseModel):
     """Feature flags, so an unfinished or broken feature can be switched off without code changes."""
 
@@ -74,6 +87,7 @@ class Settings(BaseSettings):
 
     models: RoleModels = RoleModels()
     limits: Limits = Limits()
+    guard: GuardSettings = GuardSettings()
     features: Features = Features()
 
 
