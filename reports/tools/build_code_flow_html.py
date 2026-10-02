@@ -10,7 +10,8 @@ script (code_flow_template.html). Two kinds of content go in:
 - **Narrative** (what each agent is for, the steps of one interviewer turn, the sequence diagrams, the
   findings) lives in `code_flow_narrative.toml`. Every function it names is checked against the code map
   on each build: a name that no longer exists is printed as a warning and flagged on the page, so the
-  story can't silently drift from the code. Each finding has a check below and is dropped once fixed.
+  story can't silently drift from the code. Each finding has a check below and is dropped once fixed;
+  the narrative's `fixed_findings` list records which PR fixed what.
 
 The example prompt in the "prompt journey" is rendered with the app's real template functions and the
 committed fictional sample application (samples/), never with real documents.
@@ -468,6 +469,7 @@ def build_page(m: dict) -> tuple[str, list[str]]:
         "sequences": [{**s, "mermaid": html.escape(s["mermaid"])} for s in narrative["sequences"]],
         "findings": curated_findings(narrative["findings"])
         + generated_findings(m, narrative["generated_findings"]),
+        "fixed_findings": narrative.get("fixed_findings", []),
         "example": example_messages(),
         "missing_symbols": missing,
     }

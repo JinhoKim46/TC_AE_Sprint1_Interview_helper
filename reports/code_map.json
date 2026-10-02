@@ -2496,7 +2496,7 @@
    "from": "interview_app.db:_add_missing_columns",
    "kind": "call",
    "lines": [
-    173
+    178
    ],
    "to": "interview_app.db:_sql_literal"
   },
@@ -2504,7 +2504,7 @@
    "from": "interview_app.db:init_db",
    "kind": "call",
    "lines": [
-    132
+    137
    ],
    "to": "interview_app.db:_add_missing_columns"
   },
@@ -2512,7 +2512,7 @@
    "from": "interview_app.db:make_engine",
    "kind": "call",
    "lines": [
-    123
+    128
    ],
    "to": "interview_app.db:_protect_db_file"
   },
@@ -6447,7 +6447,7 @@
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 271,
+   "lines": 276,
    "path": "src/interview_app/db.py",
    "symbols": [
     "interview_app.db:Application",
@@ -10096,12 +10096,12 @@
    ]
   }
  },
- "source_sha256": "321179e0bbf2a9ee09fe27d09296b0168e3cf559aaacd5d309f6e86e86062200",
+ "source_sha256": "9b8fe7fa803bcabc00088bcc8d336395b23849379ef670e162ebf29033e452e4",
  "stats": {
   "agents": 7,
   "call_sites": {
    "builtin": 478,
-   "external": 705,
+   "external": 706,
    "resolved": 707,
    "unresolved": 39
   },
@@ -11304,9 +11304,9 @@
   },
   "interview_app.db:Evaluation": {
    "doc": "The feedback report for one interview (at most one per session).",
-   "end_line": 270,
+   "end_line": 275,
    "kind": "class",
-   "line": 256,
+   "line": 261,
    "module": "interview_app.db",
    "name": "Evaluation",
    "qualname": "Evaluation",
@@ -11320,9 +11320,9 @@
   },
   "interview_app.db:InterviewSession": {
    "doc": "One mock interview. It snapshots the documents and settings it used, so later edits to the application don't change what an old transcript was based on.",
-   "end_line": 215,
+   "end_line": 220,
    "kind": "class",
-   "line": 195,
+   "line": 200,
    "module": "interview_app.db",
    "name": "InterviewSession",
    "qualname": "InterviewSession",
@@ -11354,9 +11354,9 @@
   },
   "interview_app.db:Turn": {
    "doc": "One message in an interview transcript.",
-   "end_line": 240,
+   "end_line": 245,
    "kind": "class",
-   "line": 218,
+   "line": 223,
    "module": "interview_app.db",
    "name": "Turn",
    "qualname": "Turn",
@@ -11390,9 +11390,9 @@
   },
   "interview_app.db:UserPreferences": {
    "doc": "Saved Settings-page choices, one row per user (see preferences.py).",
-   "end_line": 253,
+   "end_line": 258,
    "kind": "class",
-   "line": 243,
+   "line": 248,
    "module": "interview_app.db",
    "name": "UserPreferences",
    "qualname": "UserPreferences",
@@ -11405,7 +11405,7 @@
   },
   "interview_app.db:_add_missing_columns": {
    "doc": "A tiny migration step: `ALTER TABLE ... ADD COLUMN` for model columns the database lacks.",
-   "end_line": 180,
+   "end_line": 185,
    "externals": [
     "logging.getLogger().info",
     "sqlalchemy.engine.Engine.begin",
@@ -11414,7 +11414,7 @@
     "sqlalchemy.text"
    ],
    "kind": "function",
-   "line": 147,
+   "line": 152,
    "module": "interview_app.db",
    "name": "_add_missing_columns",
    "qualname": "_add_missing_columns",
@@ -11422,14 +11422,14 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 169,
+     "line": 174,
      "text": "column.type.compile"
     }
    ]
   },
   "interview_app.db:_protect_db_file": {
    "doc": "Create the SQLite file owner-only, or tighten an existing one that others can read.",
-   "end_line": 118,
+   "end_line": 123,
    "externals": [
     "contextlib.suppress",
     "logging.getLogger().warning",
@@ -11450,9 +11450,9 @@
   },
   "interview_app.db:_sql_literal": {
    "doc": "",
-   "end_line": 144,
+   "end_line": 149,
    "kind": "function",
-   "line": 135,
+   "line": 140,
    "module": "interview_app.db",
    "name": "_sql_literal",
    "qualname": "_sql_literal",
@@ -11488,12 +11488,12 @@
   },
   "interview_app.db:init_db": {
    "doc": "Create any missing tables, then add any missing columns to existing ones.",
-   "end_line": 132,
+   "end_line": 137,
    "externals": [
     "sqlmodel.SQLModel.metadata.create_all"
    ],
    "kind": "function",
-   "line": 129,
+   "line": 134,
    "module": "interview_app.db",
    "name": "init_db",
    "qualname": "init_db",
@@ -11505,13 +11505,13 @@
   },
   "interview_app.db:make_engine": {
    "doc": "",
-   "end_line": 126,
+   "end_line": 131,
    "externals": [
     "pathlib.Path",
     "sqlmodel.create_engine"
    ],
    "kind": "function",
-   "line": 121,
+   "line": 126,
    "module": "interview_app.db",
    "name": "make_engine",
    "qualname": "make_engine",
@@ -11525,14 +11525,14 @@
     "contextmanager"
    ],
    "doc": "`with session_scope(engine) as s:` commits on success and rolls back on error.",
-   "end_line": 192,
+   "end_line": 197,
    "externals": [
     "sqlmodel.Session",
     "sqlmodel.Session().commit",
     "sqlmodel.Session().rollback"
    ],
    "kind": "function",
-   "line": 184,
+   "line": 189,
    "module": "interview_app.db",
    "name": "session_scope",
    "qualname": "session_scope",
@@ -15797,7 +15797,7 @@
      "references": "user.id"
     }
    ],
-   "line": 256,
+   "line": 261,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.evaluation.service:evaluate_session",
@@ -15827,7 +15827,7 @@
      "references": "application.id"
     }
    ],
-   "line": 195,
+   "line": 200,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.evaluation.service:evaluate_session",
@@ -15886,7 +15886,7 @@
      "references": "user.id"
     }
    ],
-   "line": 218,
+   "line": 223,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.history:list_sessions",
@@ -15925,7 +15925,7 @@
      "references": "user.id"
     }
    ],
-   "line": 243,
+   "line": 248,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.preferences:load_preferences",
