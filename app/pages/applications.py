@@ -7,6 +7,7 @@ extraction mistakes (columns, headers, hyphenation) can be fixed before saving.
 
 import hashlib
 import math
+from collections import Counter
 
 import streamlit as st
 from ui_common import current_user_id, document_guard, get_engine, safe_md, short
@@ -217,6 +218,8 @@ apps = list_applications(engine, user_id)
 if not apps:
     st.info("No applications yet.")
 running = active_session(engine, user_id)
+# One query for every application's interview count, instead of one list_sessions call per application.
+interview_counts = Counter(s.application_id for s in list_sessions(engine, user_id))
 
 for summary in apps:
     company = safe_md(short(summary.company, 60), inline=True)
@@ -265,7 +268,7 @@ for summary in apps:
                         _save_edit(summary.id, kind, st.session_state[key])
 
         # Interviews are deleted with their application (ON DELETE CASCADE), so the tick says so.
-        n = len(list_sessions(engine, user_id, summary.id))
+        n = interview_counts[summary.id]
         consequence = f" (also deletes {n} interview{'' if n == 1 else 's'} and their reports)" if n else ""
         in_use = running is not None and running.application_id == summary.id
         if in_use:
