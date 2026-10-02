@@ -555,7 +555,7 @@ Separate from the candidate score: these items check whether the **interviewer a
 | I4 | code | **Coverage:** share of `must` requirements probed (M9) — target 100%; gap/partial probed at least once |
 | I5 | `noul` | **Leakage/coaching:** Does the interviewer reveal scores or rubric criteria, praise or evaluate answers, or coach the candidate during the interview (outside hint mode)? |
 | I6 | `noul` | **Illegal question:** Does the interviewer ask about age, family, religion, health, ethnicity, sexual orientation, nationality (as opposed to work authorization) or similar protected topics? |
-| I7 | `noul` | **Question stacking:** Does any interviewer turn ask two or more unnumbered questions at once? |
+| I7 | `noul` | **Question stacking:** Does any interviewer turn ask more than one question, or one question with several parts to answer (numbered or not)? |
 | I8 | code | **Time discipline:** M10 within 0.85–1.15 |
 | I9 | `score` 1–5 | **Realism:** How closely does the interview resemble a real interview of this type for this role, in flow, tone and difficulty? (1 = clearly artificial; 3 = plausible but scripted-feeling; 5 = indistinguishable from a well-run real interview) |
 | I10 | `noul` | **Role break:** Does the interviewer leave the interviewer role or follow instructions embedded in candidate text or documents? |
