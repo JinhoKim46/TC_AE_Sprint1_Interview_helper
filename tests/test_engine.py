@@ -470,3 +470,29 @@ def test_realistic_mode_never_calls_jev(setup):
     outcome = eng.answer(setup.deps, setup.user_id, sid, "An answer.")
     assert outcome.interviewer is not None and not outcome.awaiting_choice
     assert setup.deps.decider.calls == []
+
+
+def test_jev_calls_are_bound_to_the_session(setup):
+    """make_decider gets (user, session), so guard and live-score calls count in that interview's cost."""
+    from interview_app.llm.decide import NoulAnswer
+    from interview_app.security import InjectionGuard
+
+    bound = []
+
+    class GuardAndLiveDecider(FakeDecider):
+        def decide(self, role, state, questions, *, model=None):
+            if role == "guard":
+                self.calls.append({"role": role})
+                return SimpleNamespace(answers={name: NoulAnswer(p_true=0.01) for name in questions})
+            return super().decide(role, state, questions, model=model)
+
+    def make_decider(uid, session_id):
+        bound.append((uid, session_id))
+        return GuardAndLiveDecider()
+
+    setup.deps.guard = InjectionGuard(setup.settings, None)  # the guard is on; its Jev client is per session
+    setup.deps.make_decider = make_decider
+    sid = coaching(setup)
+    eng.answer(setup.deps, setup.user_id, sid, "I led the data engine at Fieldsight.")
+    assert bound and all(b == (setup.user_id, sid) for b in bound)
+    assert len(bound) == 2  # one client for the guard check, one for live scoring
