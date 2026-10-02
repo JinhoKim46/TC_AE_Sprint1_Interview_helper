@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 
-from sqlalchemy import event
+from sqlalchemy import Column, ForeignKey, Integer, event
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
@@ -51,6 +51,38 @@ class LLMCall(SQLModel, table=True):
     latency_s: float = 0.0
     ok: bool = True
     error: str | None = None
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class Application(SQLModel, table=True):
+    """One job the user is interviewing for. It owns its own copies of the documents, so
+    editing a CV for one application never changes another."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    company: str
+    role: str
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
+
+
+class Document(SQLModel, table=True):
+    """The cleaned text of one document (JD, CV, cover letter, company notes) of an application."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    # ondelete="CASCADE" lets the database itself remove documents when their application is
+    # deleted. A plain `foreign_key=` can't express that, so the column is built explicitly.
+    application_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("application.id", ondelete="CASCADE"), nullable=False, index=True
+        )
+    )
+    user_id: int = Field(foreign_key="user.id", index=True)
+    kind: str  # an ingest.DocKind value; stored as text so adding a kind needs no migration
+    source: str  # an ingest.DocSource value: pdf, paste, url
+    filename: str | None = None
+    text: str
+    char_count: int
     created_at: datetime = Field(default_factory=utcnow)
 
 
