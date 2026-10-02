@@ -1,0 +1,826 @@
+<title>Interview Helper Project Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: an engineering field guide — one map at the centre, every other section links back into it. */
+:root {
+  --bg: #f5f6f4;
+  --surface: #ffffff;
+  --ink: #1b2422;
+  --muted: #5b6764;
+  --line: #d5dad7;
+  --grid: #e6eae7;
+  --accent: #0b6e69;          /* deep teal: the selected path */
+  --accent-soft: #d8ecea;
+  --graded: #a35b00;          /* amber: graded items */
+  --graded-soft: #f6e8d4;
+  --good: #2f7d32;
+  --warn: #b26a00;
+  --bad: #b3261e;
+  --ui: #3b5b92;
+  --core: #0b6e69;
+  --svc: #6a5a8c;
+  --lab: #8a5a2b;
+  --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111615; --surface: #18201e; --ink: #e4ebe8; --muted: #9aa8a4; --line: #2c3633; --grid: #222b29;
+    --accent: #4fc0b8; --accent-soft: #163634; --graded: #e3a24a; --graded-soft: #3a2a14;
+    --good: #6cc070; --warn: #e3a24a; --bad: #ef7a72;
+    --ui: #86a6e0; --core: #4fc0b8; --svc: #b3a2d8; --lab: #d8a774;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111615; --surface: #18201e; --ink: #e4ebe8; --muted: #9aa8a4; --line: #2c3633; --grid: #222b29;
+  --accent: #4fc0b8; --accent-soft: #163634; --graded: #e3a24a; --graded-soft: #3a2a14;
+  --good: #6cc070; --warn: #e3a24a; --bad: #ef7a72;
+  --ui: #86a6e0; --core: #4fc0b8; --svc: #b3a2d8; --lab: #d8a774;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 0 64px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: 0.005em; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 700; line-height: 1.08; }
+h2 { font-size: 26px; font-weight: 600; }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+a { color: var(--accent); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+/* nav */
+.topnav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(6px); border-bottom: 1px solid var(--line); }
+.topnav .wrap { display: flex; gap: 18px; align-items: center; padding-block: 10px; overflow-x: auto; }
+.topnav a { text-decoration: none; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.topnav a:hover { color: var(--ink); }
+.brand { font-family: var(--font-display); font-weight: 700; color: var(--ink) !important; font-size: 15px !important; margin-right: 6px; }
+
+/* hero */
+.hero { display: grid; gap: 18px; padding-block: 40px 24px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 18px; color: var(--ink); max-width: 62ch; }
+.flowline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: 13px; }
+.flowline span.step { border: 1px solid var(--line); background: var(--surface); padding: 4px 10px; border-radius: 6px; }
+.flowline span.arrow { color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 6px; }
+.stat { border-top: 2px solid var(--ink); padding-top: 8px; }
+.stat b { font-family: var(--font-display); font-size: 26px; display: block; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 13px; }
+
+section { padding-block: 40px 8px; border-top: 1px solid var(--line); margin-top: 32px; display: grid; gap: 16px; }
+.section-head { display: grid; gap: 6px; }
+.section-head p { color: var(--muted); }
+
+/* map */
+.map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+@media (max-width: 900px) { .map-layout { grid-template-columns: minmax(0, 1fr); } }
+.map-frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
+.map-frame svg { display: block; min-width: 760px; width: 100%; height: auto; }
+.banner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid var(--line); min-height: 42px; }
+.banner .label { color: var(--muted); }
+.banner strong { font-weight: 600; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 10px; font-size: 12px; cursor: pointer; }
+.chip:hover { border-color: var(--accent); }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.chip.graded { border-color: color-mix(in srgb, var(--graded) 50%, var(--line)); }
+.chip.graded.on { background: var(--graded); border-color: var(--graded); color: var(--surface); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); padding: 8px 12px; border-top: 1px solid var(--line); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+.node { cursor: pointer; }
+.node rect.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.25; transition: stroke 120ms, fill 120ms; }
+.node .bar { stroke: none; }
+.node text { fill: var(--ink); font-family: var(--font-body); }
+.node text.sub { fill: var(--muted); font-family: var(--font-mono); }
+.node:hover rect.box { stroke: var(--accent); }
+.node.sel rect.box { stroke: var(--accent); stroke-width: 2.5; fill: var(--accent-soft); }
+.node.hl rect.box { stroke: var(--accent); stroke-width: 2; }
+.node.gr rect.box { stroke: var(--graded); stroke-width: 2.25; fill: var(--graded-soft); }
+.dim .node:not(.sel):not(.hl):not(.gr) { opacity: 0.28; }
+.edge { fill: none; stroke: var(--muted); stroke-opacity: 0.45; stroke-width: 1.2; transition: stroke 120ms, opacity 120ms; }
+.edge.hl { stroke: var(--accent); stroke-opacity: 1; stroke-width: 2.2; }
+.dim .edge:not(.hl) { opacity: 0.12; }
+.edge-label { font-family: var(--font-mono); font-size: 10.5px; fill: var(--accent); display: none; paint-order: stroke; stroke: var(--surface); stroke-width: 4px; }
+.edge-label.hl { display: block; }
+.lane-label { font-family: var(--font-mono); font-size: 11px; fill: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.lane-rule { stroke: var(--grid); stroke-width: 1; }
+.ah { fill: var(--muted); }
+.ah-hl { fill: var(--accent); }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel .kind { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+.panel ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.panel .files { display: flex; flex-wrap: wrap; gap: 6px; }
+.panel .files code { background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; overflow-wrap: anywhere; }
+.panel h4 { margin: 0; font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
+.linklist { display: grid; gap: 4px; }
+.linklist button { text-align: left; background: none; border: none; padding: 2px 0; cursor: pointer; color: var(--ink); font-size: 14px; }
+.linklist button:hover { color: var(--accent); }
+.linklist button span { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--font-mono); font-size: 11.5px; padding: 2px 8px; border-radius: 4px; background: var(--graded-soft); color: var(--graded); border: 1px solid color-mix(in srgb, var(--graded) 35%, transparent); cursor: pointer; }
+.fact { font-size: 13px; color: var(--muted); }
+
+/* stepper */
+.stepper { display: grid; gap: 12px; }
+.steps { display: flex; gap: 8px; flex-wrap: wrap; }
+.steps button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+.steps button.on { border-color: var(--accent); background: var(--accent-soft); }
+.stepcard { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; }
+.stepnav { display: flex; gap: 8px; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+
+/* tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+tbody tr.clickable { cursor: pointer; }
+tbody tr.clickable:hover td { background: var(--accent-soft); }
+.lvl { font-family: var(--font-mono); font-size: 11px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--line); white-space: nowrap; }
+.lvl.Mandatory { border-color: var(--ink); }
+.lvl.Hard { background: var(--graded-soft); color: var(--graded); border-color: transparent; }
+.status { font-size: 12px; white-space: nowrap; }
+.status::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; background: var(--good); vertical-align: 0; }
+.status.no::before { background: var(--line); }
+
+.filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filters .label { font-size: 13px; color: var(--muted); }
+
+/* details lists */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+details.item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+details.item summary { cursor: pointer; list-style: none; display: grid; gap: 2px; }
+details.item summary::-webkit-details-marker { display: none; }
+details.item summary .t { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+details.item summary .t::after { content: "+"; color: var(--muted); font-family: var(--font-mono); }
+details.item[open] summary .t::after { content: "−"; }
+details.item summary .s { color: var(--muted); font-size: 13px; }
+details.item .body { margin-top: 10px; display: grid; gap: 8px; font-size: 14px; }
+details.item .body dl { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 4px 10px; margin: 0; }
+details.item .body dt { color: var(--muted); font-size: 12px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.05em; padding-top: 2px; }
+details.item .body dd { margin: 0; }
+
+/* chart */
+.chartbox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; }
+.chartbox svg { width: 100%; height: auto; display: block; }
+.chartbox text { font-family: var(--font-body); }
+.variants { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.variant { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; display: grid; gap: 4px; }
+.variant b { font-family: var(--font-display); font-size: 15px; }
+.variant.def { border-color: var(--accent); }
+.note { font-size: 13px; color: var(--muted); }
+
+/* checklist */
+.checklist { display: grid; gap: 14px; }
+.checkgroup { display: grid; gap: 6px; }
+.checkgroup label { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
+.checkgroup input { margin-top: 4px; accent-color: var(--accent); }
+.checkgroup label.done span { text-decoration: line-through; color: var(--muted); }
+.roadmap { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+
+footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<nav class="topnav" aria-label="Sections">
+  <div class="wrap">
+    <a class="brand" href="#top">Interview Helper</a>
+    <a href="#map">System map</a>
+    <a href="#flow">A session, step by step</a>
+    <a href="#grading">Grading</a>
+    <a href="#stack">Tech stack</a>
+    <a href="#decisions">Decisions</a>
+    <a href="#prompts">Prompt comparison</a>
+    <a href="#risks">Risks</a>
+    <a href="#next">Next steps</a>
+  </div>
+</nav>
+
+<main class="wrap" id="top">
+  <header class="hero">
+    <div class="eyebrow">Turing College AE · Sprint 1 capstone · status 2 October 2026</div>
+    <h1>An interview rehearsal built from one job description and one CV</h1>
+    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
+    <div class="flowline" aria-label="Core flow">
+      <span class="step">Upload JD + CV</span><span class="arrow">→</span>
+      <span class="step">cover letter (optional)</span><span class="arrow">→</span>
+      <span class="step">tailored interview</span><span class="arrow">→</span>
+      <span class="step">evidence-based report</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>5 / 5</b><span>mandatory requirements met</span></div>
+      <div class="stat"><b>13</b><span>optional tasks (bonus needs 2 medium + 1 hard)</span></div>
+      <div class="stat"><b>19</b><span>pull requests merged through CI</span></div>
+      <div class="stat"><b>248</b><span>automated tests, no network</span></div>
+    </div>
+  </header>
+
+  <section id="map">
+    <div class="section-head">
+      <h2>System map</h2>
+      <p>Three layers: Streamlit pages call the core; the core holds all logic and never imports the UI; every model call goes through one logged gateway. Select a part to see its files, its job, the grades it delivers and what it talks to.</p>
+    </div>
+    <div class="map-layout">
+      <div class="map-frame">
+        <div class="banner" id="banner" aria-live="polite"><span class="label">Nothing selected. Click a box, a requirement or a step.</span></div>
+        <svg id="mapsvg" viewBox="0 0 1000 640" role="img" aria-label="Architecture map of the Interview Helper"></svg>
+        <div class="legend">
+          <span><i style="background:var(--ui)"></i>UI (Streamlit)</span>
+          <span><i style="background:var(--core)"></i>Core (Python, no UI code)</span>
+          <span><i style="background:var(--svc)"></i>Services and data</span>
+          <span><i style="background:var(--lab)"></i>Lab (offline evaluation)</span>
+          <span><i style="background:var(--graded)"></i>Graded item highlighted</span>
+        </div>
+      </div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section id="flow">
+    <div class="section-head">
+      <h2>A session, step by step</h2>
+      <p>Follow one real use of the app. Each step lights up the parts and connections it uses on the map above.</p>
+    </div>
+    <div class="stepper">
+      <div class="steps" id="steps" role="tablist"></div>
+      <div class="stepcard" id="stepcard"></div>
+      <div class="stepnav">
+        <button class="btn" id="prevStep" type="button">Previous step</button>
+        <button class="btn primary" id="nextStep" type="button">Next step</button>
+        <button class="btn" id="showStep" type="button">Show on map</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="grading">
+    <div class="section-head">
+      <h2>Grading scheme, mapped to the code</h2>
+      <p>All five mandatory requirements and 13 optional tasks are delivered. Click a row to highlight the parts of the system that deliver it.</p>
+    </div>
+    <div class="filters" id="gradeFilters"><span class="label">Show:</span></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>ID</th><th>Level</th><th>Requirement</th><th>How it is met</th><th>Status</th></tr></thead>
+        <tbody id="gradeRows"></tbody>
+      </table>
+    </div>
+    <h3>What the reviewer asks, and what to show</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Criterion</th><th>One-line answer</th><th>Show</th></tr></thead>
+        <tbody id="criteriaRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="stack">
+    <div class="section-head">
+      <h2>Tech stack</h2>
+      <p>One language, one UI library, one database file and one gateway to every model, so each piece can be explained in a sentence. Open a card for the reason and the alternative it beat.</p>
+    </div>
+    <div class="cards" id="stackCards"></div>
+    <h3>Models by role</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Role</th><th>Default model</th><th>Why</th></tr></thead>
+        <tbody id="modelRows"></tbody>
+      </table>
+    </div>
+    <p class="note">The account's OpenRouter guardrail blocks <code>openai/gpt-5</code>, DeepSeek and <code>z-ai/glm-5.2</code>. Each model in the picker was confirmed with a real call.</p>
+  </section>
+
+  <section id="decisions">
+    <div class="section-head">
+      <h2>Key decisions</h2>
+      <p>One rule runs through all of them: the model judges, code computes. Models decide what to ask and how good an answer is; code counts, weighs, enforces limits and sets thresholds.</p>
+    </div>
+    <div class="cards" id="decisionCards"></div>
+  </section>
+
+  <section id="prompts">
+    <div class="section-head">
+      <h2>Prompt comparison (R4)</h2>
+      <p>Five interviewer prompts, each the zero-shot baseline plus one technique, interviewed a simulated candidate playing three personas. Jev judged every transcript on rubric §12. Switch the measure to see the trade-offs.</p>
+    </div>
+    <div class="chartbox">
+      <div class="filters" id="metricChips"><span class="label">Measure:</span></div>
+      <svg id="chart" viewBox="0 0 760 290" role="img" aria-label="Prompt comparison chart"></svg>
+      <p class="note" id="chartNote"></p>
+    </div>
+    <div class="variants" id="variantCards"></div>
+    <p class="note">A re-run after a shared-prompt fix made turns 20–28% shorter. It did not reproduce P4's apparently adaptive follow-ups (2 / 2 / 6 became 4 / 4 / 4), so P2, P4 and P5 are treated as tied. Full details: <code>docs/05-prompt-comparison.md</code>.</p>
+  </section>
+
+  <section id="risks">
+    <div class="section-head">
+      <h2>Risks and limitations</h2>
+      <p>None blocks the review. Judge variance and the small evaluation sample are the most likely reviewer questions and should be raised first.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Issue</th><th>Impact</th><th>Mitigation now</th><th>Next step</th></tr></thead>
+        <tbody id="riskRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-head">
+      <h2>Next steps</h2>
+      <p>The next step is not more features. Run the app end to end with one real application, rehearse the review, and close three decisions. Ticks are remembered in this browser.</p>
+    </div>
+    <div class="checklist" id="checklist"></div>
+    <div class="checkgroup">
+      <h3>After the review, in order of value for long-term use</h3>
+      <ol class="roadmap">
+        <li>History and progress dashboard: past interviews, score trend, recurring weak spots</li>
+        <li>Live per-answer scoring with Jev, and a Coaching mode with tips and retries</li>
+        <li>A larger evaluation set to calibrate the judge and separate P2, P4 and P5</li>
+        <li>Voice: spoken questions and speech-to-text answers</li>
+        <li>Login with MFA (draft PR #4), if the app is ever shared</li>
+        <li>Interviewer avatars and JD import from URL, if still wanted</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer>
+    Repository: github.com/JinhoKim46/TC_AE_Sprint1_Interview_helper · Written report: <code>reports/2026-10-02-project-report.md</code> · Figures from live runs on 2 October 2026.
+  </footer>
+</main>
+
+<script>
+(() => {
+  // ------------------------------------------------------------------ data
+  const LAYER = { ui: "UI page", core: "Core module", svc: "Service / data", lab: "Lab (offline)" };
+  const NODES = [
+    { id: "applications_page", layer: "ui", name: "Applications", sub: "app/pages", x: 200, y: 70,
+      files: ["app/pages/applications.py"],
+      job: "Create an application from a job description and CV (required) plus an optional cover letter and company notes, by PDF upload or paste. Extracted text is editable before saving. Suspicious text is flagged for the user to confirm.",
+      facts: ["Includes a Load sample application button with a fictional company and candidate"], grades: ["M6", "R2", "E3"] },
+    { id: "interview_page", layer: "ui", name: "Interview", sub: "app/pages", x: 500, y: 70,
+      files: ["app/pages/interview.py", "app/report_view.py"],
+      job: "Pick the application, interview type, difficulty and number of main questions; chat with the interviewer; see progress and cost; end the interview; request and read the feedback report.",
+      facts: ["A refresh resumes the interview: every turn is already stored"], grades: ["H1", "R2", "E4"] },
+    { id: "settings_page", layer: "ui", name: "Settings", sub: "app/pages", x: 820, y: 70,
+      files: ["app/pages/settings.py"],
+      job: "Interview defaults in plain language. Developer settings sit behind a toggle: prompt variant, interviewer and judge models with prices, temperature, max tokens, reasoning effort. Usage and cost by role and model.",
+      facts: ["Open-weight models carry a badge"], grades: ["M1", "M3", "M7", "M9", "H4"] },
+
+    { id: "ingest", layer: "core", name: "Ingest", sub: "ingest.py", x: 90, y: 200,
+      files: ["src/interview_app/ingest.py", "src/interview_app/applications.py"],
+      job: "Extracts PDF text with size and page limits, cleans and validates it, and stores applications scoped by user. Each application owns its own copies of its documents.",
+      facts: ["Every query filters on user_id, so one user can never read another's rows"], grades: ["M6"] },
+    { id: "security", layer: "core", name: "Guards", sub: "security/", x: 250, y: 200,
+      files: ["security/limits.py", "security/injection.py", "security/spotlight.py"],
+      job: "Length, turn and spend limits (OWASP LLM10). Prompt-injection detection: regex rules first, then a Jev yes/no check (LLM01). Spotlighting wraps every untrusted text in tags it cannot close.",
+      facts: ["A reworded attack no rule caught was blocked at p = 0.99", "A benign answer about writing a system prompt passed at p = 0.02", "Answers are blocked; documents are flagged, never blocked"], grades: ["R5", "E3", "M9"] },
+    { id: "engine", layer: "core", name: "Interview engine", sub: "interview/engine.py", x: 420, y: 200,
+      files: ["interview/engine.py", "interview/persona.py", "interview/plan.py"],
+      job: "A stateless loop over the database. Start: snapshot documents, plan (for P4), opening turn. Answer: run the guards, then get the next turn. Code counts main questions and follow-ups, picks the phase, forces a close at limits, and makes sure the candidate is invited to ask questions.",
+      facts: ["About 25 s to start, about 3 s per interviewer turn", "Interview type + difficulty derive the persona"], grades: ["H1", "E4", "E7", "R1"] },
+    { id: "prompts", layer: "core", name: "Prompts", sub: "prompts/*.md", x: 590, y: 200,
+      files: ["src/interview_app/prompts/", "interview/prompting.py", "interview/schemas.py"],
+      job: "Five interviewer variants, each the zero-shot baseline plus one technique, and the planner and judge templates. Assembles the system, user and assistant messages. Reasoning fields sit before the message in the JSON schema.",
+      facts: ["The live-status message goes last, so the long prompt prefix stays cacheable"], grades: ["R4", "M2"] },
+    { id: "evaluation", layer: "core", name: "Evaluation", sub: "evaluation/", x: 750, y: 200,
+      files: ["evaluation/exchanges.py", "evaluation/metrics.py", "evaluation/judge.py", "evaluation/aggregate.py", "evaluation/service.py"],
+      job: "Transcript to exchanges and metrics (code), then one judge call that writes rationale and evidence before every score (model), then weights, penalties and a band from rubric.json (code). The judge must quote the candidate, and code checks each quote.",
+      facts: ["About 52 s and $0.03 per report", "Quote check added after a real run credited CV-only facts"], grades: ["H5", "M2", "R1"] },
+    { id: "preferences", layer: "core", name: "Preferences", sub: "preferences.py", x: 910, y: 200,
+      files: ["src/interview_app/preferences.py", "src/interview_app/usage.py"],
+      job: "Saved interview defaults and developer settings per user. Spend summaries by role and by model, computed from the call log.",
+      facts: [], grades: ["M1", "M3"] },
+
+    { id: "lab", layer: "lab", name: "Prompt lab", sub: "lab/", x: 90, y: 340,
+      files: ["src/interview_app/lab/", "lab/compare_prompts.py", "lab/sweep_setting.py"],
+      job: "A simulated candidate (Gemini 2.5 Flash playing strong, weak and evasive personas) drives the real engine. Jev judges interviewer quality on rubric §12. Also runs the reasoning-effort sweep.",
+      facts: ["15 sessions + sweep cost $0.52", "Uses its own database, never the app's"], grades: ["R4", "H5", "E8"] },
+    { id: "decide", layer: "core", name: "Jev client", sub: "llm/decide.py", x: 250, y: 340,
+      files: ["src/interview_app/llm/decide.py"],
+      job: "Asks the Jev decision model typed questions (yes/no, score, choice) in one request and returns probabilities. Code sets every threshold.",
+      facts: ["About 0.4 s per call", "Retries on rate limits and server errors"], grades: ["R5", "H5"] },
+    { id: "llm", layer: "core", name: "LLM gateway", sub: "llm/client.py", x: 470, y: 340,
+      files: ["src/interview_app/llm/client.py", "src/interview_app/llm/calllog.py"],
+      job: "The one gateway for chat models: OpenAI SDK pointed at OpenRouter, retries, optional settings sent only when set, reasoning effort, real cost from usage.cost. Every call is logged. chat_json validates against a schema and repairs once.",
+      facts: ["Switching provider is a base URL and a key"], grades: ["R3", "M3"] },
+    { id: "pricing", layer: "core", name: "Pricing", sub: "llm/pricing.py", x: 750, y: 340,
+      files: ["src/interview_app/llm/pricing.py"],
+      job: "Caches the OpenRouter model catalog for 24 hours: per-token prices for cost estimates when a provider reports none, and the data behind the model picker.",
+      facts: ["Backs off 10 minutes after a failed fetch, so offline use stays fast"], grades: ["M3", "M7"] },
+
+    { id: "sqlite", layer: "svc", name: "SQLite", sub: "data/app.db", x: 120, y: 500,
+      files: ["src/interview_app/db.py", "data/app.db (gitignored)"],
+      job: "Local database: users, applications, documents, interview sessions, turns, evaluations, preferences and the call log. Every owned row has a user_id, so accounts can be added later without migration.",
+      facts: ["Real CVs never leave the machine except as model calls"], grades: ["H1"] },
+    { id: "jevapi", layer: "svc", name: "Jev decisions API", sub: "OpenRouter", x: 300, y: 500,
+      files: ["POST /api/alpha/decisions"],
+      job: "The decision-model endpoint. The model is pinned to an exact build (typesafe/jev-1.13-20260917), never a moving alias.",
+      facts: [], grades: [] },
+    { id: "openrouter", layer: "svc", name: "OpenRouter chat", sub: "/api/v1", x: 480, y: 500,
+      files: ["POST /api/v1/chat/completions"],
+      job: "OpenAI-compatible chat API. Interviewer and planner: gpt-5-mini. Judge: Claude Haiku 4.5. Open-weight options: Gemma 4 31B, MiniMax M2.7.",
+      facts: ["Reports the real cost of each call"], grades: ["R3", "H4"] },
+    { id: "catalog", layer: "svc", name: "Model catalog", sub: "/api/v1/models", x: 660, y: 500,
+      files: ["GET /api/v1/models"],
+      job: "Per-token prices, modalities and structured-output support for several hundred models.",
+      facts: [], grades: ["M3"] },
+    { id: "docs", layer: "svc", name: "Rubric + guideline", sub: "docs/", x: 860, y: 500,
+      files: ["docs/rubric.json", "docs/01-interviewer-guideline.md"],
+      job: "rubric.json is the single source of truth for rubric items, weights and bands. The interviewer guideline feeds the P4 prompt.",
+      facts: [], grades: ["H5"] },
+  ];
+  const EDGES = [
+    ["applications_page", "ingest", "save documents"],
+    ["applications_page", "security", "flag documents"],
+    ["interview_page", "engine", "start / answer"],
+    ["interview_page", "evaluation", "get report"],
+    ["settings_page", "preferences", "save settings"],
+    ["settings_page", "pricing", "model prices"],
+    ["engine", "security", "guard each answer"],
+    ["engine", "prompts", "build messages"],
+    ["engine", "llm", "interviewer + planner"],
+    ["engine", "sqlite", "sessions, turns"],
+    ["evaluation", "llm", "judge call"],
+    ["evaluation", "docs", "rubric weights"],
+    ["evaluation", "sqlite", "store report"],
+    ["ingest", "sqlite", "applications"],
+    ["security", "decide", "injection check"],
+    ["preferences", "sqlite", "preferences"],
+    ["prompts", "docs", "guideline"],
+    ["llm", "openrouter", "chat completion"],
+    ["llm", "pricing", "cost fallback"],
+    ["llm", "sqlite", "call log"],
+    ["decide", "jevapi", "decide"],
+    ["pricing", "catalog", "fetch prices"],
+    ["lab", "engine", "drive sessions"],
+    ["lab", "decide", "interviewer judge"],
+    ["lab", "llm", "simulated candidate"],
+  ];
+  const STEPS = [
+    { title: "Add an application", nodes: ["applications_page", "ingest", "security", "decide", "jevapi", "sqlite"],
+      edges: [["applications_page", "ingest"], ["applications_page", "security"], ["security", "decide"], ["decide", "jevapi"], ["ingest", "sqlite"]],
+      text: "Upload or paste the job description and CV, optionally a cover letter and company notes. Ingest extracts and cleans the text; the guard checks every document with rules and Jev and flags anything that looks like an instruction to an AI. You confirm or edit, then one copy is stored per application." },
+    { title: "Start the interview", nodes: ["interview_page", "engine", "prompts", "docs", "llm", "openrouter", "sqlite"],
+      edges: [["interview_page", "engine"], ["engine", "prompts"], ["prompts", "docs"], ["engine", "llm"], ["llm", "openrouter"], ["engine", "sqlite"]],
+      text: "The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
+    { title: "Answer a question", nodes: ["interview_page", "engine", "security", "decide", "prompts", "llm", "openrouter", "sqlite"],
+      edges: [["interview_page", "engine"], ["engine", "security"], ["security", "decide"], ["engine", "prompts"], ["engine", "llm"], ["llm", "openrouter"], ["llm", "sqlite"], ["engine", "sqlite"]],
+      text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent. Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
+    { title: "Get the feedback report", nodes: ["interview_page", "evaluation", "docs", "llm", "openrouter", "sqlite"],
+      edges: [["interview_page", "evaluation"], ["evaluation", "docs"], ["evaluation", "llm"], ["llm", "openrouter"], ["evaluation", "sqlite"]],
+      text: "Code splits the transcript into exchanges and computes word metrics. One judge call (Claude Haiku, a different family from the interviewer) writes rationale and evidence before each score. Code verifies the quotes and turns the scores into the report with the weights in rubric.json. Stored, so reopening is free." },
+    { title: "Tune the settings", nodes: ["settings_page", "preferences", "pricing", "catalog", "sqlite"],
+      edges: [["settings_page", "preferences"], ["settings_page", "pricing"], ["pricing", "catalog"], ["preferences", "sqlite"]],
+      text: "Choose the prompt variant and the models, with prices from the cached catalog, and set temperature, max tokens and reasoning effort. Saved preferences start every new interview. Usage and cost come from the call log." },
+    { title: "Compare prompts (lab)", nodes: ["lab", "engine", "llm", "openrouter", "decide", "jevapi"],
+      edges: [["lab", "engine"], ["lab", "llm"], ["llm", "openrouter"], ["lab", "decide"], ["decide", "jevapi"]],
+      text: "Offline, a simulated candidate answers through the same engine the app uses. Jev scores every transcript on the interviewer-quality items, and the results feed the prompt comparison below." },
+  ];
+  const GRADES = [
+    { id: "R1", lvl: "Mandatory", title: "Choose the interview-prep focus", how: "Application-specific mock interviews grounded in the JD, CV and optional cover letter, ending in a rubric report", nodes: ["applications_page", "engine", "evaluation"] },
+    { id: "R2", lvl: "Mandatory", title: "Front end with a UI library", how: "Streamlit, four pages: Home, Interview, Applications, Settings", nodes: ["applications_page", "interview_page", "settings_page"] },
+    { id: "R3", lvl: "Mandatory", title: "Use an allowed OpenRouter model", how: "Interviewer openai/gpt-5-mini by default", nodes: ["llm", "openrouter"] },
+    { id: "R4", lvl: "Mandatory", title: "Five system prompts, different techniques, compared", how: "Zero-shot, few-shot, chain-of-thought, role-rich + plan, self-critique; compared in 15 simulated sessions", nodes: ["prompts", "lab"] },
+    { id: "R5", lvl: "Mandatory", title: "At least one security guard", how: "Limits, regex + Jev injection detection, spotlighting of untrusted text", nodes: ["security", "decide"] },
+    { id: "E3", lvl: "Easy", title: "More security constraints", how: "Input validation, LLM-based (Jev) injection check, flagged documents", nodes: ["security", "decide", "applications_page"] },
+    { id: "E4", lvl: "Easy", title: "Difficulty levels", how: "Friendly, standard, tough: tone and follow-up depth", nodes: ["engine", "interview_page"] },
+    { id: "E7", lvl: "Easy", title: "Interviewer personas", how: "Six personas derived from the interview type", nodes: ["engine"] },
+    { id: "E8", lvl: "Easy", title: "Tune a model setting", how: "Reasoning effort low vs medium: medium doubled latency, no quality gain", nodes: ["lab"] },
+    { id: "M1", lvl: "Medium", title: "All model settings in the UI", how: "Model, temperature, max tokens, reasoning effort, judge model", nodes: ["settings_page", "preferences"] },
+    { id: "M2", lvl: "Medium", title: "Two or more JSON output formats", how: "Interview plan, interviewer turn (three variants), judge evaluation, report", nodes: ["prompts", "evaluation"] },
+    { id: "M3", lvl: "Medium", title: "Price of the prompt", how: "Real cost per call, catalog prices, spend by role and model", nodes: ["llm", "pricing", "preferences", "settings_page"] },
+    { id: "M6", lvl: "Medium", title: "Job description field", how: "The JD is the centre of the app, with CV, cover letter and notes", nodes: ["applications_page", "ingest"] },
+    { id: "M7", lvl: "Medium", title: "Choose the LLM", how: "Curated picker with prices and open-weight badges", nodes: ["settings_page", "pricing"] },
+    { id: "M9", lvl: "Medium", title: "Guard + developer settings kept apart", how: "Developer settings behind a toggle on the Settings page", nodes: ["settings_page", "security"] },
+    { id: "H1", lvl: "Hard", title: "Full chatbot", how: "Persistent multi-turn sessions that survive a refresh", nodes: ["engine", "interview_page", "sqlite"] },
+    { id: "H4", lvl: "Hard", title: "Open-source LLMs", how: "Gemma 4 31B and MiniMax M2.7, tested live", nodes: ["openrouter", "settings_page"] },
+    { id: "H5", lvl: "Hard", title: "LLM-as-a-judge", how: "Candidate report (Claude Haiku) and interviewer-quality judge (Jev)", nodes: ["evaluation", "lab", "decide"] },
+    { id: "M5", lvl: "Medium", title: "Jailbreak results in a spreadsheet", how: "Not done as a spreadsheet; an 18-attack red-team table lives in the tests", nodes: ["security"], done: false },
+    { id: "M8", lvl: "Medium", title: "Image generation", how: "Deferred (interviewer avatars)", nodes: [], done: false },
+    { id: "H2", lvl: "Hard", title: "LangChain chains or agents", how: "Not attempted: raw API calls keep the parameters visible", nodes: [], done: false },
+    { id: "H3", lvl: "Hard", title: "Vector database", how: "Not attempted", nodes: [], done: false },
+  ];
+  const CRITERIA = [
+    ["Prompting techniques", "Five variants, each the zero-shot baseline plus one technique", "The prompt comparison below; the prompts folder"],
+    ["Model settings", "Temperature = randomness; max tokens = output cap; reasoning effort = thinking traded against latency", "Judge at temperature 0; E8 sweep 2.9 s → 6.0 s, no gain"],
+    ["Message roles", "System = instructions + wrapped documents; user = wrapped answer; assistant = earlier turns; status message last", "Step 3 of the walkthrough"],
+    ["Output types", "Schema-validated JSON, Jev's typed probabilities, free text inside JSON fields", "interview/schemas.py, evaluation/schemas.py"],
+    ["Project works", "A live interview with the sample application", "Demo: strong answer, vague answer, injection attempt, report"],
+    ["Correct OpenRouter calls", "One gateway with a call log of tokens, cost and latency", "Settings → Usage and cost"],
+    ["Weaknesses", "Judge variance, small sample, stacking not fully solved, partial rubric, latency", "Risks table"],
+    ["Improvements", "Median-of-3 judging, larger evaluation set, live scoring, history", "Next steps"],
+  ];
+  const STACK = [
+    { t: "Python 3.12 + uv", s: "Language and tooling", why: "One language end to end; uv gives a locked, reproducible environment. ruff and pytest run in CI.", alt: "pip + requirements.txt (no lockfile)" },
+    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
+    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 248 tests run here.", alt: "Logic inside Streamlit pages" },
+    { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt.", alt: "Parsing dicts by hand" },
+    { t: "SQLite + SQLModel", s: "Storage", why: "One user, local data, zero setup. Moving to Postgres is a connection-string change.", alt: "Supabase (cloud; sends CVs to a third party)" },
+    { t: "OpenAI SDK → OpenRouter", s: "Model access", why: "One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of every call.", alt: "LiteLLM or LangChain (more layers between you and the API parameters)" },
+    { t: "Jev decision model", s: "Typed judgements", why: "Returns probabilities instead of text: about 0.4 s, stable and cheap. Used for the injection guard and the lab judge.", alt: "A second LLM classifier (slower, writes text that must be parsed)" },
+    { t: "Jinja2 templates", s: "Prompts as files", why: "Prompts are readable documents, versioned and reviewed like code; a missing variable is an error, not empty text.", alt: "f-strings scattered through the code" },
+    { t: "GitHub + worktrees + CI", s: "Delivery", why: "Every change on its own branch, tested by GitHub Actions, squash-merged when green.", alt: "Committing straight to main" },
+  ];
+  const MODELS = [
+    ["Interviewer and planner", "openai/gpt-5-mini", "The brief's recommended default"],
+    ["Final judge", "anthropic/claude-haiku-4.5", "A different family from the interviewer avoids self-preference bias"],
+    ["Simulated candidate (lab)", "google/gemini-2.5-flash", "A third family, so neither side grades its own style"],
+    ["Injection guard, lab judge", "typesafe/jev-1.13", "Typed probabilities; code sets the threshold"],
+    ["Open-weight options (H4)", "google/gemma-4-31b-it, minimax/minimax-m2.7", "Passed a live check against the account's guardrail"],
+  ];
+  const DECISIONS = [
+    { t: "Grading criteria and the core flow first", s: "Extras wait until after the review", alt: "Build everything before Friday", why: "The extras aren't graded and each one adds explanation burden at the review.", res: "Graded scope finished on day one; MFA, voice and dashboard deferred." },
+    { t: "Each prompt = baseline + exactly one technique", s: "R4 isolates what each technique adds", alt: "Five independently written prompts", why: "A comparison can only attribute a difference to one change.", res: "Only P4 receives the separately generated plan; P3 plans in its own notes." },
+    { t: "Reasoning fields before the message", s: "Field order is part of the technique", alt: "Reasoning after the message, or none", why: "Models write JSON top to bottom, so the model must think or critique before it asks.", res: "This ordering is what makes P3 chain-of-thought and P5 self-critique." },
+    { t: "Structured JSON per turn, no streaming", s: "Reliable metadata", alt: "Stream plain text", why: "The app needs the stage, question id and end-of-interview flag on every turn.", res: "A 2–5 s spinner per turn instead of streamed words." },
+    { t: "Status message at the end", s: "Cache-friendly prompts", alt: "Rebuild the whole prompt each turn", why: "The long system prompt stays identical between turns, so the provider can cache it.", res: "Cheaper, faster turns." },
+    { t: "Code enforces limits and closing rules", s: "Prompts can be ignored; code can't", alt: "Trust the prompt", why: "A model can forget a rule; a counter can't.", res: "Interviews always close, and the candidate is always invited to ask questions." },
+    { t: "Rules first, then Jev, for injection", s: "Cheap and explainable, then robust", alt: "An LLM classifier only", why: "Rules are free and explain themselves; Jev catches paraphrases in about 0.4 s.", res: "Reworded attack blocked at p = 0.99; benign answer passed at p = 0.02." },
+    { t: "One judge call, a different model family", s: "Speed and less bias", alt: "One call per exchange; the interviewer's own model", why: "About 50 s instead of minutes, and no self-preference bias.", res: "Score variance between runs remains (see Risks)." },
+    { t: "The judge must quote; code checks the quote", s: "Grounding in the transcript", alt: "Trust the cited turn ids", why: "On a real run the judge credited CV facts never said in the interview.", res: "Requirement credit and strengths now need a verified quote." },
+    { t: "Local SQLite, one user, MFA parked", s: "Privacy and scope", alt: "Supabase; full login now", why: "Data stays on the owner's machine; login isn't graded.", res: "user_id kept on every table, so accounts can be added without migration." },
+    { t: "Public repo, privacy-first .gitignore", s: "Reviewer access, no personal data", alt: "A private repository", why: "The reviewer can open it without extra setup.", res: "Real applications never committed; a fictional sample ships instead." },
+  ];
+  const VARIANTS = [
+    { id: "P1", name: "Zero-shot", tech: "Instructions only: persona line, rules, documents, output format.", I9: 3.69, cost: 0.0091, sturn: 2.7, fu: 6.0, words: 51 },
+    { id: "P2", name: "Few-shot", tech: "Adds worked example turns from a different, fictional interview.", I9: 4.06, cost: 0.0099, sturn: 2.9, fu: 5.7, words: 54 },
+    { id: "P3", name: "Chain-of-thought", tech: "Adds private notes written before each message: a plan, then reasoning.", I9: 3.96, cost: 0.0154, sturn: 3.8, fu: 7.0, words: 52 },
+    { id: "P4", name: "Role-rich + plan", tech: "Adds a detailed persona, the interviewer guideline, and a plan from a separate call.", I9: 4.07, cost: 0.0159, sturn: 2.9, fu: 3.3, words: 60, def: true },
+    { id: "P5", name: "Self-critique", tech: "Adds draft → checklist critique → final message inside each turn.", I9: 4.02, cost: 0.0164, sturn: 5.2, fu: 6.7, words: 58 },
+  ];
+  const METRICS = [
+    { key: "I9", label: "Realism (1–5)", fmt: v => v.toFixed(2), lo: 3.5, hi: 4.25, ticks: [3.5, 3.75, 4.0, 4.25], better: "high", note: "Realism as judged by Jev. Every technique beat zero-shot; the top three sit within 0.05 of each other, inside run-to-run noise." },
+    { key: "cost", label: "$ per session", fmt: v => "$" + v.toFixed(4), lo: 0, hi: 0.02, ticks: [0, 0.005, 0.01, 0.015, 0.02], better: "low", note: "Real OpenRouter cost per simulated session. P2 is the cheapest of the realistic three, at about 60% of P4's cost." },
+    { key: "sturn", label: "Seconds per turn", fmt: v => v.toFixed(1) + " s", lo: 0, hi: 6, ticks: [0, 2, 4, 6], better: "low", note: "Mean latency per interviewer turn. Self-critique writes three passes per turn and is the slowest." },
+    { key: "fu", label: "Follow-ups per session", fmt: v => v.toFixed(1), lo: 0, hi: 8, ticks: [0, 2, 4, 6, 8], better: "none", note: "How hard the interviewer probes. P4's low count looked adaptive in the first run but did not reproduce in a second run." },
+    { key: "words", label: "Words per turn", fmt: v => v.toFixed(0), lo: 0, hi: 70, ticks: [0, 20, 40, 60], better: "none", note: "Length of interviewer turns. A later shared-prompt fix cut turns by 20–28% for P2 and P4." },
+  ];
+  const RISKS = [
+    ["Judge score variance: the same transcript scored 56.6 and 71.5 on two runs", "High for trust in the number; low for the written feedback", "Report says scores vary; quotes verified in code", "Median of 3 judge runs, about 3× the cost"],
+    ["Small evaluation sample (1 session per persona, 1 application)", "P2, P4 and P5 can't be ranked", "Conclusions limited to what the data supports", "≥ 3 sessions per persona, more applications, human-rated transcripts"],
+    ["Question stacking still occurs", "Less realistic interviews", "Shared rule tightened; turns 20–28% shorter", "Measure stacking per turn; consider a code check"],
+    ["Partial rubric: red-flag checks and logistics not judged", "Overall score omits some penalties", "Their weight is redistributed transparently", "Add red-flag checks as Jev yes/no questions"],
+    ["Latency: about 25 s to start, about 50 s for a report", "Two waits", "Spinners say how long", "Stream the report; cache plans per application"],
+    ["Old CV-derived examples remain in public git history", "Minor privacy exposure", "Removed from all current files", "Owner decides: rewrite history or accept"],
+    ["openai/gpt-5 blocked by the account guardrail", "The brief's high-capability option is unavailable", "gpt-5-mini is the recommended default", "Optional: allow it in OpenRouter"],
+  ];
+  const CHECKS = [
+    { group: "Decisions this week", items: ["Rewrite git history to remove old CV-derived examples, or accept them", "Allow openai/gpt-5 in the OpenRouter guardrail (optional)", "Confirm the order of the post-review roadmap"] },
+    { group: "Before the review (3–8 October)", items: ["Run one full interview and report with a real application", "Fix only what that run reveals; otherwise feature freeze", "Optional: median-of-3 judging to cut score variance", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
+    { group: "Review: Friday 9 October (hard deadline 12 October)", items: ["Explain techniques, settings, roles and output types using the map and the chart", "Raise judge variance and sample size before the reviewer does"] },
+  ];
+
+  // ------------------------------------------------------------------ helpers
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  const W = 148, H = 52;
+  const color = l => `var(--${l === "ui" ? "ui" : l === "core" ? "core" : l === "svc" ? "svc" : "lab"})`;
+  const svgNS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, text) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+
+  // ------------------------------------------------------------------ map
+  const svg = $("#mapsvg");
+  const defs = el("defs");
+  for (const [id, cls] of [["ah", "ah"], ["ahhl", "ah-hl"]]) {
+    const m = el("marker", { id, viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto-start-reverse" });
+    m.appendChild(el("path", { d: "M0 0L10 5L0 10z", class: cls }));
+    defs.appendChild(m);
+  }
+  svg.appendChild(defs);
+  const lanes = [["UI · Streamlit pages", 24], ["Core · Python, no UI code", 150], ["Core · model clients", 300], ["Services and data", 450]];
+  for (const [label, y] of lanes) {
+    svg.appendChild(el("line", { x1: 10, x2: 990, y1: y + 6, y2: y + 6, class: "lane-rule" }));
+    svg.appendChild(el("text", { x: 14, y: y, class: "lane-label" }, label));
+  }
+  const edgeLayer = el("g"), labelLayer = el("g"), nodeLayer = el("g");
+  svg.append(edgeLayer, nodeLayer, labelLayer);
+
+  const edgeEls = {};
+  for (const [a, b, label] of EDGES) {
+    const A = byId[a], B = byId[b];
+    let d, lx, ly;
+    if (Math.abs(A.y - B.y) < 10) {
+      // same row: arc underneath the boxes so the line never crosses a neighbour
+      const y0 = A.y + H / 2, dir = B.x > A.x ? 1 : -1;
+      const x1 = A.x + dir * 20, x2 = B.x - dir * 20, depth = 34 + Math.abs(B.x - A.x) * 0.08;
+      d = `M${x1} ${y0} C ${x1} ${y0 + depth}, ${x2} ${y0 + depth}, ${x2} ${y0 + 2}`;
+      lx = (x1 + x2) / 2; ly = y0 + depth - 4;
+    } else {
+      const down = B.y > A.y;
+      const y1 = A.y + (down ? H / 2 : -H / 2), y2 = B.y + (down ? -H / 2 : H / 2);
+      const my = (y1 + y2) / 2;
+      d = `M${A.x} ${y1} C ${A.x} ${my}, ${B.x} ${my}, ${B.x} ${y2}`;
+      lx = (A.x + B.x) / 2; ly = my - 4;
+    }
+    const p = el("path", { d, class: "edge", "marker-end": "url(#ah)" });
+    const t = el("text", { x: lx, y: ly, "text-anchor": "middle", class: "edge-label" }, label);
+    edgeLayer.appendChild(p); labelLayer.appendChild(t);
+    edgeEls[a + ">" + b] = { p, t };
+  }
+
+  const nodeEls = {};
+  for (const n of NODES) {
+    const g = el("g", { class: "node", tabindex: "0", role: "button", "aria-label": `${n.name}, ${LAYER[n.layer]}` });
+    g.appendChild(el("rect", { class: "box", x: n.x - W / 2, y: n.y - H / 2, width: W, height: H, rx: 8 }));
+    g.appendChild(el("rect", { class: "bar", x: n.x - W / 2, y: n.y - H / 2 + 8, width: 4, height: H - 16, rx: 2, fill: color(n.layer) }));
+    g.appendChild(el("text", { x: n.x + 2, y: n.y - 3, "text-anchor": "middle", "font-size": "13.5", "font-weight": "600" }, n.name));
+    g.appendChild(el("text", { x: n.x + 2, y: n.y + 15, "text-anchor": "middle", "font-size": "10.5", class: "sub" }, n.sub));
+    g.addEventListener("click", () => selectNode(n.id, true));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectNode(n.id, true); } });
+    nodeLayer.appendChild(g);
+    nodeEls[n.id] = g;
+  }
+
+  function clearMap() {
+    svg.classList.remove("dim");
+    for (const g of Object.values(nodeEls)) g.classList.remove("sel", "hl", "gr");
+    for (const { p, t } of Object.values(edgeEls)) { p.classList.remove("hl"); p.setAttribute("marker-end", "url(#ah)"); t.classList.remove("hl"); }
+  }
+  function lightEdge(a, b) {
+    const e = edgeEls[a + ">" + b];
+    if (!e) return;
+    e.p.classList.add("hl"); e.p.setAttribute("marker-end", "url(#ahhl)"); e.t.classList.add("hl");
+  }
+  function setBanner(html) { $("#banner").innerHTML = html; }
+
+  function selectNode(id, fromMap) {
+    clearMap(); svg.classList.add("dim");
+    nodeEls[id].classList.add("sel");
+    const outs = EDGES.filter(e => e[0] === id), ins = EDGES.filter(e => e[1] === id);
+    for (const [a, b] of outs) { lightEdge(a, b); nodeEls[b].classList.add("hl"); }
+    for (const [a, b] of ins) { lightEdge(a, b); nodeEls[a].classList.add("hl"); }
+    const n = byId[id];
+    setBanner(`<span class="label">Selected:</span> <strong>${esc(n.name)}</strong> <span class="label">· ${outs.length} outgoing, ${ins.length} incoming</span> <button class="chip" type="button" data-clear>Clear</button>`);
+    renderPanel(n, outs, ins);
+    setStepButtons(-1);
+  }
+
+  function renderPanel(n, outs, ins) {
+    const link = (otherId, label) => `<button type="button" data-node="${otherId}">${esc(byId[otherId].name)} <span>${esc(label)}</span></button>`;
+    $("#panel").innerHTML = `
+      <div class="kind" style="color:${color(n.layer)}">${LAYER[n.layer]}</div>
+      <h3>${esc(n.name)}</h3>
+      <p>${esc(n.job)}</p>
+      <div><h4>Files</h4><div class="files">${n.files.map(f => `<code>${esc(f)}</code>`).join("")}</div></div>
+      ${n.facts.length ? `<div><h4>Facts</h4><ul>${n.facts.map(f => `<li class="fact">${esc(f)}</li>`).join("")}</ul></div>` : ""}
+      ${n.grades.length ? `<div><h4>Delivers</h4><div class="tags">${n.grades.map(g => `<button type="button" class="tag" data-grade="${g}">${g}</button>`).join("")}</div></div>` : ""}
+      ${outs.length ? `<div><h4>Calls</h4><div class="linklist">${outs.map(e => link(e[1], e[2])).join("")}</div></div>` : ""}
+      ${ins.length ? `<div><h4>Called by</h4><div class="linklist">${ins.map(e => link(e[0], e[2])).join("")}</div></div>` : ""}`;
+  }
+  function renderPanelIntro() {
+    $("#panel").innerHTML = `
+      <div class="kind">How to read the map</div>
+      <h3>Click any box</h3>
+      <p>The panel shows what the part does, its files, the graded tasks it delivers, and what it calls. The map highlights its connections.</p>
+      <ul>
+        <li class="fact">Arrows point from caller to callee.</li>
+        <li class="fact">Click a grade tag or a table row to see which parts deliver it.</li>
+        <li class="fact">The walkthrough below lights up one step of a session at a time.</li>
+      </ul>`;
+  }
+
+  function highlightGrade(gid) {
+    const g = GRADES.find(x => x.id === gid);
+    clearMap(); svg.classList.add("dim");
+    for (const id of g.nodes) nodeEls[id].classList.add("gr");
+    for (const [a, b] of EDGES) if (g.nodes.includes(a) && g.nodes.includes(b)) lightEdge(a, b);
+    setBanner(`<span class="label">Grade:</span> <strong>${g.id} · ${esc(g.title)}</strong> <span class="label">· ${esc(g.how)}</span> <button class="chip" type="button" data-clear>Clear</button>`);
+    if (g.nodes.length) renderPanel(byId[g.nodes[0]], EDGES.filter(e => e[0] === g.nodes[0]), EDGES.filter(e => e[1] === g.nodes[0]));
+    setStepButtons(-1);
+  }
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-node],[data-grade],[data-clear]");
+    if (!t) return;
+    if (t.dataset.node) selectNode(t.dataset.node);
+    else if (t.dataset.grade) { highlightGrade(t.dataset.grade); $("#map").scrollIntoView({ behavior: "smooth", block: "start" }); }
+    else if (t.hasAttribute("data-clear")) { clearMap(); setBanner('<span class="label">Nothing selected. Click a box, a requirement or a step.</span>'); renderPanelIntro(); setStepButtons(-1); }
+  });
+
+  // ------------------------------------------------------------------ stepper
+  let step = 0;
+  const stepsEl = $("#steps");
+  STEPS.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.role = "tab"; b.textContent = `${i + 1}. ${s.title}`;
+    b.addEventListener("click", () => { step = i; renderStep(true); });
+    stepsEl.appendChild(b);
+  });
+  function setStepButtons(active) { [...stepsEl.children].forEach((b, i) => { b.classList.toggle("on", i === active); b.setAttribute("aria-selected", i === active); }); }
+  function renderStep(apply) {
+    const s = STEPS[step];
+    $("#stepcard").innerHTML = `<div class="eyebrow">Step ${step + 1} of ${STEPS.length}</div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p><div class="tags">${s.nodes.map(id => `<button type="button" class="chip" data-node="${id}">${esc(byId[id].name)}</button>`).join("")}</div>`;
+    $("#prevStep").disabled = step === 0; $("#nextStep").disabled = step === STEPS.length - 1;
+    if (apply) applyStep();
+  }
+  function applyStep() {
+    const s = STEPS[step];
+    clearMap(); svg.classList.add("dim");
+    for (const id of s.nodes) nodeEls[id].classList.add("hl");
+    for (const [a, b] of s.edges) lightEdge(a, b);
+    setBanner(`<span class="label">Step ${step + 1}:</span> <strong>${esc(s.title)}</strong> <button class="chip" type="button" data-clear>Clear</button>`);
+    setStepButtons(step);
+  }
+  $("#prevStep").addEventListener("click", () => { if (step > 0) { step--; renderStep(true); } });
+  $("#nextStep").addEventListener("click", () => { if (step < STEPS.length - 1) { step++; renderStep(true); } });
+  $("#showStep").addEventListener("click", () => { applyStep(); $("#map").scrollIntoView({ behavior: "smooth", block: "start" }); });
+
+  // ------------------------------------------------------------------ grading
+  const levels = ["All", "Mandatory", "Easy", "Medium", "Hard", "Not done"];
+  let gradeFilter = "All";
+  for (const l of levels) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip" + (l === "All" ? " on" : ""); b.textContent = l;
+    b.addEventListener("click", () => { gradeFilter = l; [...$("#gradeFilters").querySelectorAll(".chip")].forEach(c => c.classList.toggle("on", c === b)); renderGrades(); });
+    $("#gradeFilters").appendChild(b);
+  }
+  function renderGrades() {
+    const rows = GRADES.filter(g => gradeFilter === "All" || (gradeFilter === "Not done" ? g.done === false : g.lvl === gradeFilter && g.done !== false));
+    $("#gradeRows").innerHTML = rows.map(g => `
+      <tr class="${g.nodes.length ? "clickable" : ""}" ${g.nodes.length ? `data-grade="${g.id}" tabindex="0"` : ""}>
+        <td class="mono">${g.id}</td><td><span class="lvl ${g.lvl}">${g.lvl}</span></td>
+        <td>${esc(g.title)}</td><td>${esc(g.how)}</td>
+        <td><span class="status ${g.done === false ? "no" : ""}">${g.done === false ? "Not done" : "Delivered"}</span></td>
+      </tr>`).join("");
+  }
+  $("#gradeRows").addEventListener("keydown", e => { const tr = e.target.closest("tr[data-grade]"); if (tr && e.key === "Enter") tr.click(); });
+  renderGrades();
+  $("#criteriaRows").innerHTML = CRITERIA.map(c => `<tr><td>${esc(c[0])}</td><td>${esc(c[1])}</td><td>${esc(c[2])}</td></tr>`).join("");
+
+  // ------------------------------------------------------------------ stack, models, decisions
+  $("#stackCards").innerHTML = STACK.map(s => `
+    <details class="item"><summary><span class="t">${esc(s.t)}</span><span class="s">${esc(s.s)}</span></summary>
+      <div class="body"><dl><dt>Why</dt><dd>${esc(s.why)}</dd><dt>Instead of</dt><dd>${esc(s.alt)}</dd></dl></div></details>`).join("");
+  $("#modelRows").innerHTML = MODELS.map(m => `<tr><td>${esc(m[0])}</td><td class="mono">${esc(m[1])}</td><td>${esc(m[2])}</td></tr>`).join("");
+  $("#decisionCards").innerHTML = DECISIONS.map(d => `
+    <details class="item"><summary><span class="t">${esc(d.t)}</span><span class="s">${esc(d.s)}</span></summary>
+      <div class="body"><dl><dt>Instead of</dt><dd>${esc(d.alt)}</dd><dt>Because</dt><dd>${esc(d.why)}</dd><dt>Result</dt><dd>${esc(d.res)}</dd></dl></div></details>`).join("");
+
+  // ------------------------------------------------------------------ chart
+  let metric = METRICS[0];
+  for (const m of METRICS) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "chip" + (m === metric ? " on" : ""); b.textContent = m.label;
+    b.addEventListener("click", () => { metric = m; [...$("#metricChips").querySelectorAll(".chip")].forEach(c => c.classList.toggle("on", c === b)); drawChart(); });
+    $("#metricChips").appendChild(b);
+  }
+  function drawChart() {
+    const c = $("#chart"); c.innerHTML = "";
+    const x0 = 210, x1 = 690, X = v => x0 + (v - metric.lo) / (metric.hi - metric.lo) * (x1 - x0), Y = i => 40 + i * 44;
+    c.appendChild(el("text", { x: 20, y: 20, "font-size": "12", fill: "var(--muted)" }, metric.label + (metric.better === "high" ? " · higher is better" : metric.better === "low" ? " · lower is better" : "")));
+    for (const t of metric.ticks) {
+      c.appendChild(el("line", { x1: X(t), x2: X(t), y1: 26, y2: Y(VARIANTS.length - 1) + 20, stroke: "var(--grid)" }));
+      c.appendChild(el("text", { x: X(t), y: Y(VARIANTS.length - 1) + 38, "text-anchor": "middle", "font-size": "11.5", fill: "var(--muted)" }, metric.fmt(t)));
+    }
+    if (metric.key === "I9") {
+      const top = VARIANTS.filter(v => ["P2", "P4", "P5"].includes(v.id)).map(v => v.I9);
+      const lo = Math.min(...top), hi = Math.max(...top);
+      c.appendChild(el("rect", { x: X(lo), y: 26, width: X(hi) - X(lo), height: Y(VARIANTS.length - 1) - 6, fill: "var(--accent-soft)" }));
+      c.appendChild(el("text", { x: X(hi) + 8, y: 36, "font-size": "11.5", fill: "var(--muted)" }, "within noise"));
+    }
+    VARIANTS.forEach((v, i) => {
+      const val = v[metric.key], y = Y(i), isDef = !!v.def;
+      c.appendChild(el("text", { x: 20, y: y + 4, "font-size": "13.5", "font-weight": isDef ? "600" : "400", fill: "var(--ink)" }, `${v.id} ${v.name}${isDef ? " (default)" : ""}`));
+      c.appendChild(el("line", { x1: x0, x2: X(val), y1: y, y2: y, stroke: isDef ? "var(--accent)" : "var(--line)", "stroke-width": 3, "stroke-linecap": "round" }));
+      const dot = el("circle", { cx: X(val), cy: y, r: 7, fill: isDef ? "var(--accent)" : "var(--muted)" });
+      dot.appendChild(el("title", {}, `${v.id} ${v.name}: ${metric.fmt(val)}`));
+      c.appendChild(dot);
+      c.appendChild(el("text", { x: X(val) + 13, y: y + 4, "font-size": "12.5", "font-weight": isDef ? "600" : "400", fill: isDef ? "var(--ink)" : "var(--muted)" }, metric.fmt(val)));
+    });
+    $("#chartNote").textContent = metric.note + " Source: lab/compare_prompts.py, 3 simulated sessions per prompt, 2 October 2026.";
+  }
+  drawChart();
+  $("#variantCards").innerHTML = VARIANTS.map(v => `<div class="variant ${v.def ? "def" : ""}"><b>${v.id} · ${esc(v.name)}${v.def ? " · default" : ""}</b><span>${esc(v.tech)}</span></div>`).join("");
+
+  // ------------------------------------------------------------------ risks, checklist
+  $("#riskRows").innerHTML = RISKS.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("");
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem("ih-checks") || "{}"); } catch (e) { saved = {}; }
+  $("#checklist").innerHTML = CHECKS.map((g, gi) => `
+    <div class="checkgroup"><h3>${esc(g.group)}</h3>
+      ${g.items.map((it, ii) => { const k = gi + "-" + ii, on = !!saved[k]; return `<label class="${on ? "done" : ""}"><input type="checkbox" id="chk-${k}" data-k="${k}" ${on ? "checked" : ""}><span>${esc(it)}</span></label>`; }).join("")}
+    </div>`).join("");
+  $("#checklist").addEventListener("change", e => {
+    const k = e.target.dataset.k; if (!k) return;
+    saved[k] = e.target.checked; e.target.closest("label").classList.toggle("done", e.target.checked);
+    try { localStorage.setItem("ih-checks", JSON.stringify(saved)); } catch (err) { /* storage unavailable: ticks last for this visit */ }
+  });
+
+  // ------------------------------------------------------------------ start
+  renderPanelIntro();
+  renderStep(false);
+})();
+</script>
