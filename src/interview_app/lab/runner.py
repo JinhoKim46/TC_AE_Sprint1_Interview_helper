@@ -39,6 +39,16 @@ def run_session(
     documents = {kind: doc.text for kind, doc in application.documents.items()}
 
     session_id = eng.start_interview(deps, user_id, app_id, config)
+    try:
+        return _converse(deps, user_id, session_id, persona, documents, max_candidate_turns, blocked)
+    except BaseException:
+        # Only one interview may be active at a time, so a session left active by a failed run (or
+        # Ctrl-C) would block every later run against the persistent lab database.
+        eng.end_interview(deps, user_id, session_id)
+        raise
+
+
+def _converse(deps, user_id, session_id, persona, documents, max_candidate_turns, blocked) -> int:
     # Simulator calls are billed to the same session, so the call log shows the full cost of a run.
     sim_llm = deps.make_llm(user_id, session_id)
 

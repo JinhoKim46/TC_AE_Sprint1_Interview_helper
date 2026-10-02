@@ -93,8 +93,9 @@ class Limits(BaseModel):
     # 0 is allowed on purpose: it means "no retries", a valid way to practise without coaching loops.
     max_retries_per_answer: int = Field(default=2, ge=0, le=10)
     # A start (planning + opening turn) still "preparing" after this long was interrupted; it is marked
-    # failed so it can't block new interviews.
-    start_timeout_minutes: int = Field(default=5, gt=0, le=60)
+    # failed so it can't block new interviews. Generous on purpose: with the default 60 s request timeout
+    # and 3 retries, a slow but healthy start (plan + opening turn + one repair) can take over 10 minutes.
+    start_timeout_minutes: int = Field(default=15, gt=0, le=60)
 
 
 class GuardSettings(BaseModel):

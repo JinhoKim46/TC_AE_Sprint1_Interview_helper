@@ -545,7 +545,18 @@ def test_quote_must_appear_in_order_not_as_scattered_words():
     assert quote_found("the team measured the latency on the device", ["T02"], texts)
     assert quote_found("the team measured latency on the device", ["T02"], texts)  # one dropped word
     assert not quote_found("the device measured the team", ["T02"], texts)  # same words, scrambled
-    assert not quote_found("the model", ["T02"], texts)  # too short to prove anything
+    assert not quote_found("model", ["T02"], texts)  # one word proves nothing
+    assert quote_found("the team", ["T02"], texts)  # a short exact quote is fine
+
+
+def test_quote_parts_may_come_from_different_cited_turns():
+    from interview_app.evaluation.aggregate import quote_found
+
+    texts = {"T02": "I led the migration to Kafka last year.", "T04": "I also mentored two junior engineers."}
+    quote = "led the migration to Kafka; mentored two junior engineers"
+    assert quote_found(quote, ["T02", "T04"], texts)
+    assert quote_found("led the migration ... mentored two junior engineers", ["T02", "T04"], texts)
+    assert not quote_found(quote, ["T02"], texts)  # the second part was never said in T02
 
 
 def test_length_flags_use_the_main_answer_not_the_followups():

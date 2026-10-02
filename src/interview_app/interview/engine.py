@@ -500,8 +500,10 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
     with session_scope(deps.engine) as s:
         # The user may have ended the session (another tab) while planning ran; don't revive it.
         still_preparing = s.get(InterviewSession, session_id).status == "preparing"
-    if still_preparing:
-        _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
+    if not still_preparing:
+        # Ended (or marked stale) while the start ran: say so instead of silently showing the start form.
+        raise InterviewError("This interview was ended before it could start. Please start a new one.")
+    _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
     return session_id
 
 
