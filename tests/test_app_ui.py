@@ -63,3 +63,64 @@ def test_create_application_from_pasted_text():
     next(b for b in at.button if b.label == "Save application").click().run()
     assert not at.error
     assert any("Acme" in e.label for e in at.expander)
+
+
+def test_interview_page_start_answer_and_reply(monkeypatch):
+    """Start an interview from the page and answer once, with a scripted model behind the engine."""
+    import json
+    from types import SimpleNamespace
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.llm.client import LLMClient
+
+    replies = [
+        json.dumps(
+            {
+                "stage": "opening",
+                "question_id": "OPEN-01",
+                "is_followup": False,
+                "message": "Hi, walk me through your background.",
+                "is_final": False,
+            }
+        ),
+        json.dumps(
+            {
+                "stage": "experience",
+                "question_id": "EXP-EVID-01",
+                "is_followup": True,
+                "message": "How did you measure that?",
+                "is_final": False,
+            }
+        ),
+    ]
+
+    def create(**kwargs):
+        return SimpleNamespace(
+            model=kwargs["model"],
+            choices=[SimpleNamespace(message=SimpleNamespace(content=replies.pop(0)))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, cost=0.0),
+        )
+
+    sdk = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+    def fake_deps():
+        settings = ui_common.get_settings()
+        return EngineDeps(ui_common.get_engine(), settings, lambda uid, sid: LLMClient(settings, sdk=sdk))
+
+    monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
+    load_sample_application(ui_common.get_engine(), ui_common.ensure_local_user(ui_common.get_engine()))
+
+    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at.run()
+    at.selectbox[2].select_index(0)  # developer option: P1 needs no separate planning call
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+    assert "walk me through your background" in at.chat_message[0].markdown[0].value
+
+    at.chat_input[0].set_value("I improved mIoU from 0.61 to 0.74.").run()
+    assert not at.exception, at.exception
+    texts = [m.markdown[0].value for m in at.chat_message]
+    assert "I improved mIoU" in texts[1] and "How did you measure that?" in texts[2]

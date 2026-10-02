@@ -119,3 +119,45 @@ def session_scope(engine: Engine) -> Iterator[Session]:
         except Exception:
             session.rollback()
             raise
+
+
+class InterviewSession(SQLModel, table=True):
+    """One mock interview. It snapshots the documents and settings it used, so later edits to the
+    application don't change what an old transcript was based on."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", index=True)
+    application_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("application.id", ondelete="CASCADE"), nullable=False, index=True
+        )
+    )
+    company: str
+    role: str
+    config_json: str  # SessionConfig
+    documents_json: str  # {kind: text} snapshot
+    plan_json: str | None = None  # InterviewPlan, for variants that use one
+    status: str = "preparing"  # preparing -> active -> finished / ended_early
+    started_at: datetime = Field(default_factory=utcnow)
+    ended_at: datetime | None = None
+
+
+class Turn(SQLModel, table=True):
+    """One message in an interview transcript."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("interviewsession.id", ondelete="CASCADE"), nullable=False, index=True
+        )
+    )
+    user_id: int = Field(foreign_key="user.id", index=True)
+    idx: int  # 0, 1, 2 ... in conversation order
+    speaker: str  # "interviewer" or "candidate"
+    text: str
+    stage: str | None = None
+    question_id: str | None = None
+    is_followup: bool = False
+    is_final: bool = False
+    private_json: str | None = None  # P3 notes / P5 draft+critique: kept for analysis, never shown
+    created_at: datetime = Field(default_factory=utcnow)

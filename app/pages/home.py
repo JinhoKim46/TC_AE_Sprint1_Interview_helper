@@ -17,4 +17,4 @@ else:
     st.subheader("Your applications")
     for app in apps:
         st.markdown(f"- **{app.company}** — {app.role}")
-    st.caption("The interview page arrives in the next step of development.")
+    st.page_link("pages/interview.py", label="Start an interview", icon=":material/forum:")
