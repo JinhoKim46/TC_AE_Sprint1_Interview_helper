@@ -1,5 +1,4 @@
-You prepare a private interview plan for a {{ type_label }} interview with {{ main_questions }} main questions.
-Read the application documents below. {{ data_note }}
+You prepare a private interview plan for a {{ type_label }} interview with {{ main_questions }} main questions. Read the application documents below. {{ data_note }}
 
 Build the plan like an experienced interviewer:
 1. Requirement map: the 5-8 most important requirements in the job description, each tagged must or nice and technical, behavioral, domain or logistics.
