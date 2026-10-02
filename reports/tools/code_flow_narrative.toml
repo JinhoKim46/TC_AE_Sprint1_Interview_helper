@@ -1,0 +1,712 @@
+# Hand-written narrative for reports/code-flow-report.html (read by build_code_flow_html.py).
+#
+# Facts (functions, edges, models, schemas, tables) are generated from the code; this file only adds the
+# story around them. Every symbol id named here is checked against reports/code_map.json on each build,
+# and a missing one is printed as a warning and flagged on the page. Symbol ids are "module:qualname".
+
+lanes = [["user", "User"], ["ui", "Streamlit page"], ["engine", "Engine"], ["guard", "Guards"], ["prompt", "Prompt builder"], ["gateway", "LLM gateway"], ["openrouter", "OpenRouter"], ["db", "SQLite"]]
+
+[agents.interviewer]
+title = "Interviewer"
+what = "Writes the next interviewer turn: a follow-up or the next main question, in the persona's voice. One call per turn, or two when it tries to close before inviting the candidate's questions (code forces a second call). In a weak-spot drill, _base.md adds a Focused practice block with the targets from SessionConfig.focus."
+stored = "A Turn row (speaker interviewer) with stage, question_id, is_followup and is_final; P3/P5 private fields go to Turn.private_json and are never shown."
+settings_note = "Model, temperature, max tokens and reasoning effort come from the session's LLMSettings (Settings page, developer settings). A value of None is not sent at all, so the provider default applies."
+config_refs = [["LLMSettings", "reasoning_effort"], ["Limits", "max_turns"], ["Limits", "max_session_cost_usd"]]
+[agents.interviewer.messages]
+system = "The long system prompt from interviewer_<variant>.md: persona, rules, the documents wrapped as <document> data, the output format. A second, short system message at the very end carries the live status from control.md."
+assistant = "Every earlier interviewer turn, re-sent in the same JSON shape it answered in (P3 notes and P5 draft/critique included)."
+user = "Every earlier candidate answer, wrapped in <candidate_answer> tags (after the guards)."
+
+[agents.planner]
+title = "Planner"
+what = "Turns the JD, CV and cover letter into an InterviewPlan before the first question (prompt chaining). Only the P4 variant uses it. In a weak-spot drill, plan.md tells it to build the probes around the drill targets."
+stored = "InterviewSession.plan_json. Read again for every P4 interviewer prompt and by the judge (its requirement list)."
+settings_note = "Model is Settings.models.planner and reasoning effort is fixed at low in code; the developer settings on the Settings page do not change it."
+[agents.planner.messages]
+system = "One fixed sentence: an experienced interviewer preparing for an interview."
+user = "plan.md: how to build the requirement map, claim map and probes, then the documents wrapped as data."
+
+[agents.judge]
+title = "Final judge"
+what = "Scores the finished interview against docs/rubric.json and writes the feedback. Runs several times in parallel; code aggregates each run and keeps the median one."
+stored = "Evaluation.report_json (the median run's Report; overall and band also in their own columns). Every run's LLMCall row is written after all runs finish."
+settings_note = "Judge model comes from the Settings page (Preferences.judge_model) or Settings.models.judge. Number of runs: JUDGE_RUNS in .env, else rubric.json judge_settings.runs."
+config_refs = [["Settings", "judge_runs"]]
+[agents.judge.messages]
+user = "One message from judge.md: how to judge, the rubric items and levels, the plan's requirements (or an instruction to list them), the documents, and the transcript grouped into exchanges with candidate turns wrapped as <candidate_answer>."
+
+[agents.candidate_sim]
+title = "Simulated candidate (lab only)"
+what = "Plays a strong, weak or evasive candidate from the fictional sample CV, so the five interviewer prompts can be compared on the same input."
+stored = "Through engine.answer, as candidate Turn rows in the lab database (data/lab.db), with the guards on."
+settings_note = "Plain text (chat, not chat_json). Temperature SIM_TEMPERATURE for some variety between sessions."
+[agents.candidate_sim.messages]
+system = "candidate_sim.md: who you are, the JD/CV/cover letter as data, how this persona answers, rules for every reply."
+user = "The interviewer's turns (roles are mirrored compared with the interviewer's view)."
+assistant = "The simulator's own earlier answers."
+
+[agents.guard]
+title = "Injection guard (Jev)"
+what = "Asks Jev one yes/no question: does this text try to instruct or manipulate the AI? Runs on every answer (only when no regex rule fired) and on every document when an application is saved."
+inputs = "state = {text} for an answer; {document_kind, chunk_0 … chunk_n} for a document, one question per chunk, all in one request."
+stored = "Nothing is stored. A blocked answer is never saved or sent; a flagged document is shown to the user, who edits it or saves anyway. The call itself is an LLMCall row (user only, no session id)."
+settings_note = "Code compares the probability with the threshold below. If Jev is unreachable the guard fails open (rules only) and says so in GuardResult.method."
+config_refs = [["GuardSettings", "injection_threshold"], ["GuardSettings", "use_model_check"], ["GuardSettings", "document_chunk_chars"]]
+
+[agents.live_score]
+title = "Live scorer (Jev, coaching mode)"
+what = "Scores one answer on the three rubric items that weigh most for this kind of question, in one request (about half a second). The tip is built in code from the rubric's next-level descriptor."
+inputs = "state = {jd_requirements (the whole JD text), cv, cover_letter, exchange: {question, answer}}; questions = the rubric items' instructions and level criteria, sent as they are."
+stored = "Turn.live_json (LiveFeedback: item scores plus the tip). Shown as chips under the answer."
+settings_note = "Returns None instead of failing, so the interview continues without scores if Jev is down. Switched off by Features.live_scoring."
+config_refs = [["Features", "live_scoring"], ["Limits", "max_retries_per_answer"]]
+
+[agents.lab_judge]
+title = "Interviewer-quality judge (Jev, lab only)"
+what = "Judges the interviewer, not the candidate (rubric section 12): three 1-5 scores and five yes/no checks in one request."
+inputs = "state = role, company, interview_type, the documents and the full transcript."
+stored = "Not in the database: one CSV row per session in lab/results/, plus the printed markdown tables."
+settings_note = "Code applies the yes threshold (p >= 0.5) and the release gate."
+
+[[journey]]
+title = "The candidate types an answer"
+lane = "user"
+symbol = "app.pages.interview:chat"
+text = "The Interview page re-reads the session from the database on every rerun. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
+payload = "\"I led the move of our detector to the phone: I quantised it to int8 and cut latency from 140 ms to 45 ms.\""
+
+[[journey]]
+title = "The page wires the engine"
+lane = "ui"
+symbol = "app.ui_common:engine_deps"
+text = "submit() builds EngineDeps: the database engine, Settings, a make_llm factory (an LLMClient whose call log is bound to the user and session), and one Jev DecisionClient shared by the injection guard and live scoring."
+payload = "EngineDeps(engine, settings, make_llm=<LLMClient factory>, guard=InjectionGuard(decider), decider=DecisionClient)"
+
+[[journey]]
+title = "engine.answer loads the transcript"
+lane = "engine"
+symbol = "interview_app.interview.engine:answer"
+text = "The engine is stateless: it loads the session and its turns through _load, which drops superseded coaching attempts, and refuses unless the session is active."
+payload = '''
+row = InterviewSession(status='active', config_json=…, documents_json=…, plan_json=…)
+turns = [Turn(idx=0, speaker='interviewer', …)]'''
+
+[[journey]]
+title = "Length limit"
+lane = "guard"
+symbol = "interview_app.security.limits:check_answer_length"
+text = "_check_answer runs the cheap checks first: an empty answer or one longer than Limits.max_answer_chars is blocked before any model sees it."
+payload = "GuardResult(allowed=True, method='rules')"
+
+[[journey]]
+title = "Injection rules, then Jev"
+lane = "guard"
+symbol = "interview_app.security.injection:InjectionGuard.check_answer"
+text = "Regex rules catch known attack shapes (ignore previous instructions, fake role markers, chat-template tokens, score manipulation, our own wrapper tags). Only if none fires does Jev get one yes/no question; code compares p with the threshold. A blocked answer is never stored or sent."
+payload = '''
+decide("guard", state={"text": "<the answer>"}, questions={"injection": NoulQuestion(…)})
+→ {"injection": {"type": "noul", "noul": 0.02}}  → allowed (0.02 < 0.7)'''
+
+[[journey]]
+title = "The answer is stored"
+lane = "db"
+symbol = "interview_app.interview.engine:_add_turn"
+text = "Realistic mode stores the candidate Turn immediately (a crash or refresh never loses it), then asks for the next interviewer turn via respond(). Coaching mode instead scores the answer live and waits for Retry or Continue."
+payload = "Turn(session_id=12, idx=1, speaker='candidate', text='I led the move …')"
+
+[[journey]]
+title = "Hard limits decide whether to close"
+lane = "engine"
+symbol = "interview_app.interview.engine:must_close"
+text = "respond() sums this session's LLMCall costs and counts turns. Past Limits.max_turns or max_session_cost_usd the interview is closed no matter what the model wants."
+payload = "force_close = must_close(len(turns)=2, cost_usd=0.004, settings)  → False"
+
+[[journey]]
+title = "Code decides the phase"
+lane = "engine"
+symbol = "interview_app.interview.engine:next_directive"
+text = "compute_progress counts main questions and follow-ups from the stored turn metadata; next_directive turns that into one instruction (open, follow up or move on, invite questions, close). The model decides the wording, code decides the phase."
+payload = '''
+Progress(main_asked=1, followups=0, candidate_turns=1, in_candidate_questions=False, last_speaker='candidate')
+→ "Decide the single best next move: one follow-up on the last answer …"'''
+
+[[journey]]
+title = "System prompt from the templates"
+lane = "prompt"
+symbol = "interview_app.interview.prompting:interviewer_system_prompt"
+text = "_messages builds a PromptContext (persona from the interview type and difficulty, the guideline excerpt, the plan for P4) and renders interviewer_<variant>.md, which includes _base.md, _documents.md and _contract.md. Every document is wrapped by wrap_untrusted so it reads as data."
+templates = ["interviewer_p4_role_rich.md", "_base.md", "_documents.md", "_contract.md"]
+example = "system"
+
+[[journey]]
+title = "The conversation so far"
+lane = "prompt"
+symbol = "interview_app.interview.engine:_messages"
+text = "Earlier interviewer turns go back as assistant messages in their own JSON shape (assistant_turn_content); candidate answers as user messages wrapped in <candidate_answer> (wrap_answer)."
+example = "history"
+
+[[journey]]
+title = "The trailing status message"
+lane = "prompt"
+symbol = "interview_app.interview.prompting:control_message"
+text = "control.md renders the computed status and the directive as a second system message at the end. Keeping it last leaves the long system prompt byte-identical between turns, so the provider can cache it."
+templates = ["control.md"]
+example = "control"
+
+[[journey]]
+title = "One gateway call, JSON schema attached"
+lane = "gateway"
+symbol = "interview_app.llm.client:LLMClient.chat_json"
+text = "_interviewer_turn picks the schema for the variant (TURN_SCHEMA) and the session's model settings. chat_json attaches the pydantic schema as response_format (strict off) and calls chat(), which sends only the settings that are not None."
+example = "request"
+
+[[journey]]
+title = "OpenRouter answers; the call is logged"
+lane = "openrouter"
+symbol = "interview_app.llm.client:LLMClient.chat"
+text = "The OpenAI SDK posts to OpenRouter (it retries 429/5xx itself). usage.cost is the real charged cost; the CallRecord goes to the recorder, which writes an LLMCall row bound to the user and session."
+payload = "LLMCall(role=\"interviewer\", model=\"openai/gpt-5-mini\", prompt_tokens=5210, completion_tokens=310, cost_usd=0.0021, latency_s=2.9)"
+
+[[journey]]
+title = "Validate, repair once"
+lane = "gateway"
+symbol = "interview_app.llm.client:LLMClient.chat_json"
+text = "The reply is stripped of code fences and validated with the schema. If it fails, the model sees its own reply plus the error and gets exactly one more try; a second failure raises LLMError, which the engine turns into a friendly InterviewError."
+example = "reply"
+
+[[journey]]
+title = "Code rules on the reply"
+lane = "engine"
+symbol = "interview_app.interview.engine:_interviewer_turn"
+text = "If the model sets is_final before the candidate was invited to ask questions, code asks again with a corrective directive and clears the flag. At a hard limit, code sets is_final itself."
+payload = "directive = \"Do not close yet. First invite the candidate's own questions (stage candidate_questions).\""
+
+[[journey]]
+title = "The interviewer turn is stored"
+lane = "db"
+symbol = "interview_app.interview.engine:_add_turn"
+text = "The turn becomes a Turn row; reasoning fields of P3/P5 go to private_json. A final turn sets the session status to finished."
+payload = "Turn(idx=2, speaker='interviewer', stage='experience', question_id='EXP-EVID-01', is_followup=True, is_final=False)"
+
+[[journey]]
+title = "The page shows it"
+lane = "ui"
+symbol = "interview_app.interview.engine:get_session"
+text = "submit() calls st.rerun(). The page asks active_session → get_session for the stored transcript (superseded attempts excluded, live scores attached) and draws the chat again."
+payload = "SessionView(turns=[…3 turns…], progress=Progress(main_asked=1, followups=1, …), cost_usd=0.0062)"
+
+[[lifecycles]]
+name = "Documents"
+stages = [
+  ["born", "Upload or paste on the Applications page", "app.pages.applications:_document_input"],
+  ["transform", "PDF text layer, size and page limits", "interview_app.ingest:extract_pdf_text"],
+  ["transform", "Injection rules + Jev, flag only", "interview_app.security.injection:InjectionGuard.check_document"],
+  ["transform", "Clean and validate", "interview_app.ingest:clean_text"],
+  ["store", "Application + Document rows", "interview_app.applications:create_application"],
+  ["store", "Snapshot into InterviewSession.documents_json", "interview_app.interview.engine:start_interview"],
+  ["read", "Wrapped as <document> in prompts", "interview_app.interview.prompting:document_blocks"],
+  ["read", "JD / CV / cover letter to the live scorer", "interview_app.interview.engine:_live_feedback"],
+]
+
+[[lifecycles]]
+name = "Turns"
+stages = [
+  ["born", "Candidate answer (chat input) or interviewer JSON", "interview_app.interview.engine:answer"],
+  ["transform", "Length + injection guards", "interview_app.interview.engine:_check_answer"],
+  ["store", "Turn rows (append only; retries marked superseded)", "interview_app.interview.engine:_add_turn"],
+  ["read", "Transcript for the next prompt, superseded dropped", "interview_app.interview.engine:_load"],
+  ["read", "Exchanges for the judge, metrics, live scores", "interview_app.evaluation.exchanges:build_exchanges"],
+  ["read", "History list and lab metrics", "interview_app.history:list_sessions"],
+]
+
+[[lifecycles]]
+name = "Interview plan (P4)"
+stages = [
+  ["born", "Planner call before the first turn", "interview_app.interview.plan:make_plan"],
+  ["store", "InterviewSession.plan_json", "interview_app.interview.engine:start_interview"],
+  ["read", "Inside every P4 system prompt", "interview_app.interview.engine:_messages"],
+  ["read", "Requirement list for the judge", "interview_app.evaluation.judge:judge_messages"],
+]
+
+[[lifecycles]]
+name = "Live scores (coaching)"
+stages = [
+  ["born", "Jev scores three rubric items", "interview_app.evaluation.live:live_score"],
+  ["transform", "Tip from the rubric's next level", "interview_app.evaluation.live:build_tip"],
+  ["store", "Turn.live_json", "interview_app.interview.engine:_store_scored_answer"],
+  ["read", "Chips under the answer", "app.pages.interview:live_chips"],
+]
+
+[[lifecycles]]
+name = "Judgements and reports"
+stages = [
+  ["born", "Judge runs in parallel", "interview_app.evaluation.judge:run_judge"],
+  ["transform", "Weights, quote checks, penalties, band", "interview_app.evaluation.aggregate:aggregate"],
+  ["transform", "Median run becomes the Report", "interview_app.evaluation.service:median_run"],
+  ["store", "Evaluation.report_json (+ overall, band)", "interview_app.evaluation.service:evaluate_session"],
+  ["read", "Report view", "app.report_view:render_report"],
+  ["read", "Progress per application", "interview_app.history:progress"],
+]
+
+[[lifecycles]]
+name = "Call log and cost"
+stages = [
+  ["born", "CallRecord per chat call", "interview_app.llm.client:LLMClient.chat"],
+  ["born", "CallRecord per Jev call", "interview_app.llm.decide:DecisionClient.decide"],
+  ["store", "LLMCall row", "interview_app.llm.calllog:make_db_recorder.record"],
+  ["read", "Cost so far + session budget", "interview_app.interview.engine:session_cost"],
+  ["read", "Settings page totals by role and model", "interview_app.usage:usage_summary"],
+  ["read", "Lab budget and per-variant cost", "interview_app.lab.compare:spend_since"],
+]
+
+[[lifecycles]]
+name = "Weak-spot drill focus"
+stages = [
+  ["born", "Picked in code from a stored Report", "interview_app.interview.drill:focus_from_report"],
+  ["transform", "Same type, difficulty, models; length from the targets", "interview_app.interview.drill:drill_config"],
+  ["store", "SessionConfig.focus inside InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
+  ["read", "Focused practice block in _base.md (every variant)", "interview_app.interview.prompting:interviewer_system_prompt"],
+  ["read", "Probes built around the targets (plan.md)", "interview_app.interview.prompting:plan_messages"],
+  ["read", "Banner on the Interview page", "app.pages.interview:chat"],
+]
+
+[[lifecycles]]
+name = "Preferences"
+stages = [
+  ["born", "Settings page form", "app.pages.settings:<module>"],
+  ["store", "UserPreferences.prefs_json", "interview_app.preferences:save_preferences"],
+  ["read", "Pre-fills the start form", "interview_app.preferences:load_preferences"],
+  ["transform", "Becomes the SessionConfig", "interview_app.preferences:to_session_config"],
+  ["store", "InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
+]
+
+[[sequences]]
+id = "add-application"
+title = "Add an application"
+symbols = [
+  "app.pages.applications:_document_input",
+  "interview_app.ingest:extract_pdf_text",
+  "app.pages.applications:_flag_documents",
+  "interview_app.security.injection:InjectionGuard.check_document",
+  "interview_app.applications:create_application",
+  "interview_app.ingest:clean_text",
+  "interview_app.ingest:validate_document",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Applications page
+  participant C as ingest + applications
+  participant G as InjectionGuard
+  participant J as Jev
+  participant D as SQLite
+  U->>P: upload a PDF or paste text (JD, CV, optional cover letter and notes)
+  P->>C: extract_pdf_text(bytes, limits)
+  C-->>P: ExtractResult(text, pages, warnings)
+  Note over U,P: the text lands in an editable box first
+  U->>P: Save application
+  loop every document
+    P->>G: check_document(kind, text)
+    G->>G: find_rule_hits (regex rules)
+    G->>J: decide("guard", one question per chunk)
+    J-->>G: p(injection) per chunk
+    G->>D: LLMCall row (role guard)
+    G-->>P: GuardResult (flagged or not)
+  end
+  alt a document is flagged
+    P-->>U: warning with a short excerpt
+    U->>P: edit and save again, or Save anyway
+  end
+  P->>C: create_application(company, role, documents)
+  C->>C: clean_text, validate_document
+  C->>D: INSERT Application + Document rows (one transaction)
+  P-->>U: toast, rerun
+'''
+
+[[sequences]]
+id = "start-interview"
+title = "Start an interview"
+symbols = [
+  "app.pages.interview:start_form",
+  "interview_app.preferences:load_preferences",
+  "interview_app.preferences:to_session_config",
+  "interview_app.interview.engine:start_interview",
+  "interview_app.applications:get_application",
+  "interview_app.interview.plan:make_plan",
+  "interview_app.interview.engine:_interviewer_turn",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview page
+  participant E as engine
+  participant L as LLMClient
+  participant O as OpenRouter
+  participant D as SQLite
+  U->>P: pick application, type, difficulty, length, mode, then Start
+  P->>D: load_preferences (UserPreferences)
+  P->>P: to_session_config(prefs, form values)
+  P->>E: start_interview(deps, user, application, config)
+  E->>D: get_application (Application + Documents)
+  E->>D: INSERT InterviewSession (config_json, documents_json snapshot)
+  opt prompt variant uses a plan (P4)
+    E->>L: make_plan: chat_json("planner", plan_messages, InterviewPlan)
+    L->>O: chat.completions.create (json_schema, reasoning low)
+    O-->>L: plan JSON + usage.cost
+    L->>D: LLMCall row (role planner)
+    L-->>E: InterviewPlan (validated, repaired once if needed)
+    E->>D: UPDATE InterviewSession.plan_json
+  end
+  E->>E: _interviewer_turn (directive: open the interview)
+  E->>L: chat_json("interviewer", _messages, TURN_SCHEMA[variant])
+  L->>O: chat.completions.create
+  O-->>L: turn JSON
+  L->>D: LLMCall row (role interviewer)
+  alt a model call failed
+    E->>D: status failed
+    E-->>P: InterviewError, shown as an error
+  else
+    E->>D: INSERT Turn 0 (interviewer), status active
+    E-->>P: session id
+    P-->>U: rerun, the opening question appears
+  end
+'''
+
+[[sequences]]
+id = "answer-realistic"
+title = "Answer (realistic mode)"
+symbols = [
+  "app.pages.interview:submit",
+  "interview_app.interview.engine:answer",
+  "interview_app.interview.engine:_check_answer",
+  "interview_app.security.limits:check_answer_length",
+  "interview_app.security.injection:InjectionGuard.check_answer",
+  "interview_app.interview.engine:respond",
+  "interview_app.interview.engine:must_close",
+  "interview_app.interview.engine:session_cost",
+  "interview_app.interview.engine:next_directive",
+  "interview_app.interview.engine:_messages",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview page
+  participant E as engine
+  participant G as guards
+  participant J as Jev
+  participant L as LLMClient
+  participant O as OpenRouter
+  participant D as SQLite
+  U->>P: chat_input(answer)
+  P->>E: answer(deps, user, session, text)
+  E->>D: _load (turns without superseded attempts)
+  E->>G: check_answer_length
+  E->>G: InjectionGuard.check_answer
+  alt a regex rule fires
+    G-->>E: blocked, no Jev call
+  else no rule fires
+    G->>J: decide("guard", text)
+    J-->>G: p(injection)
+    G-->>E: blocked if p >= threshold
+  end
+  alt blocked
+    E-->>P: AnswerOutcome(accepted false)
+    P-->>U: warning, nothing stored or sent
+  else allowed
+    E->>D: INSERT Turn (candidate)
+    E->>E: respond: must_close(turns, session_cost)
+    E->>D: SUM LLMCall.cost_usd for the session
+    E->>E: compute_progress, next_directive
+    E->>L: chat_json("interviewer", _messages, schema)
+    L->>O: request
+    O-->>L: turn JSON
+    L->>D: LLMCall row
+    opt is_final before the candidate's questions
+      E->>L: second chat_json with a corrective directive
+    end
+    E->>D: INSERT Turn (interviewer), finished if is_final
+    E-->>P: AnswerOutcome
+    P-->>U: rerun, next question
+  end
+'''
+
+[[sequences]]
+id = "answer-coaching"
+title = "Answer (coaching mode, with retry)"
+symbols = [
+  "interview_app.interview.engine:_store_scored_answer",
+  "interview_app.interview.engine:_live_feedback",
+  "interview_app.evaluation.live:live_score",
+  "interview_app.evaluation.live:build_tip",
+  "interview_app.interview.engine:retry",
+  "interview_app.interview.engine:respond",
+  "app.pages.interview:coaching_choice",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview page
+  participant E as engine
+  participant J as Jev
+  participant L as LLMClient
+  participant D as SQLite
+  U->>P: chat_input(answer)
+  P->>E: answer (same guards as realistic mode)
+  E->>E: _store_scored_answer, _live_feedback
+  E->>E: build_exchanges (category of the current exchange)
+  E->>J: live_score: decide("live_score", 3 ScoreQuestions)
+  J-->>E: level probabilities per item
+  E->>E: build_tip (rubric text of the next level up)
+  E->>D: INSERT Turn (candidate, live_json)
+  E-->>P: awaiting_choice
+  P-->>U: score chips, tip, Retry or Continue
+  alt Retry (up to max_retries_per_answer)
+    U->>P: new answer
+    P->>E: retry(deps, user, session, text)
+    E->>E: same guards, live_score again
+    E->>D: UPDATE old Turn superseded, INSERT new Turn (one transaction)
+    P-->>U: new chips, earlier attempt in an expander
+  else Continue
+    U->>P: Continue
+    P->>E: continue_interview (alias of respond)
+    E->>L: chat_json("interviewer"), superseded attempts never sent
+    E->>D: INSERT Turn (interviewer)
+    P-->>U: next question
+  end
+'''
+
+[[sequences]]
+id = "report"
+title = "Get the report (median of 3)"
+symbols = [
+  "app.pages.interview:feedback",
+  "interview_app.evaluation.service:stored_report",
+  "interview_app.evaluation.service:evaluate_session",
+  "interview_app.evaluation.metrics:compute_metrics",
+  "interview_app.evaluation.judge:judge_messages",
+  "interview_app.evaluation.judge:run_judge",
+  "interview_app.evaluation.aggregate:aggregate",
+  "interview_app.evaluation.service:median_run",
+  "app.report_view:render_report",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview page
+  participant S as evaluation.service
+  participant L as LLMClient x3
+  participant O as OpenRouter
+  participant D as SQLite
+  U->>P: Get my feedback report
+  P->>S: stored_report (none yet)
+  P->>S: evaluate_session(deps, user, session, judge_model)
+  S->>D: get_session (transcript without superseded attempts)
+  S->>S: build_exchanges, compute_metrics
+  S->>D: documents_json, plan_json
+  S->>S: judge_messages (judge.md)
+  par run 1
+    S->>L: run_judge: chat_json("judge", Judgement, temperature 0)
+  and run 2
+    S->>L: run_judge
+  and run 3
+    S->>L: run_judge
+  end
+  L->>O: three requests at once
+  O-->>L: three Judgement JSONs
+  S->>D: LLMCall rows, written from one thread after all runs
+  S->>S: aggregate each run (weights, quote checks, penalties)
+  S->>S: median_run picks one whole run
+  S->>D: DELETE old Evaluation, INSERT Evaluation(report_json)
+  S-->>P: Report
+  P-->>U: render_report (score, runs, breakdown, feedback)
+'''
+
+[[sequences]]
+id = "drill"
+title = "Weak-spot drill"
+symbols = [
+  "app.drill_ui:drill_offer",
+  "interview_app.interview.drill:focus_from_report",
+  "interview_app.interview.drill:drill_config",
+  "interview_app.interview.engine:start_interview",
+  "interview_app.interview.prompting:plan_messages",
+  "interview_app.interview.prompting:interviewer_system_prompt",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview or History page
+  participant W as drill_ui + interview.drill
+  participant E as engine
+  participant L as LLMClient
+  participant D as SQLite
+  P->>W: drill_offer(view, report) under the feedback report
+  W->>W: focus_from_report: weak requirements (must first, up to 4) + rubric skills below 3.5 (up to 3)
+  alt nothing weak enough
+    W-->>P: no offer shown
+  else targets found
+    W-->>U: requirements and skills to practise
+    U->>W: Start a focused practice interview
+    W->>W: drill_config(base config, focus): same type, difficulty, mode, models
+    W->>E: start_interview(deps, user, same application, config with focus)
+    E->>D: INSERT InterviewSession (config_json carries the focus)
+    opt P4: planner
+      E->>L: chat_json("planner"), plan.md adds the drill targets
+    end
+    E->>L: chat_json("interviewer"), _base.md adds a Focused practice block
+    E->>D: INSERT Turn 0
+    W-->>P: switch to the Interview page (from History) or rerun
+    P-->>U: banner "Focused practice on …", then the interview as usual
+  end
+'''
+
+[[sequences]]
+id = "lab"
+title = "Run the prompt lab"
+symbols = [
+  "lab.compare_prompts:main",
+  "interview_app.lab.compare:make_lab",
+  "interview_app.lab.compare:run_arms",
+  "interview_app.lab.runner:run_session",
+  "interview_app.lab.candidate:simulate_answer",
+  "interview_app.lab.judge:load_session",
+  "interview_app.lab.judge:code_metrics",
+  "interview_app.lab.judge:judge_session",
+  "interview_app.lab.judge:release_gate",
+]
+mermaid = '''
+sequenceDiagram
+  actor Dev as Developer
+  participant CLI as lab/compare_prompts.py
+  participant C as lab.compare
+  participant R as lab.runner
+  participant E as engine
+  participant Sim as candidate_sim
+  participant J as Jev
+  participant D as data/lab.db
+  Dev->>CLI: uv run python lab/compare_prompts.py
+  CLI->>C: make_lab (own database, fictional sample application, guard on)
+  CLI->>C: run_arms(variants x personas x repeats, budget)
+  loop every arm, persona and repeat
+    C->>D: spend_since (stop cleanly at the budget)
+    C->>R: run_session
+    R->>E: start_interview
+    loop until is_final or the turn cap
+      R->>Sim: simulate_answer: chat("candidate_sim")
+      R->>E: answer (guards on, as in the app)
+    end
+    C->>D: load_session (turns + LLMCall rows)
+    C->>C: code_metrics
+    C->>J: judge_session: decide("lab_judge", 8 items)
+  end
+  C->>CLI: summarize, release_gate
+  CLI-->>Dev: CSV in lab/results + markdown tables
+'''
+# --------------------------------------------------------------------------------------------------------
+# Findings. Each one has a check in build_code_flow_html.py (same id) and is only published while the check
+# still holds, so a fixed issue disappears on the next build. {placeholders} are filled in by the check.
+
+[findings.jev_not_billed]
+severity = "worth fixing"
+title = "Jev calls in an interview are not billed to the session"
+detail = "engine_deps() binds the shared Jev client's recorder to the user only (no session_id). So the guard and live-score calls of an interview are missing from session_cost: the sidebar's \"Cost so far\", the per-session budget limit (must_close) and the History cost column all leave them out. Only the Settings page totals include them. Each call is cheap (about $0.00002), so the effect is small, but the per-session numbers are incomplete."
+
+[findings.edit_skips_guard]
+severity = "worth fixing"
+title = "Editing a saved document skips the injection guard"
+detail = "Documents are checked by the guard only when a new application is saved (_flag_documents). The edit tabs of a saved application call update_document directly, so an edited JD or CV is cleaned and validated but never checked for injection. Spotlighting still wraps it as data in every prompt."
+
+[findings.mode_not_saved]
+severity = "minor"
+title = "Preferences.mode is never saved"
+detail = "Preferences has a mode field and the Interview page pre-selects it, but the Settings page has no mode control and the Interview page doesn't save its choice, so the saved value always stays at the default (realistic)."
+
+[findings.judge_settings_copied]
+severity = "minor"
+title = "Judge settings are copied from rubric.json into code"
+detail = "CLAUDE.md makes docs/rubric.json the single source of truth, but run_judge hard-codes temperature=0 and max_tokens=8000, aggregate.py hard-codes NEEDS_EVIDENCE = True (judge_settings.evidence_required), and report_view.py uses UNSTABLE_SPREAD = 15 while rubric.json says unstable_spread = {unstable_spread}. Only judge_settings.runs is read from the file."
+
+[findings.p5_contradiction]
+severity = "minor"
+title = "P5's checklist contradicts the shared one-question rule"
+detail = "_base.md says one question means one thing to answer, with no lists of sub-topics. The P5 self-critique checklist accepts \"exactly one question (or one numbered multi-part question)\", which invites the stacking the base rule forbids."
+
+[findings.base_hard_wrap]
+severity = "minor"
+title = "A hard-wrapped line in the shared interviewer prompt"
+detail = "_base.md breaks one rule across two lines (\"…one thing to answer:\" then \"  no lists of sub-topics…\"), against the repo's no-hard-wrap rule. The model receives the line break and the indent as part of the bullet."
+
+[findings.missing_file]
+severity = "minor"
+title = "config.py points to a file that doesn't exist ({name})"
+detail = "A comment in config.py says \"{needle}\", but {path} is not in the repo (neither the guard tuning script nor an auth module was ever merged)."
+
+[findings.stale_report_view]
+severity = "minor"
+title = "Stale docstring in report_view.py"
+detail = "It says the report view will be shared with History \"later\"; the History page already uses render_report."
+
+[findings.stale_ingest]
+severity = "minor"
+title = "Stale docstring in ingest.validate_document"
+detail = "It says injection scanning will live in security/ in a later PR; the guard exists and runs from the Applications page."
+
+[findings.status_failed]
+severity = "minor"
+title = "InterviewSession.status has an undocumented value"
+detail = "The column comment lists preparing → active → finished / ended_early, but start_interview also sets failed when the planning or opening call fails (History hides those sessions)."
+
+[findings.counting_duplicated]
+severity = "info"
+title = "The main-question counting rule exists twice"
+detail = "lab/judge.py copies engine.compute_progress's rule (its own _NOT_MAIN set and condition) instead of calling it, so a change to how the engine counts would make the lab report different numbers from the app."
+
+[findings.unused_metric]
+severity = "info"
+title = "A computed metric nobody reads"
+detail = "compute_metrics counts the candidate's questions (SessionMetrics.candidate_question_count), but neither the report, the judge prompt nor the UI uses the number."
+
+[findings.engine_deps_uncached]
+severity = "info"
+title = "New API clients on every click"
+detail = "engine_deps() is not cached, so every answer, retry, Continue or report click builds a fresh OpenAI SDK client and httpx client (and their connection pools). Harmless for one user, but each action opens new connections."
+
+[findings.drill_unwrapped]
+severity = "minor"
+title = "Drill targets enter the instructions unwrapped"
+detail = "The weak-spot drill puts Focus.requirements into the instruction part of _base.md and plan.md, not inside a <document> wrapper. The code comment argues they come from our own validated report, but those requirement strings are written by the judge model while it reads the JD and the answers, so text that started in an untrusted document can reach the instructions without passing the injection guard again. CLAUDE.md asks for untrusted text to be wrapped as data."
+
+[findings.focus_unread]
+severity = "info"
+title = "Two drill fields are saved but never read"
+detail = "Focus.advice (commented \"shown to the user\") and Focus.source_session_id are filled by focus_from_report and stored with the session, but no page or prompt reads them: the drill offer and the Interview banner show only requirements and skills, and History doesn't link a drill to the interview it came from."
+
+[generated_findings.unread_config]
+severity = "minor"
+title = "Settings that nothing reads"
+detail = "These config fields never appear as an attribute outside config.py, so changing them in .env has no effect: {names}."
+
+[generated_findings.unused_tables]
+severity = "info"
+title = "Tables no code reads or writes"
+detail = "{names}: created by init_db, but no function reads or writes them (left over from the MFA login that was dropped)."
+
+[generated_findings.test_only]
+severity = "info"
+title = "Functions only the tests call"
+detail = "No app or lab code calls these; only tests do: {names}."
+
+[generated_findings.unreferenced]
+severity = "minor"
+title = "Functions nothing refers to"
+detail = "No call, reference or test reaches these (candidates for removal; check for dynamic use first): {names}."
+
+[generated_findings.unused_kwargs]
+severity = "info"
+title = "Template variables passed but not used"
+detail = "interviewer_system_prompt passes the same variables to every variant; {names} are only used by some of them ({templates} ignore them). Harmless: it keeps one render call for all five."
+
+[generated_findings.missing_vars]
+severity = "worth fixing"
+title = "{template} uses variables its renderer doesn't pass"
+detail = "Missing: {names}. StrictUndefined makes this an error at render time."
