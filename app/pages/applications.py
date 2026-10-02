@@ -6,7 +6,7 @@ extraction mistakes (columns, headers, hyphenation) can be fixed before saving.
 """
 
 import streamlit as st
-from ui_common import current_user_id, get_engine, settings
+from ui_common import current_user_id, document_guard, get_engine, settings
 
 from interview_app.applications import (
     DocumentIn,
@@ -72,6 +72,36 @@ def _document_input(kind: DocKind) -> None:
     )
 
 
+def _collect_documents() -> list[DocumentIn]:
+    return [
+        DocumentIn(
+            kind=kind,
+            source=st.session_state.get(f"new_source_{kind}", DocSource.PASTE),
+            text=st.session_state.get(_text_key(kind), ""),
+            filename=getattr(st.session_state.get(f"new_pdf_{kind}"), "name", None),
+        )
+        for kind in DocKind
+        if st.session_state.get(_text_key(kind), "").strip()
+    ]
+
+
+def _flag_documents(documents: list[DocumentIn]) -> list[str]:
+    guard = document_guard()
+    results = [guard.check_document(KIND_LABELS[d.kind], d.text) for d in documents]
+    return [r.reason for r in results if r.flagged]
+
+
+def _save(company: str, role: str, documents: list[DocumentIn]) -> None:
+    try:
+        create_application(engine, user_id, company, role, documents, limits=limits)
+    except IngestError as e:
+        st.error(str(e))
+    else:
+        _clear_new_form()
+        st.toast("Application saved.", icon=":material/check:")
+        st.rerun()
+
+
 def _clear_new_form() -> None:
     for key in list(st.session_state):
         if key.startswith("new_"):
@@ -94,24 +124,22 @@ with st.expander("Add a new application", expanded=not list_applications(engine,
         _document_input(DocKind.COMPANY_NOTES)
 
     if st.button("Save application", type="primary", icon=":material/save:"):
-        documents = [
-            DocumentIn(
-                kind=kind,
-                source=st.session_state.get(f"new_source_{kind}", DocSource.PASTE),
-                text=st.session_state.get(_text_key(kind), ""),
-                filename=getattr(st.session_state.get(f"new_pdf_{kind}"), "name", None),
-            )
-            for kind in DocKind
-            if st.session_state.get(_text_key(kind), "").strip()
-        ]
-        try:
-            create_application(engine, user_id, company, role, documents, limits=limits)
-        except IngestError as e:
-            st.error(str(e))
+        documents = _collect_documents()
+        # Documents are untrusted input (OWASP LLM01). The guard never blocks a document on its own,
+        # because a real JD can contain odd text: it flags it, and the user decides.
+        flags = _flag_documents(documents)
+        if flags:
+            st.session_state.new_flags = flags
         else:
-            _clear_new_form()
-            st.toast("Application saved.", icon=":material/check:")
-            st.rerun()
+            _save(company, role, documents)
+
+    if flags := st.session_state.get("new_flags"):
+        for reason in flags:
+            st.warning(reason, icon=":material/shield:")
+        st.caption("Edit the text above and save again, or save it as it is if it's fine.")
+        if st.button("Save anyway", icon=":material/check:"):
+            del st.session_state["new_flags"]
+            _save(company, role, _collect_documents())
 
     st.divider()
     st.caption("No documents at hand? Load a fictional sample application.")
