@@ -1,0 +1,21 @@
+# Allow-list: send only what the app needs to the build, so personal data (real CVs in
+# docs/applications/, the SQLite DB in data/, the API key in .env) can never end up in the image,
+# even if a new private folder is added later and nobody remembers to list it here.
+*
+!pyproject.toml
+!uv.lock
+!.python-version
+!README.md
+!app/
+!src/
+!samples/
+!docs/rubric.json
+!docs/01-interviewer-guideline.md
+
+# Belt and braces: never these, even inside an allowed folder.
+**/.env
+**/.env.*
+**/data/
+**/__pycache__/
+**/*.py[oc]
+**/.DS_Store
