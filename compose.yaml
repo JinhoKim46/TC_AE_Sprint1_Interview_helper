@@ -1,0 +1,31 @@
+# Run:  docker compose up -d --build     Stop: docker compose down     Guide: docs/06-docker.md
+services:
+  app:
+    build:
+      context: .
+      args:
+        # Must match the owner of ./data on the host, or the app can't write its DB (bind mounts keep
+        # host ownership). Default 1000; if `id -u` / `id -g` print something else, set APP_UID and
+        # APP_GID in .env (compose reads it for these values too) and rebuild.
+        APP_UID: ${APP_UID:-1000}
+        APP_GID: ${APP_GID:-1000}
+    image: interview-helper:local
+    # Localhost only: the app has no login of its own, so it must not be reachable from the network.
+    ports:
+      - "127.0.0.1:8501:8501"
+    # Secrets are read at runtime from .env and never copied into the image (.dockerignore).
+    env_file: .env
+    # SQLite DB, model-price cache and uploads live on the host, so they survive restarts and rebuilds.
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8501/_stcore/health', timeout=4).read() == b'ok' else 1)"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3

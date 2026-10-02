@@ -10,6 +10,8 @@ cp .env.example .env          # set OPENROUTER_API_KEY (APP_SECRET_KEY is only f
 uv run streamlit run app/main.py
 ```
 
+To keep it running as a local service in Docker instead: `cp .env.example .env`, set the key, then `make up` and open http://localhost:8501. Run `make` to list every command (`down`, `logs`, `status`, `backup`, `rebuild` …). Details: [`docs/06-docker.md`](docs/06-docker.md).
+
 1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one.
 2. **Interview** → pick the application, the interview type and the difficulty, then **Start interview**.
 3. Answer in the chat. When it ends (or you click **End interview**), click **Get my feedback report**.
@@ -172,4 +174,5 @@ Every change goes through a branch in a git worktree and a PR to `main`, merged 
 | [`docs/00-project-objective.md`](docs/00-project-objective.md) | The course brief and my understanding of every requirement |
 | [`docs/04-design-spec.md`](docs/04-design-spec.md) | The approved design and the changes since |
 | [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md) | R4: the five prompts compared |
+| [`docs/06-docker.md`](docs/06-docker.md) | Run the app as a local Docker service; `make` commands |
 | [`docs/01-interviewer-guideline.md`](docs/01-interviewer-guideline.md), [`02-question-bank.md`](docs/02-question-bank.md), [`03-evaluation-rubric.md`](docs/03-evaluation-rubric.md) | Interviewer and evaluator reference material |
