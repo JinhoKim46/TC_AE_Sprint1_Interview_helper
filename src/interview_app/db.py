@@ -161,3 +161,16 @@ class Turn(SQLModel, table=True):
     is_final: bool = False
     private_json: str | None = None  # P3 notes / P5 draft+critique: kept for analysis, never shown
     created_at: datetime = Field(default_factory=utcnow)
+
+
+class UserPreferences(SQLModel, table=True):
+    """Saved Settings-page choices, one row per user (see preferences.py).
+
+    Stored as one JSON text column instead of a column per setting: settings change often while
+    the app grows, and a JSON blob needs no schema migration when one is added or renamed.
+    """
+
+    id: int | None = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id", unique=True, index=True)
+    prefs_json: str
+    updated_at: datetime = Field(default_factory=utcnow)

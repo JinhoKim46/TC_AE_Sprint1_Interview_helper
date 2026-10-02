@@ -169,3 +169,49 @@ def test_client_prefers_reported_cost_over_estimate(settings):
 
     client.chat("x", [], model="openai/gpt-5-mini")
     assert records[0].cost_usd == 0.0042
+
+
+# --- model_options -------------------------------------------------------------------------------
+
+
+def test_model_options_join_curated_list_with_catalog(tmp_path):
+    from interview_app.config import ModelChoice
+    from interview_app.llm.pricing import model_options
+
+    settings = Settings(
+        _env_file=None,
+        data_dir=tmp_path,
+        model_choices=[
+            ModelChoice(id="openai/gpt-5-mini"),
+            ModelChoice(id="typesafe/jev-router"),  # "-1" prices in the catalog
+            ModelChoice(id="vendor/open-model", open_weight=True),  # not in the catalog at all
+        ],
+    )
+    options = {o.id: o for o in model_options(PriceCatalog(settings, fetch=FakeFetch()), settings)}
+
+    mini = options["openai/gpt-5-mini"]
+    assert mini.label == "OpenAI: GPT-5 Mini" and not mini.open_weight
+    assert mini.prompt_price_per_m == pytest.approx(0.25)
+    assert mini.completion_price_per_m == pytest.approx(2.0)
+    assert mini.supports_structured_outputs and mini.supports_reasoning
+
+    router = options["typesafe/jev-router"]
+    assert router.prompt_price_per_m is None and router.completion_price_per_m is None
+
+    unknown = options["vendor/open-model"]
+    assert unknown.open_weight and unknown.label == "vendor/open-model"
+    assert unknown.prompt_price_per_m is None and unknown.supports_reasoning is None
+
+    # The configured role defaults are always selectable, even if not in the curated list.
+    assert settings.models.judge in options
+
+
+def test_model_options_survive_an_offline_catalog(tmp_path):
+    from interview_app.llm.pricing import model_options
+
+    settings = Settings(_env_file=None, data_dir=tmp_path)
+    catalog = PriceCatalog(settings, fetch=FakeFetch(error=RuntimeError("offline")))
+    options = model_options(catalog, settings)
+    assert [o.id for o in options][: len(settings.model_choices)] == [c.id for c in settings.model_choices]
+    assert all(o.prompt_price_per_m is None for o in options)
+    assert any(o.open_weight for o in options)

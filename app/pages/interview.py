@@ -14,12 +14,10 @@ from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
     TYPE_LABELS,
-    VARIANT_LABELS,
     Difficulty,
     InterviewType,
-    PromptVariant,
-    SessionConfig,
 )
+from interview_app.preferences import load_preferences, to_session_config
 
 engine = get_engine()
 user_id = current_user_id()
@@ -34,6 +32,10 @@ def start_form() -> None:
         st.page_link("pages/applications.py", label="Go to Applications", icon=":material/folder_open:")
         return
 
+    # Saved preferences (Settings page) pre-fill the form; the developer part (prompt variant, model
+    # settings) is not shown here at all and flows into the session through to_session_config.
+    prefs = load_preferences(engine, user_id)
+
     labels = {a.id: f"{a.company} — {a.role}" for a in apps}
     app_id = st.selectbox("Application", options=list(labels), format_func=labels.get)
     col1, col2 = st.columns(2)
@@ -44,36 +46,30 @@ def start_form() -> None:
             "Interview type",
             options=[t.value for t in InterviewType],
             format_func=lambda v: TYPE_LABELS[InterviewType(v)],
-            index=1,
+            index=list(InterviewType).index(prefs.interview_type),
         )
     )
     difficulty = col2.segmented_control(
         "Difficulty",
         options=[d.value for d in Difficulty],
-        default=Difficulty.STANDARD.value,
+        default=prefs.difficulty.value,
         format_func=str.capitalize,
     )
     main_questions = st.slider(
-        "Main questions (follow-ups come on top)", 3, 12, DEFAULT_MAIN_QUESTIONS[interview_type]
+        "Main questions (follow-ups come on top)",
+        3,
+        12,
+        prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type],
     )
-
-    # Developer options are kept out of the main flow (course task M9): a candidate doesn't need them.
-    with st.expander("Developer options"):
-        variant = PromptVariant(
-            st.selectbox(
-                "Interviewer system prompt",
-                options=[v.value for v in PromptVariant],
-                format_func=lambda v: VARIANT_LABELS[PromptVariant(v)],
-                index=list(PromptVariant).index(PromptVariant.P4_ROLE_RICH),
-            )
-        )
+    # Developer options live on the Settings page (course task M9): a candidate doesn't need them here.
+    st.caption("Defaults, prompt and model settings: see the [Settings](/settings) page.")
 
     if st.button("Start interview", type="primary", icon=":material/play_arrow:"):
-        config = SessionConfig(
+        config = to_session_config(
+            prefs,
             interview_type=interview_type,
             difficulty=Difficulty(difficulty or Difficulty.STANDARD),
             main_questions=main_questions,
-            prompt_variant=variant,
         )
         with st.spinner("Reading your documents and preparing the interview (about 30 seconds)…"):
             try:
