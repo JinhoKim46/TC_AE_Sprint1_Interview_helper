@@ -1,4 +1,7 @@
-from interview_app.config import Settings
+import pytest
+from pydantic import ValidationError
+
+from interview_app.config import PROJECT_ROOT, GuardSettings, Limits, Settings
 
 
 def test_defaults_follow_course_requirements():
@@ -8,13 +11,122 @@ def test_defaults_follow_course_requirements():
 
 
 def test_nested_settings_from_env(monkeypatch):
-    monkeypatch.setenv("MODELS__INTERVIEWER", "openai/gpt-5")
+    monkeypatch.setenv("MODELS__INTERVIEWER", "openai/gpt-5-nano")
     monkeypatch.setenv("LIMITS__MAX_TURNS", "40")
     s = Settings(_env_file=None)
-    assert s.models.interviewer == "openai/gpt-5"
+    assert s.models.interviewer == "openai/gpt-5-nano"
     assert s.limits.max_turns == 40
 
 
 def test_secrets_are_not_printed():
     s = Settings(_env_file=None, openrouter_api_key="sk-secret")
     assert "sk-secret" not in repr(s)
+
+
+# --- Validation ---------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "max_upload_mb",
+        "max_pdf_pages",
+        "max_document_chars",
+        "max_answer_chars",
+        "max_turns",
+        "max_session_cost_usd",
+    ],
+)
+def test_limits_must_be_positive(field):
+    with pytest.raises(ValidationError):
+        Limits(**{field: 0})
+
+
+@pytest.mark.parametrize(
+    ("field", "too_big"),
+    [("max_upload_mb", 51), ("max_turns", 501), ("max_session_cost_usd", 51), ("max_retries_per_answer", 11)],
+)
+def test_limits_have_sanity_caps(field, too_big):
+    with pytest.raises(ValidationError):
+        Limits(**{field: too_big})
+
+
+def test_zero_retries_per_answer_is_allowed():
+    assert Limits(max_retries_per_answer=0).max_retries_per_answer == 0
+    with pytest.raises(ValidationError):
+        Limits(max_retries_per_answer=-1)
+
+
+@pytest.mark.parametrize("threshold", [-0.1, 1.1])
+def test_injection_threshold_is_a_probability(threshold):
+    with pytest.raises(ValidationError):
+        GuardSettings(injection_threshold=threshold)
+
+
+def test_document_chunk_chars_must_be_positive():
+    with pytest.raises(ValidationError):
+        GuardSettings(document_chunk_chars=0)
+
+
+@pytest.mark.parametrize("runs", [0, 6])
+def test_judge_runs_bounds(runs):
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, judge_runs=runs)
+
+
+def test_judge_runs_defaults_to_rubric():
+    assert Settings(_env_file=None).judge_runs is None
+    assert Settings(_env_file=None, judge_runs=1).judge_runs == 1
+
+
+def test_judge_max_tokens(monkeypatch):
+    assert Settings(_env_file=None).judge_max_tokens == 16000
+    monkeypatch.setenv("JUDGE_MAX_TOKENS", "32000")
+    assert Settings(_env_file=None).judge_max_tokens == 32000
+    for bad in (999, 64001):
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, judge_max_tokens=bad)
+
+
+def test_out_of_range_env_value_fails(monkeypatch):
+    monkeypatch.setenv("LIMITS__MAX_TURNS", "0")
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
+def test_typo_in_nested_env_var_fails_loudly(monkeypatch):
+    monkeypatch.setenv("LIMITS__MAX_TURN", "40")  # missing the final S
+    with pytest.raises(ValidationError, match="max_turn"):
+        Settings(_env_file=None)
+
+
+def test_unknown_top_level_env_vars_are_ignored(monkeypatch):
+    # Stale keys (the dropped login feature's secret) and other tools' values must not crash startup.
+    monkeypatch.setenv("APP_SECRET_KEY", "old")
+    monkeypatch.setenv("APP_UID", "1000")
+    Settings(_env_file=None)
+
+
+# --- Database URL -------------------------------------------------------------------------------
+
+
+def test_database_url_default_is_unchanged():
+    assert Settings(_env_file=None).database_url == f"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}"
+
+
+def test_database_url_follows_data_dir(tmp_path):
+    s = Settings(_env_file=None, data_dir=tmp_path)
+    assert s.database_url == f"sqlite:///{tmp_path / 'app.db'}"
+
+
+def test_explicit_database_url_wins(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "sqlite://")
+    assert Settings(_env_file=None, data_dir=tmp_path).database_url == "sqlite://"
+
+
+# --- The test suite itself ----------------------------------------------------------------------
+
+
+def test_unit_tests_do_not_read_the_developers_env_file():
+    # The autouse fixture in conftest.py: a plain Settings() must not see the real .env.
+    assert Settings.model_config["env_file"] is None

@@ -4,6 +4,16 @@
 URL     := http://localhost:8501
 STAMP   := $(shell date +%Y%m%d-%H%M%S)
 
+# One-line SQLite backup, run either inside the container or on the host: `python -c "$(BACKUP_PY)" SRC DST`.
+# sqlite3's backup API gives a consistent copy even while the app is writing (a plain cp may not).
+# The target file is created with mode 600 before SQLite writes to it, because it holds real CVs and
+# answers; the existence check stops sqlite3.connect from creating an empty DB when there is none.
+BACKUP_PY := import os, sqlite3, sys; src, dst = sys.argv[1:3]; \
+	os.path.exists(src) or sys.exit('No ' + src + ' yet: nothing to back up.'); \
+	os.makedirs(os.path.dirname(dst), mode=0o700, exist_ok=True); \
+	os.close(os.open(dst, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)); \
+	a = sqlite3.connect(src); b = sqlite3.connect(dst); a.backup(b); b.close(); a.close()
+
 .DEFAULT_GOAL := help
 .PHONY: help up down restart rebuild logs ps status shell open url backup clean run test lint fmt \
 	check-env data-dir
@@ -23,8 +33,8 @@ down: ## Stop and remove the container (data/ and the image stay)
 restart: ## Restart the running container (picks up no code or .env changes)
 	docker compose restart
 
-rebuild: check-env data-dir ## Rebuild the image from scratch (no cache) and start
-	docker compose build --no-cache
+rebuild: check-env data-dir ## Rebuild the image from scratch (no cache, fresh base image) and start
+	docker compose build --no-cache --pull
 	docker compose up -d
 
 logs: ## Follow the app logs (Ctrl-C to stop)
@@ -41,20 +51,30 @@ open: url ## Alias of url
 url: ## Print the app URL
 	@echo $(URL)
 
-backup: ## Copy data/app.db to data/backups/app-<timestamp>.db
-	@test -f data/app.db || { echo "No data/app.db yet: nothing to back up."; exit 1; }
-	@mkdir -p data/backups
-	@# sqlite3's backup API gives a consistent copy even while the app is writing (a plain cp may not).
-	@python3 -c "import sqlite3; s = sqlite3.connect('data/app.db'); d = sqlite3.connect('data/backups/app-$(STAMP).db'); s.backup(d); d.close(); s.close()"
+backup: ## Copy data/app.db to data/backups/app-<timestamp>.db (mode 600)
+	@# Inside the container when it runs: the app's own process and the backup then take SQLite's file
+	@# locks on the same kernel. From the host they would cross the host/VM boundary (Docker Desktop)
+	@# or an NFS mount, where locking is unreliable and a copy taken mid-write could be corrupt.
+	@if [ -n "$$(docker compose ps --status running -q app 2>/dev/null)" ]; then \
+		echo "Backing up inside the running container..."; \
+		docker compose exec -T app python -c "$(BACKUP_PY)" /app/data/app.db /app/data/backups/app-$(STAMP).db; \
+	else \
+		echo "Container not running: backing up with the host's python3..."; \
+		python3 -c "$(BACKUP_PY)" data/app.db data/backups/app-$(STAMP).db; \
+	fi
 	@echo "Saved data/backups/app-$(STAMP).db"
 
-clean: ## Stop the app and remove its image (never touches data/)
+clean: ## Stop the app and remove its image (never touches data/); asks first, CONFIRM=1 skips
+	@if [ "$(CONFIRM)" != "1" ]; then \
+		printf "Stop the app and remove its image? data/ is kept. [y/N] "; read ans; \
+		case "$$ans" in [yY]*) ;; *) echo "Cancelled."; exit 1 ;; esac; \
+	fi
 	@# --rmi all removes the service images (interview-helper:local); bind-mounted data/ is never removed.
 	docker compose down --rmi all
 
 # --- Development without Docker -----------------------------------------------------------------
 
-run: ## Run the app locally with uv (no Docker)
+run: ## Run the app locally with uv (no Docker); listens on 127.0.0.1 only (.streamlit/config.toml)
 	uv run streamlit run app/main.py
 
 test: ## Unit tests (no network), as in CI

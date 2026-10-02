@@ -6,6 +6,7 @@
 !uv.lock
 !.python-version
 !README.md
+!.streamlit/config.toml
 !app/
 !src/
 !samples/

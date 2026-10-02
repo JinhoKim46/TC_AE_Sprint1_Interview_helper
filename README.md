@@ -10,6 +10,8 @@ cp .env.example .env          # set OPENROUTER_API_KEY
 uv run streamlit run app/main.py
 ```
 
+The app listens on 127.0.0.1 only (set in `.streamlit/config.toml`), so it isn't reachable from other machines.
+
 To keep it running as a local service in Docker instead: `cp .env.example .env`, set the key, then `make up` and open http://localhost:8501. Run `make` to list every command (`down`, `logs`, `status`, `backup`, `rebuild` …). Details: [`docs/06-docker.md`](docs/06-docker.md).
 
 1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one.

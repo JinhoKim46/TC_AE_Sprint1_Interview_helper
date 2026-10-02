@@ -88,6 +88,6 @@ def run_judge(
         Judgement,
         model=model or settings.models.judge,
         temperature=temperature,
-        max_tokens=8000,
+        max_tokens=settings.judge_max_tokens,  # long transcripts need room for every item + rationale
     )
     return judgement

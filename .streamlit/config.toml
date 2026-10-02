@@ -1,0 +1,21 @@
+# Streamlit settings for `uv run streamlit run app/main.py` (and `make run`), read from the folder
+# Streamlit is started in. Command-line flags win over this file: the Docker image passes
+# --server.address=0.0.0.0 because inside the container the published port must reach it (compose
+# still publishes it on the host's 127.0.0.1 only).
+
+[server]
+# Localhost only: the app has no login and spends money on your OpenRouter key, so it must not be
+# reachable from other machines on the network. Streamlit's default would be every interface.
+address = "127.0.0.1"
+# Megabytes. Keep in step with LIMITS__MAX_UPLOAD_MB (config.py): Streamlit rejects bigger files
+# before the app's own check runs, so this is the effective upper limit.
+maxUploadSize = 5
+
+[browser]
+# No telemetry to Streamlit's servers.
+gatherUsageStats = false
+
+[client]
+# Show only the exception type in the browser, not the message and traceback: those can contain
+# document text or request details. The full error still goes to the terminal log.
+showErrorDetails = "type"

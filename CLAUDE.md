@@ -10,7 +10,7 @@ A local, single-user Streamlit app for mock job interviews. Upload a JD + CV (co
 
 ```bash
 uv sync                                   # install
-uv run streamlit run app/main.py          # run the app
+uv run streamlit run app/main.py          # run the app (127.0.0.1 only, from .streamlit/config.toml)
 uv run pytest -m "not live"               # unit tests (no network) — what CI runs
 uv run pytest -m live                     # real-API tests, needs .env
 uv run ruff check && uv run ruff format --check
