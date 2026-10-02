@@ -1,6 +1,7 @@
 """Render a feedback report (shared by the Interview and History pages)."""
 
 import streamlit as st
+from ui_common import safe_md, short
 
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
@@ -42,7 +43,7 @@ def render_report(report: Report, rubric_path) -> None:
     col1, col2 = st.columns([1, 3])
     col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
     col2.markdown(f"### {label}")
-    col2.write(report.summary)
+    col2.markdown(safe_md(report.summary))
     runs = [r for r in report.runs if r is not None]
     if len(runs) > 1:
         scores = " · ".join(f"{r:.0f}" for r in report.runs if r is not None)
@@ -53,7 +54,7 @@ def render_report(report: Report, rubric_path) -> None:
                 "approximate and rely on the written feedback."
             )
     for p in report.penalties:
-        st.warning(p)
+        st.warning(safe_md(p))
 
     st.subheader("Score breakdown")
     for key, value in report.components.items():
@@ -64,24 +65,27 @@ def render_report(report: Report, rubric_path) -> None:
     with left:
         st.subheader("What went well")
         for s in report.strengths:
+            # No unsafe_allow_html: the quote is the candidate's own text, and raw HTML from it would run
+            # in the app's origin (stored XSS). Escaped markdown italics give the same look safely.
+            evidence = safe_md(", ".join(s.evidence), inline=True)
             st.markdown(
-                f"- {s.point}  \n  <small>“{s.quote}” ({', '.join(s.evidence)})</small>",
-                unsafe_allow_html=True,
+                f"- {safe_md(s.point, inline=True)}  \n  *“{safe_md(s.quote, inline=True)}”* ({evidence})"
             )
         if not report.strengths:
             st.caption("No strengths with clear evidence in this interview.")
     with right:
         st.subheader("What to improve")
         for imp in report.improvements:
-            ref = f" ({imp.example_turn})" if imp.example_turn else ""
-            st.markdown(f"- **{imp.area}**{ref}: {imp.advice}")
+            ref = f" ({safe_md(imp.example_turn, inline=True)})" if imp.example_turn else ""
+            st.markdown(f"- **{safe_md(imp.area, inline=True)}**{ref}: {safe_md(imp.advice, inline=True)}")
 
     if report.better_answer:
         with st.expander(
-            f"A stronger answer for {report.better_answer.exchange_id}", icon=":material/edit_note:"
+            f"A stronger answer for {safe_md(short(report.better_answer.exchange_id, 40))}",
+            icon=":material/edit_note:",
         ):
-            st.caption(report.better_answer.why)
-            st.markdown(report.better_answer.rewrite)
+            st.caption(safe_md(report.better_answer.why))
+            st.markdown(safe_md(report.better_answer.rewrite))
 
     st.subheader("Job requirements")
     st.dataframe(
@@ -101,16 +105,18 @@ def render_report(report: Report, rubric_path) -> None:
     st.subheader("Answer by answer")
     for ex in report.exchanges:
         score = f"{ex.score:.0f}" if ex.score is not None else "—"
-        with st.expander(f"{ex.exchange_id} · {ex.category} · {score}  —  {ex.question[:90]}"):
+        label = f"{ex.exchange_id} · {ex.category} · {score}  —  {short(ex.question)}"
+        with st.expander(safe_md(label, inline=True)):
             st.caption(
                 f"{ex.answer_words} words · {ex.followups} follow-up(s)"
-                + (f" · {', '.join(ex.flags)}" if ex.flags else "")
+                + (f" · {safe_md(', '.join(ex.flags), inline=True)}" if ex.flags else "")
             )
             for item in ex.items:
-                st.markdown(f"**{names.get(item.item, item.item)}: {item.score}/5** — {item.rationale}")
+                name = safe_md(names.get(item.item, item.item), inline=True)
+                st.markdown(f"**{name}: {item.score}/5** — {safe_md(item.rationale)}")
 
     st.caption(
-        f"Judged by {report.judge_model} against rubric v{report.rubric_version}. "
+        f"Judged by {safe_md(report.judge_model)} against rubric v{report.rubric_version}. "
         f"Talk ratio {report.talk_ratio}. "
         "AI feedback for practice: scores can vary by several points between runs."
     )

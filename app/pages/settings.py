@@ -7,7 +7,7 @@ Everything saved here is read by the Interview page when a new interview starts 
 """
 
 import streamlit as st
-from ui_common import current_user_id, get_engine, get_price_catalog, settings
+from ui_common import current_user_id, get_engine, get_price_catalog, kept_widget, settings
 
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
@@ -129,8 +129,8 @@ def _model_label(model_id: str) -> str:
 
 def _model_picker(label: str, current: str, help_text: str, key: str) -> str:
     ids = [o.id for o in options]
-    picked = st.selectbox(
-        label, options=ids, index=ids.index(current), format_func=_model_label, help=help_text, key=key
+    picked = kept_widget(
+        st.selectbox, key, current, label, options=ids, format_func=_model_label, help=help_text
     )
     o = by_id[picked]
     badges = []
@@ -153,12 +153,14 @@ judge = judge_model(prefs, cfg)
 if show_dev:
     st.subheader("Developer settings")
     variant = PromptVariant(
-        st.radio(
+        kept_widget(
+            st.radio,
+            "pref_variant",
+            prefs.prompt_variant.value,
             "Interviewer system prompt",
             options=[v.value for v in PromptVariant],
             format_func=lambda v: VARIANT_LABELS[PromptVariant(v)],
             captions=[VARIANT_HELP[v] for v in PromptVariant],
-            index=list(PromptVariant).index(prefs.prompt_variant),
             help="Five prompting techniques for the same interviewer, compared in the lab (course task R4).",
         )
     )
@@ -172,37 +174,47 @@ if show_dev:
 
     c1, c2 = st.columns(2)
     with c1:
-        temp_default = st.checkbox("Provider default temperature", value=llm.temperature is None)
+        temp_default = kept_widget(
+            st.checkbox, "pref_temp_default", llm.temperature is None, "Provider default temperature"
+        )
         temperature = None
         if not temp_default:
-            temperature = st.slider(
+            temperature = kept_widget(
+                st.slider,
+                "pref_temperature",
+                llm.temperature if llm.temperature is not None else 0.7,
                 "Temperature",
                 0.0,
                 2.0,
-                llm.temperature if llm.temperature is not None else 0.7,
                 step=0.1,
                 help="Randomness of the wording: 0 = almost the same reply every time, higher = more "
                 "varied but less predictable. Reasoning models (e.g. the gpt-5 family) ignore it.",
             )
     with c2:
-        tokens_default = st.checkbox("Provider default max tokens", value=llm.max_tokens is None)
+        tokens_default = kept_widget(
+            st.checkbox, "pref_tokens_default", llm.max_tokens is None, "Provider default max tokens"
+        )
         max_tokens = None
         if not tokens_default:
-            max_tokens = st.number_input(
+            max_tokens = kept_widget(
+                st.number_input,
+                "pref_max_tokens",
+                llm.max_tokens or 2000,
                 "Max tokens",
                 min_value=64,
                 max_value=8000,
-                value=llm.max_tokens or 2000,
                 step=100,
                 help="Upper limit on the length of one reply (output only). Too low and the reply is cut "
                 "off mid-JSON, which fails validation. Reasoning models count their hidden thinking "
                 "against this limit too.",
             )
 
-    effort = st.segmented_control(
+    effort = kept_widget(
+        st.segmented_control,
+        "pref_effort",
+        llm.reasoning_effort or "default",
         "Reasoning effort",
         options=EFFORT_OPTIONS,
-        default=llm.reasoning_effort or "default",
         format_func=str.capitalize,
         help="How much the model 'thinks' before answering, for models that support it. More effort can "
         "mean better questions but slower, more expensive turns. 'Low' keeps turns at a few seconds. "
