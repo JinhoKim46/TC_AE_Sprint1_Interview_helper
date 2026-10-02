@@ -5,6 +5,12 @@ on:
   push:
     branches: [main]
 
+# A newer push to the same branch cancels the older, still-running check (saves minutes).
+# Runs on main are never cancelled, so every merged commit gets a full result.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   checks:
     runs-on: ubuntu-latest
