@@ -115,7 +115,12 @@ def _protect_db_file(path: Path) -> None:
     mode = stat.S_IMODE(path.stat().st_mode)
     if mode & 0o077:
         log.warning("Database file %s was readable by other users (mode %o); setting it to 600", path, mode)
-        path.chmod(DB_FILE_MODE)
+        try:
+            path.chmod(DB_FILE_MODE)
+        except OSError as e:
+            # Some mounts can't change permissions (Docker Desktop bind mounts, some NFS shares): the host
+            # side decides there. Protecting the file is best effort; failing would lock the user out.
+            log.warning("Could not change the database file's permissions (%s); continuing", e)
 
 
 def make_engine(database_url: str) -> Engine:

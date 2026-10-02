@@ -150,3 +150,22 @@ def test_deleted_text_does_not_linger_in_the_file(tmp_path):
         s.delete(s.exec(select(Application)).one())
     engine.dispose()
     assert b"FICTIONAL-CV-MARKER-" not in path.read_bytes()
+
+
+def test_a_mount_that_cannot_chmod_does_not_stop_the_app(tmp_path, monkeypatch, caplog):
+    # Docker Desktop bind mounts raise EOPNOTSUPP on chmod; the app must still open its database.
+    import errno
+    from pathlib import Path
+
+    from interview_app.db import make_engine
+
+    db = tmp_path / "app.db"
+    db.touch(mode=0o644)
+    db.chmod(0o644)
+
+    def refuse(self, mode, **kw):
+        raise OSError(errno.EOPNOTSUPP, "Operation not supported")
+
+    monkeypatch.setattr(Path, "chmod", refuse)
+    make_engine(f"sqlite:///{db}")  # no exception
+    assert "Could not change" in caplog.text
