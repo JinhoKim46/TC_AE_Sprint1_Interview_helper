@@ -392,20 +392,20 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   // ------------------------------------------------------------------ data
   const LAYER = { ui: "UI page", core: "Core module", svc: "Service / data", lab: "Lab (offline)" };
   const NODES = [
-    { id: "applications_page", layer: "ui", name: "Applications", sub: "app/pages", x: 130, y: 70,
-      files: ["app/pages/applications.py"],
+    { id: "applications_page", layer: "ui", name: "Applications", sub: "app/views", x: 130, y: 70,
+      files: ["app/views/applications.py"],
       job: "Create an application from a job description and CV (required) plus an optional cover letter and company notes, by PDF upload or paste. Extracted text is editable before saving. New and edited documents pass the injection check; suspicious text is flagged for the user to confirm.",
       facts: ["Includes a Load sample application button with a fictional company and candidate", "Deleting an application says how many interviews go with it, and is locked while one of them runs"], grades: ["M6", "R2", "E3"] },
-    { id: "interview_page", layer: "ui", name: "Interview", sub: "app/pages", x: 380, y: 70,
-      files: ["app/pages/interview.py", "app/report_view.py", "app/drill_ui.py"],
+    { id: "interview_page", layer: "ui", name: "Interview", sub: "app/views", x: 380, y: 70,
+      files: ["app/views/interview.py", "app/report_view.py", "app/drill_ui.py"],
       job: "Pick the application, interview type, difficulty, mode (Realistic or Coaching) and number of main questions; chat with the interviewer; see progress and cost; end the interview; read the feedback report and start a weak-spot drill from it.",
       facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere"], grades: ["H1", "R2", "E4"] },
-    { id: "history_page", layer: "ui", name: "History", sub: "app/pages", x: 630, y: 70,
-      files: ["app/pages/history.py"],
+    { id: "history_page", layer: "ui", name: "History", sub: "app/views", x: 630, y: 70,
+      files: ["app/views/history.py"],
       job: "Past interviews with their transcripts and reports. Pick one application to see its progress: score trend, weakest rubric skills, job requirements over time and recurring advice. Each report offers a weak-spot drill.",
       facts: ["Never calls the judge: it only reads stored reports"], grades: ["R2"] },
-    { id: "settings_page", layer: "ui", name: "Settings", sub: "app/pages", x: 880, y: 70,
-      files: ["app/pages/settings.py"],
+    { id: "settings_page", layer: "ui", name: "Settings", sub: "app/views", x: 880, y: 70,
+      files: ["app/views/settings.py"],
       job: "Interview defaults in plain language (type, difficulty, mode, length). Developer settings sit behind a toggle: prompt variant, interviewer and judge models with prices, temperature, max tokens, reasoning effort. Usage and cost by role and model.",
       facts: ["Open-weight models carry a badge"], grades: ["M1", "M3", "M7", "M9", "H4"] },
 

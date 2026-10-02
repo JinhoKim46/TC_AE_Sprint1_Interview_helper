@@ -245,7 +245,7 @@ for summary in apps:
         )
         with action:
             go_button(
-                "pages/interview.py",
+                "views/interview.py",
                 "Practise this application",
                 icon=":material/play_arrow:",
                 key=f"practise_{summary.id}",
