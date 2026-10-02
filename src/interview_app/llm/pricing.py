@@ -20,7 +20,7 @@ from typing import Any
 import httpx
 from pydantic import BaseModel
 
-from interview_app.config import Settings
+from interview_app.config import ModelChoice, Settings
 
 log = logging.getLogger(__name__)
 
@@ -173,3 +173,59 @@ class PriceCatalog:
         if info is None or info.prompt_price is None or info.completion_price is None:
             return None
         return prompt_tokens * info.prompt_price + completion_tokens * info.completion_price
+
+
+# --- Model picker data (course tasks M3, M7, H4) -------------------------------------------------
+
+PER_MILLION = 1_000_000  # the catalog prices one token; people compare models per million tokens
+
+
+class ModelOption(BaseModel):
+    """One row of the model picker: the curated choice from config joined with catalog data."""
+
+    id: str
+    label: str
+    open_weight: bool
+    # USD per 1M tokens; None when the catalog doesn't know the model (offline, renamed, new...).
+    prompt_price_per_m: float | None = None
+    completion_price_per_m: float | None = None
+    supports_structured_outputs: bool | None = None
+    supports_reasoning: bool | None = None
+
+
+def _per_million(price: float | None) -> float | None:
+    return None if price is None else price * PER_MILLION
+
+
+def model_options(catalog: PriceCatalog, settings: Settings) -> list[ModelOption]:
+    """The curated `settings.model_choices`, enriched with name, prices and capabilities.
+
+    The role defaults (interviewer, judge) are always included, so a model set in `.env` but missing
+    from the curated list can still be shown as selected. Unknown models get None fields: the picker
+    must keep working when the catalog is offline.
+    """
+    choices = list(settings.model_choices)
+    known = {c.id for c in choices}
+    for default in (settings.models.interviewer, settings.models.judge):
+        if default not in known:
+            choices.append(ModelChoice(id=default))
+            known.add(default)
+
+    options = []
+    for choice in choices:
+        info = catalog.get(choice.id)
+        if info is None:
+            options.append(ModelOption(id=choice.id, label=choice.id, open_weight=choice.open_weight))
+            continue
+        options.append(
+            ModelOption(
+                id=choice.id,
+                label=info.name,
+                open_weight=choice.open_weight,
+                prompt_price_per_m=_per_million(info.prompt_price),
+                completion_price_per_m=_per_million(info.completion_price),
+                supports_structured_outputs=info.supports_structured_outputs,
+                supports_reasoning=info.supports_reasoning,
+            )
+        )
+    return options

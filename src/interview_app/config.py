@@ -28,6 +28,34 @@ class RoleModels(BaseModel):
     image: str = "google/gemini-2.5-flash-image"  # interviewer avatars
 
 
+class ModelChoice(BaseModel):
+    """One entry of the model picker on the Settings page (course tasks M7 and H4)."""
+
+    id: str  # OpenRouter model id
+    # Open-weight = the weights are published (anyone can self-host it). The UI labels these,
+    # because course task H4 asks for running the app on open-source models.
+    open_weight: bool = False
+
+
+# Curated, not the whole catalog: a few hundred models would be unusable in a dropdown, and this
+# account's OpenRouter guardrail blocks some providers. Each entry was checked on 2026-10-02 with a
+# tiny real call (plain chat + `chat_json`):
+#   passed:  openai/gpt-5-mini, openai/gpt-5-nano, anthropic/claude-haiku-4.5, google/gemini-2.5-flash,
+#            google/gemma-4-31b-it (open-weight), minimax/minimax-m2.7 (open-weight; the catalog lists
+#            no structured_outputs, but chat_json still validated, via plain JSON + the repair retry)
+#   blocked by the guardrail (404 "model-ignored-by-guardrail"): openai/gpt-5, z-ai/glm-5.2,
+#            qwen/qwen3-235b-a22b-2507, meta-llama/llama-4-maverick, mistralai/mistral-medium-3.1,
+#            openai/gpt-oss-120b
+DEFAULT_MODEL_CHOICES: list[ModelChoice] = [
+    ModelChoice(id="openai/gpt-5-mini"),
+    ModelChoice(id="openai/gpt-5-nano"),
+    ModelChoice(id="anthropic/claude-haiku-4.5"),
+    ModelChoice(id="google/gemini-2.5-flash"),
+    ModelChoice(id="google/gemma-4-31b-it", open_weight=True),
+    ModelChoice(id="minimax/minimax-m2.7", open_weight=True),
+]
+
+
 class Limits(BaseModel):
     """Hard limits enforced in code (OWASP LLM10: unbounded consumption)."""
 
@@ -87,6 +115,9 @@ class Settings(BaseSettings):
     max_retries: int = 3
 
     models: RoleModels = RoleModels()
+    # Models offered in the Settings page pickers. Override in .env as JSON, e.g.
+    # MODEL_CHOICES='[{"id": "openai/gpt-5-mini"}, {"id": "google/gemma-4-31b-it", "open_weight": true}]'
+    model_choices: list[ModelChoice] = DEFAULT_MODEL_CHOICES
     limits: Limits = Limits()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
