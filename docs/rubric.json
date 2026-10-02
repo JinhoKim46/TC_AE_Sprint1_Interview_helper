@@ -323,7 +323,7 @@
       "key": "contradicts_documents",
       "primitive": "noul",
       "applies_to": "all",
-      "instructions": "Does any statement the candidate makes about their own experience, dates, roles, results or qualifications conflict with `state.cv` or `state.cover_letter`? Count it only if the two cannot both be true; rounding (2.2× vs \"about 2×\") and additional detail do not count.",
+      "instructions": "Does any statement the candidate makes about their own experience, dates, roles, results or qualifications conflict with `state.cv` or `state.cover_letter`? Count it only if the two cannot both be true; rounding (38% vs \"about 40%\") and additional detail do not count.",
       "yes_means": "A real contradiction exists",
       "threshold": 0.5
     },

@@ -1,5 +1,18 @@
 # Interview Practice App — Design Plan
 
+## Changes since approval (kept up to date)
+
+| Date | Change | Why |
+|---|---|---|
+| 2026-10-02 | **Priority:** the grading criteria and the core flow (upload JD + CV, optional cover letter → tailored interview → feedback) come first. Secondary until after the review: MFA, Jev live scoring + Coaching mode, History, Dashboard, avatars (M8), JD from URL, voice. | Owner's decision; the extras aren't graded |
+| 2026-10-02 | **MFA parked** in draft PR #4 (its behaviour is specified as tests). The app runs as one built-in local user; tables keep `user_id`. | Not graded; local single-user app |
+| 2026-10-02 | **Models:** this account's OpenRouter guardrail blocks `openai/gpt-5`, DeepSeek and `z-ai/glm-5.2`. Open-weight options (H4) are `google/gemma-4-31b-it` and `minimax/minimax-m2.7`. | Checked with real calls (see `config.py`) |
+| 2026-10-02 | **Prompt variants:** only P4 receives the plan from the separate planning call (prompt chaining); P3 plans in its own `notes`; P1/P2/P5 get no plan. Each variant = zero-shot baseline + one technique. | Clean comparison of techniques (R4) |
+| 2026-10-02 | **Planning call** at `reasoning_effort="low"`: ~21 s / $0.006 vs ~36 s / $0.012 at medium, same plan structure. | Start-up latency |
+| 2026-10-02 | **Developer settings** live on the Settings page (prompt variant, models, temperature, max tokens, reasoning effort, judge model), not on the Interview page. | M9 separation |
+| 2026-10-02 | **Final judge:** one call per session (not per exchange); rationale and evidence before each score; requirement credit and strengths need a verbatim quote that code checks in the cited candidate turns. Median-of-3 runs is not done yet (scores vary between runs). | Latency; a real run showed CV-only credit |
+| 2026-10-02 | **Jev's role so far:** injection guard (rules → Jev) and the interviewer-quality judge in `lab/`. Live per-answer scoring is secondary. | Priority change above |
+
 ## Context
 Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the user keeps using it for real job
 applications → a clean, tested, readable personal tool rather than a throwaway demo. Existing inputs:
