@@ -143,6 +143,91 @@ def test_interview_page_start_answer_and_reply(monkeypatch):
     assert "I improved mIoU" in texts[1] and "How did you measure that?" in texts[2]
 
 
+def test_coaching_mode_shows_live_scores_then_continues(monkeypatch):
+    """Coaching: answer -> score chips + tip + Retry/Continue, retry once, then Continue -> next question."""
+    import json
+    from types import SimpleNamespace
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.interview.persona import PromptVariant
+    from interview_app.llm.client import LLMClient
+    from interview_app.llm.decide import ScoreAnswer
+    from interview_app.preferences import Preferences, save_preferences
+
+    def reply(stage, qid, message):
+        return json.dumps(
+            {"stage": stage, "question_id": qid, "is_followup": False, "message": message, "is_final": False}
+        )
+
+    replies = [
+        reply("opening", "OPEN-01", "Hi, walk me through your background."),
+        reply("experience", "EXP-DEEP-01", "Tell me about the data engine."),
+    ]
+
+    def create(**kwargs):
+        return SimpleNamespace(
+            model=kwargs["model"],
+            choices=[SimpleNamespace(message=SimpleNamespace(content=replies.pop(0)))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, cost=0.0),
+        )
+
+    class FakeDecider:
+        def decide(self, role, state, questions, *, model=None):
+            levels = dict(zip(questions, (2, 4, 4), strict=False))
+            answers = {
+                n: ScoreAnswer(score=lv, probabilities=[float(i + 1 == lv) for i in range(5)])
+                for n, lv in levels.items()
+            }
+            return SimpleNamespace(answers=answers)
+
+    sdk = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+    def fake_deps():
+        settings = ui_common.get_settings()
+        return EngineDeps(
+            ui_common.get_engine(),
+            settings,
+            lambda uid, sid: LLMClient(settings, sdk=sdk),
+            decider=FakeDecider(),
+        )
+
+    monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    load_sample_application(engine, uid)
+    save_preferences(engine, uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
+
+    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at.run()
+    next(r for r in at.radio if r.label == "Mode").set_value("coaching")
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+
+    at.chat_input[0].set_value("I built things.").run()
+    assert not at.exception, at.exception
+    answer_md = " ".join(m.value for m in at.chat_message[1].markdown)
+    assert "badge[" in answer_md and "/5]" in answer_md  # the three score chips
+    assert any("To reach 3 on" in c.value for c in at.caption)  # tip for the weakest item
+    labels = [b.label for b in at.button]
+    assert "Retry this answer" in labels and "Continue" in labels
+
+    next(b for b in at.button if b.label == "Retry this answer").click().run()
+    assert at.chat_input[0].placeholder == "Your new answer"
+    at.chat_input[0].set_value("I built the Fieldsight data engine, cutting labelling time by 40%.").run()
+    assert not at.exception, at.exception
+    assert any(e.label == "Earlier attempt" for e in at.expander)
+
+    next(b for b in at.button if b.label == "Continue").click().run()
+    assert not at.exception, at.exception
+    texts = [m.markdown[0].value for m in at.chat_message]
+    assert "Tell me about the data engine." in texts[-1]
+    assert not any(b.label == "Continue" for b in at.button)
+    assert at.chat_input[0].placeholder == "Your answer"
+
+
 # --- Settings page ----------------------------------------------------------------------------------
 
 

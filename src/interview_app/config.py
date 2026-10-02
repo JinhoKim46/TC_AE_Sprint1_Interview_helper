@@ -67,6 +67,9 @@ class Limits(BaseModel):
     max_followups_per_question: int = 2
     max_turns: int = 60
     max_session_cost_usd: float = 1.00
+    # Coaching mode: how many times one answer may be retried (so 1 + this many attempts in total).
+    # A cap keeps a session from turning into an endless loop of re-answers (and Jev calls).
+    max_retries_per_answer: int = 2
 
 
 class GuardSettings(BaseModel):
