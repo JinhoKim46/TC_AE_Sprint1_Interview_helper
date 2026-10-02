@@ -468,94 +468,94 @@
     {
      "comment": "",
      "default": "True",
-     "line": 89,
+     "line": 115,
      "name": "live_scoring",
      "type": "bool"
     }
    ],
-   "line": 86
+   "line": 110
   },
   "GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
    "fields": [
     {
      "comment": "",
-     "default": "0.7",
-     "line": 78,
+     "default": "Field(default=0.7, ge=0, le=1)",
+     "line": 102,
      "name": "injection_threshold",
      "type": "float"
     },
     {
      "comment": "",
      "default": "True",
-     "line": 80,
+     "line": 104,
      "name": "use_model_check",
      "type": "bool"
     },
     {
      "comment": "",
-     "default": "3000",
-     "line": 83,
+     "default": "Field(default=3000, gt=0)",
+     "line": 107,
      "name": "document_chunk_chars",
      "type": "int"
     }
    ],
-   "line": 72
+   "line": 93
   },
   "Limits": {
    "doc": "Hard limits enforced in code (OWASP LLM10: unbounded consumption).",
    "fields": [
     {
      "comment": "",
-     "default": "5.0",
-     "line": 61,
+     "default": "Field(default=5.0, gt=0, le=50)",
+     "line": 81,
      "name": "max_upload_mb",
      "type": "float"
     },
     {
      "comment": "",
-     "default": "20",
-     "line": 62,
+     "default": "Field(default=20, gt=0, le=200)",
+     "line": 82,
      "name": "max_pdf_pages",
      "type": "int"
     },
     {
      "comment": "",
-     "default": "40000",
-     "line": 63,
+     "default": "Field(default=40000, gt=0, le=500000)",
+     "line": 83,
      "name": "max_document_chars",
      "type": "int"
     },
     {
      "comment": "",
-     "default": "4000",
-     "line": 64,
+     "default": "Field(default=4000, gt=0, le=50000)",
+     "line": 84,
      "name": "max_answer_chars",
      "type": "int"
     },
     {
      "comment": "",
-     "default": "60",
-     "line": 65,
+     "default": "Field(default=60, gt=0, le=500)",
+     "line": 85,
      "name": "max_turns",
      "type": "int"
     },
     {
      "comment": "",
-     "default": "1.0",
-     "line": 66,
+     "default": "Field(default=1.0, gt=0, le=50)",
+     "line": 86,
      "name": "max_session_cost_usd",
      "type": "float"
     },
     {
      "comment": "",
-     "default": "2",
-     "line": 69,
+     "default": "Field(default=2, ge=0, le=10)",
+     "line": 90,
      "name": "max_retries_per_answer",
      "type": "int"
     }
    ],
-   "line": 58
+   "line": 70
   },
   "ModelChoice": {
    "doc": "One entry of the model picker on the Settings page (course tasks M7 and H4).",
@@ -563,19 +563,19 @@
     {
      "comment": "OpenRouter model id",
      "default": null,
-     "line": 33,
+     "line": 45,
      "name": "id",
      "type": "str"
     },
     {
      "comment": "",
      "default": "False",
-     "line": 36,
+     "line": 48,
      "name": "open_weight",
      "type": "bool"
     }
    ],
-   "line": 30
+   "line": 40
   },
   "RoleModels": {
    "doc": "Which model plays which role. Different families on purpose: a judge from the same family as the interviewer tends to prefer that family's style (self-preference bias).",
@@ -583,40 +583,40 @@
     {
      "comment": "on the course allow-list (requirement R3)",
      "default": "'openai/gpt-5-mini'",
-     "line": 23,
+     "line": 33,
      "name": "interviewer",
      "type": "str"
     },
     {
      "comment": "JD + CV -> interview plan",
      "default": "'openai/gpt-5-mini'",
-     "line": 24,
+     "line": 34,
      "name": "planner",
      "type": "str"
     },
     {
      "comment": "final LLM-as-a-judge report",
      "default": "'anthropic/claude-haiku-4.5'",
-     "line": 25,
+     "line": 35,
      "name": "judge",
      "type": "str"
     },
     {
      "comment": "simulated candidate for prompt comparison",
      "default": "'google/gemini-2.5-flash'",
-     "line": 26,
+     "line": 36,
      "name": "candidate_sim",
      "type": "str"
     },
     {
      "comment": "decision model: live scores + injection guard",
      "default": "'typesafe/jev-1.13-20260917'",
-     "line": 27,
+     "line": 37,
      "name": "jev",
      "type": "str"
     }
    ],
-   "line": 19
+   "line": 27
   },
   "Settings": {
    "doc": "",
@@ -624,117 +624,124 @@
     {
      "comment": "",
      "default": "SecretStr('')",
-     "line": 99,
+     "line": 128,
      "name": "openrouter_api_key",
      "type": "SecretStr"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1'",
-     "line": 100,
+     "line": 129,
      "name": "openrouter_base_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1/models'",
-     "line": 102,
+     "line": 131,
      "name": "openrouter_models_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/alpha/decisions'",
-     "line": 104,
+     "line": 133,
      "name": "openrouter_decisions_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'data'",
-     "line": 106,
+     "line": 135,
      "name": "data_dir",
      "type": "Path"
     },
     {
      "comment": "",
-     "default": "f\"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}\"",
-     "line": 107,
+     "default": "''",
+     "line": 138,
      "name": "database_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / 'rubric.json'",
-     "line": 108,
+     "line": 139,
      "name": "rubric_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / '01-interviewer-guideline.md'",
-     "line": 109,
+     "line": 140,
      "name": "guideline_path",
      "type": "Path"
     },
     {
      "comment": "",
-     "default": "None",
-     "line": 112,
+     "default": "Field(default=None, ge=1, le=5)",
+     "line": 143,
      "name": "judge_runs",
      "type": "int | None"
     },
     {
      "comment": "",
-     "default": "60.0",
-     "line": 113,
+     "default": "Field(default=16000, ge=1000, le=64000)",
+     "line": 146,
+     "name": "judge_max_tokens",
+     "type": "int"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=60.0, gt=0, le=600)",
+     "line": 147,
      "name": "request_timeout_s",
      "type": "float"
     },
     {
      "comment": "",
-     "default": "3",
-     "line": 114,
+     "default": "Field(default=3, ge=0, le=10)",
+     "line": 148,
      "name": "max_retries",
      "type": "int"
     },
     {
      "comment": "",
      "default": "RoleModels()",
-     "line": 116,
+     "line": 150,
      "name": "models",
      "type": "RoleModels"
     },
     {
      "comment": "",
      "default": "DEFAULT_MODEL_CHOICES",
-     "line": 119,
+     "line": 153,
      "name": "model_choices",
      "type": "list[ModelChoice]"
     },
     {
      "comment": "",
      "default": "Limits()",
-     "line": 120,
+     "line": 154,
      "name": "limits",
      "type": "Limits"
     },
     {
      "comment": "",
      "default": "GuardSettings()",
-     "line": 121,
+     "line": 155,
      "name": "guard",
      "type": "GuardSettings"
     },
     {
      "comment": "",
      "default": "Features()",
-     "line": 122,
+     "line": 156,
      "name": "features",
      "type": "Features"
     }
    ],
-   "line": 92
+   "line": 118
   }
  },
  "edges": [
@@ -2126,12 +2133,12 @@
    "from": "interview_app.config:<module>",
    "kind": "construct",
    "lines": [
-    49,
-    50,
-    51,
-    52,
-    53,
-    54
+    61,
+    62,
+    63,
+    64,
+    65,
+    66
    ],
    "to": "interview_app.config:ModelChoice"
   },
@@ -2139,7 +2146,7 @@
    "from": "interview_app.config:get_settings",
    "kind": "construct",
    "lines": [
-    128
+    168
    ],
    "to": "interview_app.config:Settings"
   },
@@ -5646,12 +5653,13 @@
   },
   "interview_app.config": {
    "doc": "All settings in one place.",
-   "doc_more": "Values come from (highest priority first): real environment variables, the `.env` file, then the defaults below. Nested groups use a double underscore in env vars, e.g. `MODELS__INTERVIEWER=openai/gpt-5` or `LIMITS__MAX_MAIN_QUESTIONS=6`.",
+   "doc_more": "Values come from (highest priority first): real environment variables, the `.env` file, then the defaults below. Nested groups use a double underscore in env vars, e.g. `MODELS__INTERVIEWER=openai/gpt-5-nano` or `LIMITS__MAX_TURNS=40`.\n\nEvery value is validated at startup: out-of-range numbers and misspelled nested keys (e.g. `LIMITS__MAX_TURN=40`) stop the app with a clear error instead of being silently ignored.",
    "external_imports": [
     "functools",
     "pathlib",
     "pydantic",
-    "pydantic_settings"
+    "pydantic_settings",
+    "typing"
    ],
    "imported_by": [
     "app.ui_common",
@@ -5674,7 +5682,7 @@
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 129,
+   "lines": 169,
    "path": "src/interview_app/config.py",
    "symbols": [
     "interview_app.config:<module>",
@@ -5684,6 +5692,7 @@
     "interview_app.config:ModelChoice",
     "interview_app.config:RoleModels",
     "interview_app.config:Settings",
+    "interview_app.config:Settings._derive_database_url",
     "interview_app.config:get_settings"
    ]
   },
@@ -5714,7 +5723,7 @@
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 243,
+   "lines": 245,
    "path": "src/interview_app/db.py",
    "symbols": [
     "interview_app.db:Application",
@@ -7245,7 +7254,7 @@
      "type": "Path"
     },
     {
-     "default": "f\"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}\"",
+     "default": "''",
      "description": null,
      "name": "database_url",
      "type": "str"
@@ -7267,6 +7276,12 @@
      "description": null,
      "name": "judge_runs",
      "type": "int | None"
+    },
+    {
+     "default": "16000",
+     "description": null,
+     "name": "judge_max_tokens",
+     "type": "int"
     },
     {
      "default": "60.0",
@@ -9305,12 +9320,12 @@
    ]
   }
  },
- "source_sha256": "4c9524d08c02cdab0a78fbcd6c5ed9c4900eea6488efae91f927bf716c1bdb22",
+ "source_sha256": "e7450201fa0e4d534e7b8e268cefb39aedd54e2d6ecac19115f751b32a5b6be9",
  "stats": {
   "agents": 7,
   "call_sites": {
    "builtin": 443,
-   "external": 655,
+   "external": 656,
    "resolved": 589,
    "unresolved": 36
   },
@@ -9321,7 +9336,7 @@
    "construct": 125,
    "ref": 21
   },
-  "functions": 218,
+  "functions": 219,
   "model_call_sites": 9,
   "modules": 52,
   "tables": 8,
@@ -10197,7 +10212,8 @@
    "end_line": 1,
    "externals": [
     "pathlib.Path",
-    "pathlib.Path().resolve"
+    "pathlib.Path().resolve",
+    "pydantic.ConfigDict"
    ],
    "kind": "module",
    "line": 1,
@@ -10208,9 +10224,9 @@
   },
   "interview_app.config:Features": {
    "doc": "Feature flags, so an unfinished or broken feature can be switched off without code changes.",
-   "end_line": 89,
+   "end_line": 115,
    "kind": "class",
-   "line": 86,
+   "line": 110,
    "module": "interview_app.config",
    "name": "Features",
    "qualname": "Features",
@@ -10219,20 +10235,23 @@
   },
   "interview_app.config:GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
-   "end_line": 83,
+   "end_line": 107,
    "kind": "class",
-   "line": 72,
+   "line": 93,
    "module": "interview_app.config",
    "name": "GuardSettings",
    "qualname": "GuardSettings",
    "schema": true,
-   "signature": "class GuardSettings(BaseModel)"
+   "signature": "class GuardSettings(BaseModel)",
+   "tested_by": [
+    "tests.test_config"
+   ]
   },
   "interview_app.config:Limits": {
    "doc": "Hard limits enforced in code (OWASP LLM10: unbounded consumption).",
-   "end_line": 69,
+   "end_line": 90,
    "kind": "class",
-   "line": 58,
+   "line": 70,
    "module": "interview_app.config",
    "name": "Limits",
    "qualname": "Limits",
@@ -10240,6 +10259,7 @@
    "signature": "class Limits(BaseModel)",
    "tested_by": [
     "tests.test_applications",
+    "tests.test_config",
     "tests.test_engine",
     "tests.test_guards",
     "tests.test_ingest",
@@ -10249,9 +10269,9 @@
   },
   "interview_app.config:ModelChoice": {
    "doc": "One entry of the model picker on the Settings page (course tasks M7 and H4).",
-   "end_line": 36,
+   "end_line": 48,
    "kind": "class",
-   "line": 30,
+   "line": 40,
    "module": "interview_app.config",
    "name": "ModelChoice",
    "qualname": "ModelChoice",
@@ -10263,9 +10283,9 @@
   },
   "interview_app.config:RoleModels": {
    "doc": "Which model plays which role. Different families on purpose: a judge from the same family as the interviewer tends to prefer that family's style (self-preference bias).",
-   "end_line": 27,
+   "end_line": 37,
    "kind": "class",
-   "line": 19,
+   "line": 27,
    "module": "interview_app.config",
    "name": "RoleModels",
    "qualname": "RoleModels",
@@ -10274,9 +10294,9 @@
   },
   "interview_app.config:Settings": {
    "doc": "",
-   "end_line": 122,
+   "end_line": 162,
    "kind": "class",
-   "line": 92,
+   "line": 118,
    "module": "interview_app.config",
    "name": "Settings",
    "qualname": "Settings",
@@ -10302,19 +10322,34 @@
     "tests.test_scoring_live_feedback"
    ]
   },
+  "interview_app.config:Settings._derive_database_url": {
+   "class": "interview_app.config:Settings",
+   "decorators": [
+    "model_validator(mode='after')"
+   ],
+   "doc": "",
+   "end_line": 162,
+   "kind": "method",
+   "line": 159,
+   "module": "interview_app.config",
+   "name": "_derive_database_url",
+   "qualname": "Settings._derive_database_url",
+   "signature": "_derive_database_url(self) -> Self"
+  },
   "interview_app.config:get_settings": {
    "decorators": [
     "lru_cache"
    ],
    "doc": "One shared Settings object. Tests build their own `Settings(...)` instead.",
-   "end_line": 128,
+   "end_line": 168,
    "kind": "function",
-   "line": 126,
+   "line": 166,
    "module": "interview_app.config",
    "name": "get_settings",
    "qualname": "get_settings",
    "signature": "get_settings() -> Settings",
    "tested_by": [
+    "tests.conftest",
     "tests.test_app_ui"
    ]
   },
@@ -10348,9 +10383,9 @@
   },
   "interview_app.db:Evaluation": {
    "doc": "The feedback report for one interview (at most one per session).",
-   "end_line": 242,
+   "end_line": 244,
    "kind": "class",
-   "line": 228,
+   "line": 230,
    "module": "interview_app.db",
    "name": "Evaluation",
    "qualname": "Evaluation",
@@ -10364,7 +10399,7 @@
   },
   "interview_app.db:InterviewSession": {
    "doc": "One mock interview. It snapshots the documents and settings it used, so later edits to the application don't change what an old transcript was based on.",
-   "end_line": 187,
+   "end_line": 189,
    "kind": "class",
    "line": 169,
    "module": "interview_app.db",
@@ -10397,9 +10432,9 @@
   },
   "interview_app.db:Turn": {
    "doc": "One message in an interview transcript.",
-   "end_line": 212,
+   "end_line": 214,
    "kind": "class",
-   "line": 190,
+   "line": 192,
    "module": "interview_app.db",
    "name": "Turn",
    "qualname": "Turn",
@@ -10433,9 +10468,9 @@
   },
   "interview_app.db:UserPreferences": {
    "doc": "Saved Settings-page choices, one row per user (see preferences.py).",
-   "end_line": 225,
+   "end_line": 227,
    "kind": "class",
-   "line": 215,
+   "line": 217,
    "module": "interview_app.db",
    "name": "UserPreferences",
    "qualname": "UserPreferences",
@@ -14615,7 +14650,7 @@
      "references": "user.id"
     }
    ],
-   "line": 228,
+   "line": 230,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.evaluation.service:evaluate_session",
@@ -14705,7 +14740,7 @@
      "references": "user.id"
     }
    ],
-   "line": 190,
+   "line": 192,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.history:list_sessions",
@@ -14744,7 +14779,7 @@
      "references": "user.id"
     }
    ],
-   "line": 215,
+   "line": 217,
    "path": "src/interview_app/db.py",
    "readers": [
     "interview_app.preferences:load_preferences",
@@ -15073,6 +15108,13 @@
  "test_only": [
   "interview_app.llm.pricing:PriceCatalog.models"
  ],
- "unread_config_fields": [],
+ "unread_config_fields": [
+  {
+   "class": "Settings",
+   "comment": "",
+   "field": "judge_max_tokens",
+   "line": 146
+  }
+ ],
  "unreferenced": []
 }
