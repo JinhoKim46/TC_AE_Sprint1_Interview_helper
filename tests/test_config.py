@@ -130,3 +130,15 @@ def test_explicit_database_url_wins(tmp_path, monkeypatch):
 def test_unit_tests_do_not_read_the_developers_env_file():
     # The autouse fixture in conftest.py: a plain Settings() must not see the real .env.
     assert Settings.model_config["env_file"] is None
+
+
+def test_main_question_slider_bounds():
+    limits = Limits()
+    assert (limits.min_main_questions, limits.max_main_questions) == (3, 12)
+    # Inside SessionConfig's own bounds (2-15), and min below max, or the slider can't be drawn.
+    with pytest.raises(ValidationError):
+        Limits(min_main_questions=1)
+    with pytest.raises(ValidationError):
+        Limits(max_main_questions=16)
+    with pytest.raises(ValidationError):
+        Limits(min_main_questions=8, max_main_questions=8)
