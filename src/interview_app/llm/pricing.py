@@ -26,6 +26,9 @@ log = logging.getLogger(__name__)
 
 # Prices change rarely (days or weeks), so one fetch per day is plenty and keeps startup fast.
 CACHE_TTL_S = 24 * 60 * 60
+# After a failed fetch, wait this long before trying the network again. Without it, every
+# cost lookup while offline would block on a fresh HTTP timeout.
+RETRY_AFTER_FAILURE_S = 10 * 60
 
 
 class ModelInfo(BaseModel):
@@ -120,6 +123,7 @@ class PriceCatalog:
 
         cache = self._read_cache()
         fresh = cache is not None and self.now() - cache.get("fetched_at", 0) < CACHE_TTL_S
+        fetch_failed = False
         if fresh:
             payload = cache["payload"]
             fetched_at = cache["fetched_at"]
@@ -129,6 +133,7 @@ class PriceCatalog:
                 fetched_at = self.now()
                 self._write_cache(payload, fetched_at)
             except Exception as e:
+                fetch_failed = True
                 if cache is not None:
                     log.warning("Model catalog fetch failed, using stale cache: %r", e)
                     payload, fetched_at = cache["payload"], cache.get("fetched_at", 0)
@@ -148,6 +153,9 @@ class PriceCatalog:
         self._models = models
         # Remember when the data was fetched (not when we read it), so stale data is retried soon.
         self._loaded_at = fetched_at
+        if fetch_failed:
+            # Pretend the data is almost expired so the next retry happens after RETRY_AFTER_FAILURE_S.
+            self._loaded_at = self.now() - CACHE_TTL_S + RETRY_AFTER_FAILURE_S
         return models
 
     def models(self) -> list[ModelInfo]:

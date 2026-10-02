@@ -7,7 +7,7 @@ import pytest
 
 from interview_app.config import Settings
 from interview_app.llm.client import CallRecord, LLMClient
-from interview_app.llm.pricing import CACHE_TTL_S, PriceCatalog
+from interview_app.llm.pricing import CACHE_TTL_S, RETRY_AFTER_FAILURE_S, PriceCatalog
 
 # A trimmed copy of the real response shape (prices are strings, "-1" means unknown).
 CATALOG = {
@@ -114,6 +114,22 @@ def test_stale_cache_used_when_fetch_fails(settings):
     catalog = PriceCatalog(settings, fetch=failing, now=clock)
     assert catalog.get("openai/gpt-5-mini") is not None
     assert failing.calls == 1
+
+
+def test_failed_fetch_is_not_retried_on_every_lookup(settings):
+    clock = Clock()
+    PriceCatalog(settings, fetch=FakeFetch(), now=clock).models()
+    clock.t += CACHE_TTL_S * 3
+
+    failing = FakeFetch(error=RuntimeError("offline"))
+    catalog = PriceCatalog(settings, fetch=failing, now=clock)
+    for _ in range(5):
+        catalog.get("openai/gpt-5-mini")
+    assert failing.calls == 1  # offline lookups must not each wait for a new HTTP timeout
+
+    clock.t += RETRY_AFTER_FAILURE_S + 1
+    catalog.get("openai/gpt-5-mini")
+    assert failing.calls == 2
 
 
 def test_empty_catalog_when_fetch_fails_and_no_cache(settings):
