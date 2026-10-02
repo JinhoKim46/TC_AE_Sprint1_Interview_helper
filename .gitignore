@@ -28,6 +28,9 @@ dist/
 .idea/
 .vscode/
 
-# --- Prompt lab: raw per-session CSVs stay local (the summary goes into docs/05-prompt-comparison.md)
+# --- Prompt lab: the per-session CSVs are committed. They hold only metrics (scores, counts, cost)
+# from the fictional sample application, no transcript text. While they were ignored, the first
+# runs' CSVs were never kept. Anything else a run might drop there stays local.
 lab/results/*
 !lab/results/.gitkeep
+!lab/results/*.csv
