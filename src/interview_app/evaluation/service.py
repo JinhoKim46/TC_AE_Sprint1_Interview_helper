@@ -86,7 +86,7 @@ def evaluate_session(
         llm = deps.make_llm(user_id, session_id)
         llm.recorder = buffered.append  # list.append is thread-safe in CPython
         try:
-            return run_judge(llm, deps.settings, messages, model)
+            return run_judge(llm, deps.settings, messages, model, temperature=rubric.judge_temperature)
         except (LLMError, ValidationError) as e:
             log.warning("Judge run failed for session %s: %r", session_id, e)
             return None

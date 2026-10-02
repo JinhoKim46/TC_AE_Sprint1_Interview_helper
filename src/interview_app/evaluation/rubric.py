@@ -53,6 +53,15 @@ class Rubric:
         return self.data["penalties"][severity]
 
     @property
+    def judge_temperature(self) -> float:
+        return float(self.data.get("judge_settings", {}).get("temperature", 0))
+
+    @property
+    def evidence_required(self) -> bool:
+        """judge_settings.evidence_required: a score without a cited transcript turn is ignored."""
+        return bool(self.data.get("judge_settings", {}).get("evidence_required", True))
+
+    @property
     def judge_runs(self) -> int:
         """How many independent judge runs a report uses (rubric judge_settings.runs)."""
         return int(self.data.get("judge_settings", {}).get("runs", 1))

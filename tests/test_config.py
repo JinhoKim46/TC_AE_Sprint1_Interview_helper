@@ -9,10 +9,10 @@ def test_defaults_follow_course_requirements():
 
 def test_nested_settings_from_env(monkeypatch):
     monkeypatch.setenv("MODELS__INTERVIEWER", "openai/gpt-5")
-    monkeypatch.setenv("LIMITS__MAX_MAIN_QUESTIONS", "5")
+    monkeypatch.setenv("LIMITS__MAX_TURNS", "40")
     s = Settings(_env_file=None)
     assert s.models.interviewer == "openai/gpt-5"
-    assert s.limits.max_main_questions == 5
+    assert s.limits.max_turns == 40
 
 
 def test_secrets_are_not_printed():

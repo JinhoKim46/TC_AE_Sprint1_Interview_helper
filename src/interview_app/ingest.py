@@ -152,7 +152,7 @@ def clean_text(text: str) -> str:
 def validate_document(kind: DocKind, text: str, limits: Limits) -> list[str]:
     """Check a (cleaned) document. Raises IngestError when unusable; returns soft warnings otherwise.
 
-    Prompt-injection scanning is deliberately not here: it lives in `security/` (later PR).
+    Prompt-injection scanning is deliberately not here: it lives in `security/` (InjectionGuard).
     """
     label = KIND_LABELS[kind]
     stripped = text.strip()

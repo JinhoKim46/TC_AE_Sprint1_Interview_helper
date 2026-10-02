@@ -12,7 +12,7 @@ The setup is three files at the repo root: `Dockerfile` (the image), `compose.ya
 
 ## First run
 
-1. Create your settings file: `cp .env.example .env`, then set `OPENROUTER_API_KEY` (and `APP_SECRET_KEY` if you use the TOTP login). Any other setting from `src/interview_app/config.py` can go here too, e.g. `MODELS__INTERVIEWER=...`.
+1. Create your settings file: `cp .env.example .env`, then set `OPENROUTER_API_KEY`. Any other setting from `src/interview_app/config.py` can go here too, e.g. `MODELS__INTERVIEWER=...`.
 2. Check your user id: `id -u` and `id -g`. If both print `1000` (the usual case on a single-user Linux machine) there is nothing to do. Otherwise add `APP_UID=<your uid>` and `APP_GID=<your gid>` to `.env` (see "Permission denied on data/" below for why).
 3. Start it: `make up` (it creates `data/` first; by hand that is `mkdir -p data && docker compose up -d --build`). The first build downloads the base image and the dependencies and takes a minute or two; later builds reuse the cached layers.
 4. Wait until it is healthy: `make status` shows `(healthy)` after about 10 to 20 seconds.

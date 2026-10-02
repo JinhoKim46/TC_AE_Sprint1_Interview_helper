@@ -25,7 +25,6 @@ class RoleModels(BaseModel):
     judge: str = "anthropic/claude-haiku-4.5"  # final LLM-as-a-judge report
     candidate_sim: str = "google/gemini-2.5-flash"  # simulated candidate for prompt comparison
     jev: str = "typesafe/jev-1.13-20260917"  # decision model: live scores + injection guard
-    image: str = "google/gemini-2.5-flash-image"  # interviewer avatars
 
 
 class ModelChoice(BaseModel):
@@ -63,8 +62,6 @@ class Limits(BaseModel):
     max_pdf_pages: int = 20
     max_document_chars: int = 40_000
     max_answer_chars: int = 4_000
-    max_main_questions: int = 8
-    max_followups_per_question: int = 2
     max_turns: int = 60
     max_session_cost_usd: float = 1.00
     # Coaching mode: how many times one answer may be retried (so 1 + this many attempts in total).
@@ -76,7 +73,8 @@ class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
     # Jev's probability at or above which text counts as an injection. The model only reports a
-    # probability; this threshold is where *our code* draws the line. Tune it with lab/tune_guard.py.
+    # probability; this threshold is where *our code* draws the line.
+    # Tune it on the red-team examples in tests/test_guards.py.
     injection_threshold: float = 0.7
     # Switch off the Jev check (rules still run), e.g. to save cost or when offline.
     use_model_check: bool = True
@@ -88,8 +86,6 @@ class GuardSettings(BaseModel):
 class Features(BaseModel):
     """Feature flags, so an unfinished or broken feature can be switched off without code changes."""
 
-    voice: bool = False
-    avatars: bool = True
     live_scoring: bool = True
 
 
@@ -106,8 +102,6 @@ class Settings(BaseSettings):
     openrouter_models_url: str = "https://openrouter.ai/api/v1/models"
     # Jev decision model (llm/decide.py). Not OpenAI-compatible, so it has its own URL.
     openrouter_decisions_url: str = "https://openrouter.ai/api/alpha/decisions"
-    # Encrypts the TOTP secret at rest (see auth.py). Must be a Fernet key.
-    app_secret_key: SecretStr = SecretStr("")
 
     data_dir: Path = PROJECT_ROOT / "data"
     database_url: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}"
