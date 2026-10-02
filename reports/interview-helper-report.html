@@ -213,7 +213,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   <header class="hero">
     <div class="eyebrow">Turing College AE · Sprint 1 capstone · status 2 October 2026</div>
     <h1>An interview rehearsal built from one job description and one CV</h1>
-    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
+    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a theme for light and dark mode and clearer interview and report screens. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
     <div class="flowline" aria-label="Core flow">
       <span class="step">Upload JD + CV</span><span class="arrow">→</span>
       <span class="step">cover letter (optional)</span><span class="arrow">→</span>
@@ -223,8 +223,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="stats">
       <div class="stat"><b>5 / 5</b><span>mandatory requirements met</span></div>
       <div class="stat"><b>13</b><span>optional tasks (bonus needs 2 medium + 1 hard)</span></div>
-      <div class="stat"><b>37</b><span>pull requests merged through CI</span></div>
-      <div class="stat"><b>406</b><span>automated tests, no network</span></div>
+      <div class="stat"><b>40</b><span>pull requests merged through CI</span></div>
+      <div class="stat"><b>421</b><span>automated tests, no network</span></div>
     </div>
   </header>
 
@@ -351,7 +351,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       </table>
     </div>
     <h3>Resolved by the audit before the review</h3>
-    <p class="note">An independent pass over the core, security, UI, infrastructure and documentation, with a second review of the fixes. Each fix came with a regression test.</p>
+    <p class="note">An independent pass over the core, security, UI, infrastructure and documentation, with a second review of the fixes, plus the navigation bug found during the UX pass (PR #41). Each fix came with a regression test.</p>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Issue</th><th>Fixed in</th><th>What changed</th></tr></thead>
@@ -368,7 +368,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="checklist" id="checklist"></div>
     <div class="checkgroup">
       <h3>After the review, in order of value for long-term use</h3>
-      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service, and the audit fixes (PRs #30–#38). Login with MFA was dropped: the app has one user and is served on localhost only.</p>
+      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service, the audit fixes (PRs #30–#38) and the UX pass (PRs #40, #41). Login with MFA was dropped: the app has one user and is served on localhost only.</p>
       <ol class="roadmap">
         <li>Re-run the prompt lab on the current prompts: the published numbers predate PRs #26, #28 and #33</li>
         <li>A larger evaluation set (more applications, at least 3 sessions per persona, a few human-rated transcripts) to calibrate the judge and separate P2, P4 and P5</li>
@@ -392,19 +392,23 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   // ------------------------------------------------------------------ data
   const LAYER = { ui: "UI page", core: "Core module", svc: "Service / data", lab: "Lab (offline)" };
   const NODES = [
-    { id: "applications_page", layer: "ui", name: "Applications", sub: "app/views", x: 130, y: 70,
+    { id: "home_page", layer: "ui", name: "Home", sub: "app/views", x: 100, y: 70,
+      files: ["app/views/home.py", "app/main.py"],
+      job: "The start of the journey: three step cards (add an application, practise, read feedback), each marked Done, Next or Later with an icon and a word, never colour alone. A Next step card offers one primary action, picked in code by journey.next_step: add an application, start, resume the running interview, get the missing report, or practise again. Application cards show the interview count and the latest score.",
+      facts: ["The sidebar follows the journey: Practise (Home, Applications, Interview, History), then Setup (Settings)", "Indigo theme for light and dark mode, checked for WCAG AA contrast"], grades: ["R2"] },
+    { id: "applications_page", layer: "ui", name: "Applications", sub: "app/views", x: 290, y: 70,
       files: ["app/views/applications.py"],
       job: "Create an application from a job description and CV (required) plus an optional cover letter and company notes, by PDF upload or paste. Extracted text is editable before saving. New and edited documents pass the injection check; suspicious text is flagged for the user to confirm.",
-      facts: ["Includes a Load sample application button with a fictional company and candidate", "Deleting an application says how many interviews go with it, and is locked while one of them runs"], grades: ["M6", "R2", "E3"] },
-    { id: "interview_page", layer: "ui", name: "Interview", sub: "app/views", x: 380, y: 70,
+      facts: ["Includes a Load sample application button with a fictional company and candidate", "Deleting an application says how many interviews go with it, and is locked while one of them runs", "Practise this application opens the start form with it preselected"], grades: ["M6", "R2", "E3"] },
+    { id: "interview_page", layer: "ui", name: "Interview", sub: "app/views", x: 480, y: 70,
       files: ["app/views/interview.py", "app/report_view.py", "app/drill_ui.py"],
-      job: "Pick the application, interview type, difficulty, mode (Realistic or Coaching) and number of main questions; chat with the interviewer; see progress and cost; end the interview; read the feedback report and start a weak-spot drill from it.",
-      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere"], grades: ["H1", "R2", "E4"] },
-    { id: "history_page", layer: "ui", name: "History", sub: "app/views", x: 630, y: 70,
+      job: "Pick the application, interview type, difficulty, mode (Realistic or Coaching) and number of main questions in a numbered start form with plain-language help; chat with the interviewer under type, difficulty and mode badges and a \"Question n of N · Stage\" progress line; end the interview; read the feedback report (verdict card first, two-column breakdown, framed strengths and improvements) and start a weak-spot drill from it.",
+      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere", "st.status boxes explain the ~30 s start and the ~1 min report, with a clear failed state", "Live score chips carry an icon per level as well as a colour"], grades: ["H1", "R2", "E4"] },
+    { id: "history_page", layer: "ui", name: "History", sub: "app/views", x: 670, y: 70,
       files: ["app/views/history.py"],
       job: "Past interviews with their transcripts and reports. Pick one application to see its progress: score trend, weakest rubric skills, job requirements over time and recurring advice. Each report offers a weak-spot drill.",
-      facts: ["Never calls the judge: it only reads stored reports"], grades: ["R2"] },
-    { id: "settings_page", layer: "ui", name: "Settings", sub: "app/views", x: 880, y: 70,
+      facts: ["Never calls the judge: it only reads stored reports", "Metrics: interview count, latest score with its change, best score", "An interview without a report links back to get one"], grades: ["R2"] },
+    { id: "settings_page", layer: "ui", name: "Settings", sub: "app/views", x: 860, y: 70,
       files: ["app/views/settings.py"],
       job: "Interview defaults in plain language (type, difficulty, mode, length). Developer settings sit behind a toggle: prompt variant, interviewer and judge models with prices, temperature, max tokens, reasoning effort. Usage and cost by role and model.",
       facts: ["Open-weight models carry a badge"], grades: ["M1", "M3", "M7", "M9", "H4"] },
@@ -451,8 +455,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       job: "Turns a report into a focused interview for the same application: code picks the requirements not yet shown (must-haves first) and the lowest-scoring rubric skills; the targets reach every prompt variant and the planner, wrapped as data.",
       facts: ["On a real report: 4 requirements + 3 skills, start 25 s, $0.009"], grades: [] },
     { id: "history", layer: "core", name: "History", sub: "history.py", x: 900, y: 340,
-      files: ["src/interview_app/history.py"],
-      job: "Lists sessions with their scores and computes progress per application: trend, weakest skills, requirement history, recurring advice.",
+      files: ["src/interview_app/history.py", "src/interview_app/journey.py"],
+      job: "Lists sessions with their scores and computes progress per application: trend, weakest skills, requirement history, recurring advice. journey.py turns the same rows into the Home page's next step and the score summary (count, latest with its change, best), so the UI does no counting.",
       facts: [], grades: [] },
     { id: "pricing", layer: "core", name: "Pricing", sub: "llm/pricing.py", x: 780, y: 340,
       files: ["src/interview_app/llm/pricing.py"],
@@ -508,12 +512,16 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["lab", "llm", "simulated candidate"],
     ["engine", "decide", "live scores (coaching)"],
     ["history_page", "history", "sessions, progress"],
+    ["home_page", "history", "next step, scores"],
     ["history", "sqlite", "sessions, reports"],
     ["history_page", "drill", "practise weak spots"],
     ["interview_page", "drill", "practise weak spots"],
     ["drill", "engine", "focused interview"],
   ];
   const STEPS = [
+    { title: "Open Home", nodes: ["home_page", "history", "sqlite"],
+      edges: [["home_page", "history"], ["history", "sqlite"]],
+      text: "Home shows where you are: three step cards marked Done, Next or Later, and one Next step card with a single primary action that code picks from your applications and interviews (add an application, start, resume, get the missing report, or practise again)." },
     { title: "Add an application", nodes: ["applications_page", "ingest", "security", "decide", "jevapi", "sqlite"],
       edges: [["applications_page", "ingest"], ["applications_page", "security"], ["security", "decide"], ["decide", "jevapi"], ["ingest", "sqlite"]],
       text: "Upload or paste the job description and CV, optionally a cover letter and company notes. Ingest extracts and cleans the text; the guard checks every document with rules and Jev and flags anything that looks like an instruction to an AI. You confirm or edit, then one copy is stored per application." },
@@ -534,7 +542,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       text: "Under any report, code picks the requirements the report says you haven't shown and your lowest-scoring skills. A new interview for the same application starts with those targets in the planner and the interviewer prompt, wrapped as data." },
     { title: "Review progress", nodes: ["history_page", "history", "sqlite"],
       edges: [["history_page", "history"], ["history", "sqlite"]],
-      text: "History lists every interview with its score and cost. Pick an application to see the score trend, the weakest rubric skills, how each job requirement was rated over time, and advice that keeps coming back." },
+      text: "History lists every interview with its score and cost, with the count, your latest score and its change, and your best score on top. Pick an application to see the score trend, the weakest rubric skills, how each job requirement was rated over time, and advice that keeps coming back." },
     { title: "Tune the settings", nodes: ["settings_page", "preferences", "pricing", "catalog", "sqlite"],
       edges: [["settings_page", "preferences"], ["settings_page", "pricing"], ["pricing", "catalog"], ["preferences", "sqlite"]],
       text: "Choose the prompt variant and the models, with prices from the cached catalog, and set temperature, max tokens and reasoning effort. Saved preferences start every new interview. Usage and cost come from the call log." },
@@ -557,7 +565,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "M3", lvl: "Medium", title: "Price of the prompt", how: "Real cost per call, catalog prices, spend by role and model", nodes: ["llm", "pricing", "preferences", "settings_page"] },
     { id: "M6", lvl: "Medium", title: "Job description field", how: "The JD is the centre of the app, with CV, cover letter and notes", nodes: ["applications_page", "ingest"] },
     { id: "M7", lvl: "Medium", title: "Choose the LLM", how: "Curated picker with prices and open-weight badges", nodes: ["settings_page", "pricing"] },
-    { id: "M9", lvl: "Medium", title: "Guard + developer settings kept apart", how: "Developer settings behind a toggle on the Settings page", nodes: ["settings_page", "security"] },
+    { id: "M9", lvl: "Medium", title: "Guard + developer settings kept apart", how: "Developer settings behind a toggle on the Settings page, which sits apart under Setup in the sidebar", nodes: ["settings_page", "security"] },
     { id: "H1", lvl: "Hard", title: "Full chatbot", how: "Persistent multi-turn sessions that survive a refresh", nodes: ["engine", "interview_page", "sqlite"] },
     { id: "H4", lvl: "Hard", title: "Open-source LLMs", how: "Gemma 4 31B and MiniMax M2.7, tested live", nodes: ["openrouter", "settings_page"] },
     { id: "H5", lvl: "Hard", title: "LLM-as-a-judge", how: "Candidate report (Claude Haiku 4.5, median of 3 runs) and interviewer-quality judge (Jev)", nodes: ["evaluation", "lab", "decide"] },
@@ -579,8 +587,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   ];
   const STACK = [
     { t: "Python 3.12 + uv", s: "Language and tooling", why: "One language end to end; uv gives a locked, reproducible environment. ruff and pytest run in CI.", alt: "pip + requirements.txt (no lockfile)" },
-    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core. .streamlit/config.toml binds it to 127.0.0.1, caps uploads at 5 MB and turns telemetry off.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
-    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 406 tests run here.", alt: "Logic inside Streamlit pages" },
+    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core. .streamlit/config.toml binds it to 127.0.0.1, caps uploads at 5 MB, turns telemetry off and sets one indigo theme for light and dark mode. Pages live in app/views/, not app/pages/, so Streamlit never switches to its legacy file-list navigation.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
+    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 421 tests run here.", alt: "Logic inside Streamlit pages" },
     { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt. Settings have bounds, and a misspelt key in a settings group fails at start instead of being ignored.", alt: "Parsing dicts by hand" },
     { t: "SQLite + SQLModel", s: "Storage", why: "One user, local data, zero setup. Moving to Postgres is a connection-string change.", alt: "Supabase (cloud; sends CVs to a third party)" },
     { t: "OpenAI SDK → OpenRouter", s: "Model access", why: "One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of every call.", alt: "LiteLLM or LangChain (more layers between you and the API parameters)" },
@@ -662,10 +670,11 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["Duplicate load-and-decode code and an import cycle in the engine", "#35", "_load_active, session_documents and session_plan; config parsed once per turn; no behaviour change"],
     ["A failed lab run stayed active and blocked every later run; lab metrics counted retried attempts", "#36, #37", "A failed run ends its session; leftovers are ended at start; superseded turns are dropped"],
     ["Docs overstated some results and test and PR counts", "#36", "Claims aligned with the data; lab code versions disclosed in docs/05"],
+    ["A deep link right after a server start (a tab reconnecting after a Docker restart) showed the raw page list instead of the sections", "#41", "app/pages/ renamed to app/views/, so Streamlit's legacy auto-navigation never kicks in"],
   ];
   const CHECKS = [
     { group: "Decisions this week", items: ["Rewrite git history to remove old CV-derived examples, or accept them", "Allow openai/gpt-5 in the OpenRouter guardrail (optional)"] },
-    { group: "Before the review (3–8 October)", items: ["make rebuild after the audit fixes and open the database inside the container (PR #38 check)", "On Docker Desktop, run chmod 600 data/app.db on the host once", "make up, then run one real application end to end with a real CV PDF: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
+    { group: "Before the review (3–8 October)", items: ["make rebuild after the audit fixes and open the database inside the container (PR #38 check)", "On Docker Desktop, run chmod 600 data/app.db on the host once", "make up, then run one real application end to end with a real CV PDF: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Look at light and dark mode, and at the Home next-step card with your real data", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
     { group: "Review: Friday 9 October (hard deadline 12 October)", items: ["Explain techniques, settings, roles and output types using the map, the chart and the models table", "Raise the small evaluation sample before the reviewer does"] },
   ];
   const RUNS = [

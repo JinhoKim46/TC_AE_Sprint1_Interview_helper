@@ -72,7 +72,7 @@ settings_note = "Code applies the yes threshold (p >= 0.5) and the release gate.
 title = "The candidate types an answer"
 lane = "user"
 symbol = "app.views.interview:chat"
-text = "The Interview page re-reads the session from the database on every rerun. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
+text = "The Interview page re-reads the session from the database on every rerun. A header shows company, role and type, difficulty and mode badges, and progress_text writes \"Question n of N · Stage\" from the computed Progress. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
 payload = "\"I led the move of our detector to the phone: I quantised it to int8 and cut latency from 140 ms to 45 ms.\""
 
 [[journey]]
@@ -236,7 +236,7 @@ stages = [
   ["born", "Jev scores three rubric items", "interview_app.evaluation.live:live_score"],
   ["transform", "Tip from the rubric's next level", "interview_app.evaluation.live:build_tip"],
   ["store", "Turn.live_json", "interview_app.interview.engine:_store_scored_answer"],
-  ["read", "Chips under the answer", "app.views.interview:live_chips"],
+  ["read", "Chips under the answer (an icon and a colour per level)", "app.views.interview:live_chips"],
 ]
 
 [[lifecycles]]
@@ -273,11 +273,21 @@ stages = [
 ]
 
 [[lifecycles]]
+name = "Next step and score summary (Home, History)"
+stages = [
+  ["born", "History rows for the user", "interview_app.history:list_sessions"],
+  ["transform", "One next action: add, start, resume, get feedback or practise", "interview_app.journey:next_step"],
+  ["transform", "Count, latest score with its change, best score", "interview_app.journey:score_summary"],
+  ["read", "Home: step cards and the Next step card", "app.views.home:<module>"],
+  ["read", "History: score metrics", "app.views.history:score_metrics"],
+]
+
+[[lifecycles]]
 name = "Preferences"
 stages = [
   ["born", "Settings page form", "app.views.settings:<module>"],
   ["store", "UserPreferences.prefs_json", "interview_app.preferences:save_preferences"],
-  ["read", "Pre-fills the start form", "interview_app.preferences:load_preferences"],
+  ["read", "Pre-fills the start form (length slider range from Limits)", "interview_app.preferences:load_preferences"],
   ["transform", "Becomes the SessionConfig", "interview_app.preferences:to_session_config"],
   ["store", "InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
 ]
@@ -355,6 +365,7 @@ sequenceDiagram
   U->>P: pick application, type, difficulty, length, mode, then Start
   P->>D: load_preferences (UserPreferences)
   P->>P: to_session_config(prefs, form values)
+  P->>P: st.status "Preparing your interview…" (about 30 s)
   P->>E: start_interview(deps, user, application, config)
   E->>D: get_application (Application + Documents)
   E->>D: active_session (a preparing row older than start_timeout_minutes is marked failed)
@@ -377,7 +388,7 @@ sequenceDiagram
   L->>D: LLMCall row (role interviewer)
   alt any step failed (model call or anything else)
     E->>D: status failed
-    E-->>P: InterviewError, shown as an error
+    E-->>P: InterviewError, the status box turns to a failed state
   else
     E->>D: INSERT Turn 0 (interviewer)
     alt the session was ended meanwhile (another tab, or marked stale)
@@ -520,6 +531,7 @@ sequenceDiagram
   participant O as OpenRouter
   participant D as SQLite
   U->>P: Get my feedback report
+  P->>P: st.status "Writing your feedback report…" (about a minute)
   P->>S: stored_report (none yet)
   P->>S: evaluate_session(deps, user, session, judge_model)
   S->>D: get_session (transcript without superseded attempts)
@@ -543,7 +555,7 @@ sequenceDiagram
   S->>S: median_run picks one whole run
   S->>D: DELETE old Evaluation, INSERT Evaluation(report_json)
   S-->>P: Report
-  P-->>U: render_report (score, runs, breakdown, feedback)
+  P-->>U: render_report (verdict card first, then runs, two-column breakdown, strengths and improvements)
 '''
 
 [[sequences]]
@@ -777,6 +789,11 @@ detail = "Deleting an application now says how many interviews go with it and is
 pr = "#35"
 title = "Duplicate decoding and an import cycle"
 detail = "_load_active, session_documents and session_plan replace copies of the same load-and-decode code, the config is parsed once per turn instead of up to three times, and evaluation/exchanges.py no longer imports the engine at run time."
+
+[[fixed_findings]]
+pr = "#41"
+title = "Deep links after a server start showed the raw page list"
+detail = "Streamlit treats an app/pages/ folder as legacy auto-navigation. When the first request after a start was a deep link (a tab reconnecting to /interview after a Docker restart), the sidebar showed main, applications, history, … instead of the Practise and Setup sections. The folder is now app/views/, which Streamlit never auto-detects."
 
 [[fixed_findings]]
 pr = "#36, #37"

@@ -4,11 +4,11 @@
 
 ## Executive summary
 
-The project is feature-complete for grading one week ahead of the Friday 9 October review: every mandatory requirement and well over the bonus threshold of optional tasks are built, tested and merged, and so is Phase 2 (History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service). An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues.
+The project is feature-complete for grading one week ahead of the Friday 9 October review: every mandatory requirement and well over the bonus threshold of optional tasks are built, tested and merged, and so is Phase 2 (History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service). An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a light and dark theme and clearer interview and report screens.
 
 - **What it is:** a local Streamlit app that rehearses an interview for **one specific job application**. The user uploads a job description and CV (cover letter optional); an LLM interviewer grounded in those documents runs a realistic multi-turn interview; an LLM judge then scores the transcript against a weighted rubric and writes evidence-backed feedback.
 - **Status against the grading scheme:** all five mandatory requirements (R1–R5) met; 13 optional tasks delivered (E3, E4, E7, E8, M1, M2, M3, M6, M7, M9, H1, H4, H5) against a bonus threshold of 2 medium and 1 hard.
-- **Delivery:** 37 pull requests merged through CI, 406 automated tests (no network); the MFA work was dropped and stays in a closed PR (#4) for reference.
+- **Delivery:** 40 pull requests merged through CI, 421 automated tests (no network); the MFA work was dropped and stays in a closed PR (#4) for reference.
 - **Evidence:** live runs on real models show about 25 s to start an interview, about 3 s per interviewer turn, about $0.015 per interview and about $0.10 per report (three judge runs, median). The 15-session prompt comparison plus the setting sweep cost $0.52.
 - **Honest caveats:** judge scores vary between runs (the median of three reduces this); the prompt comparison is small (one session per persona), cannot separate the three best prompts and was run on prompts that later PRs changed; question stacking is reduced, not eliminated.
 
@@ -47,6 +47,7 @@ Scope was set in two passes: a broad design from the owner's brainstorm, then a 
 | History, progress dashboard | Delivered after the graded scope (PR #22) | Not graded; valuable for long-term use |
 | Live per-answer scoring (Jev) and Coaching mode | Delivered after the graded scope (PR #21) | Not graded; Jev already used for the guard and the lab judge |
 | Weak-spot drill, median-of-3 judging, Docker service | Delivered after the graded scope (PRs #23, #24, #26) | Long-term use and score stability |
+| UX pass: guided Home with a next step, theme, clearer interview, report and History screens | Delivered after the audit (PRs #40, #41) | A tool the owner keeps using should say what to do next |
 | Interviewer avatars (image generation, M8) | Deferred | Bonus already exceeded |
 | Voice (speech-to-text, text-to-speech) | Deferred | Highest effort and risk for a demo |
 | JD import from URL | Deferred | Fragile (sites block scraping); paste covers it |
@@ -61,7 +62,7 @@ The app has three layers: a thin Streamlit UI, a Python core that holds all logi
 
 **How a session flows.** The Applications page turns PDFs or pasted text into clean documents, flags anything that looks like an instruction to an AI, and stores one copy per application. Only one interview runs at a time. Starting one snapshots those documents, makes a plan (for P4), and asks for the opening turn. Each answer passes the length and injection guards before the engine builds the messages; the engine checks whose turn it is, code counts questions and follow-ups and decides the phase, and the model writes the next turn as validated JSON. When the interview ends, code splits the transcript into exchanges and computes metrics, three parallel judge runs score it with cited evidence, code verifies every quote and turns each run's scores into a report using the weights in `rubric.json`, and the median run becomes the report.
 
-**Why this shape.** The core can be tested without a browser, so most of the 406 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
+**Why this shape.** The core can be tested without a browser, so most of the 421 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
 
 ## Technology stack
 
@@ -70,7 +71,7 @@ The stack is deliberately small: one language, one UI library, one database file
 | Layer | Choice | Why this, not the alternative |
 | --- | --- | --- |
 | Language and tooling | Python 3.12, uv, ruff, pytest | One language end to end; uv gives a locked, reproducible environment |
-| User interface | Streamlit (multi-page, `st.navigation`) | Required by the brief (or Next.js); fastest path to a working chat UI; `.streamlit/config.toml` binds it to 127.0.0.1 |
+| User interface | Streamlit (multi-page, `st.navigation`, pages in `app/views/`) | Required by the brief (or Next.js); fastest path to a working chat UI; `.streamlit/config.toml` binds it to 127.0.0.1 and sets one indigo theme for light and dark mode |
 | Core logic | Plain Python package `interview_app`, no UI imports | Testable without a browser; the UI could be replaced later |
 | Data models and validation | pydantic, pydantic-settings | Every model response and every setting is validated against a typed schema; settings have bounds, and a misspelt key in a settings group fails at start |
 | Storage | SQLite via SQLModel | Single user, local data; moving to Postgres later is a connection-string change |
@@ -100,7 +101,7 @@ One principle runs through every decision below: **the model judges, code comput
 | Decision | Alternatives considered | Rationale | Consequence |
 | --- | --- | --- | --- |
 | Grading criteria and core flow first; extras after the review | Build everything before Friday | The extras are not graded; each one adds explanation burden at the review | Graded scope finished on day one; MFA, voice and dashboard deferred |
-| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 406 tests, most of them on pure functions |
+| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 421 tests, most of them on pure functions |
 | One OpenAI-compatible gateway for all chat models | LiteLLM; LangChain | Fewest moving parts; raw API parameters stay visible for the review | Switching provider = a base URL and a key; every call logged with tokens, cost and latency |
 | Each of the five prompts = the zero-shot baseline plus exactly one technique | Five independently written prompts | A comparison then isolates what each technique adds | Clean R4 story; only P4 receives the separately generated plan |
 | Structured JSON for every interviewer turn, no streaming | Stream plain text | The app needs stage, question id and end-of-interview metadata reliably | 2–5 s spinner per turn instead of streamed words |
@@ -122,7 +123,7 @@ Every mandatory requirement is met, and 13 optional tasks are delivered against 
 | ID | Requirement | How it is met | Where |
 | --- | --- | --- | --- |
 | R1 | Choose the interview-prep focus | Application-specific mock interviews grounded in the JD, CV and optional cover letter, ending in a rubric report | Whole app |
-| R2 | Front end with a UI library | Streamlit, five pages: Home, Interview, History, Applications, Settings | `app/` |
+| R2 | Front end with a UI library | Streamlit, five pages in two sidebar sections: Practise (Home, Applications, Interview, History) and Setup (Settings) | `app/` |
 | R3 | Allowed OpenRouter model | Interviewer `openai/gpt-5-mini` by default | `config.py` |
 | R4 | Five system prompts, different techniques, compared | Zero-shot, few-shot, chain-of-thought, role-rich + plan, self-critique; compared on 15 simulated sessions | `prompts/`, `lab/`, `docs/05-prompt-comparison.md` |
 | R5 | At least one security guard | Limits, regex + Jev injection detection on canonical text, spotlighting of untrusted and model-written text | `security/` |
@@ -166,11 +167,13 @@ Not attempted, by choice: E1, E2, E5, E6 (partly covered by the rubric), M4, M5 
 
 The project was run like a small engineering team: every change went through its own branch, a pull request and automated checks before it reached `main`.
 
-**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format, the unit tests and a Docker build; the PR is squash-merged only when that is green, then the branch and worktree are removed. 37 PRs were merged this way; one (MFA, #4) was closed unmerged and is kept for reference.
+**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format, the unit tests and a Docker build; the PR is squash-merged only when that is green, then the branch and worktree are removed. 40 PRs were merged this way; one (MFA, #4) was closed unmerged and is kept for reference.
 
 **Parallel work.** Independent modules were built by sub-agents in separate worktrees while the interview engine and evaluation, the parts the owner must explain, were built in the main line. Every sub-agent PR was reviewed, rebased and merged by the lead; two real bugs were caught in review (pricing retried the network on every lookup when offline; UI tests leaked a cached database between tests).
 
 **Audit before the review.** After the feature work, independent passes over the core logic, security, UI, infrastructure and documentation looked for what the tests missed, and a second round reviewed the fixes. Each confirmed finding was reproduced, fixed and covered by a regression test: interview-state bugs such as double submits and stuck starts (#30), two scoring rules that inflated the score (#30, #37), config validation and Docker/CI hardening (#32), five security issues including a ReDoS, Unicode bypasses, PDF bombs and second-order injection (#33, #38), markdown/HTML escaping and stale UI state (#31), a simplification pass (#35) and corrections to claims in the docs (#36). The full list is under Risks, limitations and open issues below.
+
+**UX pass.** A heuristic review of every page (hierarchy, onboarding, empty states, feedback during slow steps, error recovery, accessibility) led to PR #40. Home now shows three step cards marked Done, Next or Later (icon and word, never colour alone) and one Next step card whose action is picked in code by the new `journey.py` (`next_step`, `score_summary`). The start form has numbered sections with plain-language help, and the slider range comes from `Limits.min_main_questions` / `max_main_questions`. `st.status` boxes explain the ~30 s start and the ~1 min report and show a clear failed state. The interview screen shows type, difficulty and mode badges and "Question n of N · Stage", live score chips carry an icon per level, and the report opens with a verdict card. History shows the interview count, the latest score with its change and the best score. "Practise this application" preselects an application on the start form. PR #41 renamed `app/pages/` to `app/views/` because Streamlit fell back to its legacy file-list navigation on a deep link right after a server start.
 
 **Testing strategy.**
 
@@ -231,7 +234,7 @@ None of the open issues blocks the review; two (judge variance and the small eva
 | Old CV-derived examples remain in git history of the public repo | Minor privacy exposure | Removed from all current files | Owner decision: rewrite history (force-push) or accept |
 | `openai/gpt-5` blocked by the account guardrail | The brief's high-capability option unavailable | gpt-5-mini is the recommended default | Optional: allow it in OpenRouter settings |
 
-**Resolved by the audit (PRs #30–#38)**, each with a regression test:
+**Resolved by the audit (PRs #30–#38) and the navigation fix (PR #41)**, each with a regression test:
 
 | Issue | Fixed in | What changed |
 | --- | --- | --- |
@@ -245,6 +248,7 @@ None of the open issues blocks the review; two (judge variance and the small eva
 | Raw HTML in the report; markdown injection from model and document text; stale or duplicate UI state | #31, #37 | No `unsafe_allow_html`; `safe_md` everywhere; delete warnings and locks; single-click guards; blocked answer returned for editing; cached clients |
 | Duplicate decoding code and an import cycle | #35 | `_load_active`, `session_documents`, `session_plan`; no behaviour change |
 | A failed lab run blocked every later run; overstated claims in the docs | #36, #37 | Failed runs end their session; superseded turns filtered; I7 wording; claims aligned with the data |
+| A deep link right after a server start showed the raw page list instead of the sidebar sections (found during the UX pass) | #41 | `app/pages/` renamed to `app/views/`, so Streamlit's legacy auto-navigation never kicks in |
 
 ## Review preparation
 
@@ -284,6 +288,7 @@ The next step is not more features: it is for the owner to use the app end to en
 - [ ] `make rebuild` after the audit fixes and open the database inside the container (the PR #38 check); on Docker Desktop, run `chmod 600 data/app.db` on the host once
 - [ ] Owner runs one full interview, report and weak-spot drill with a real application and a real CV PDF (documents stay local) and notes anything confusing
 - [ ] Try Coaching mode once (an answer, a retry, continue)
+- [ ] Look at light and dark mode, and at the Home next-step card with your real data
 - [ ] Fix only what those runs reveal; feature freeze otherwise
 - [ ] Rehearse the demo script and the question table twice; read `README.md` and `docs/05-prompt-comparison.md` once
 - [ ] Submit the repository link and schedule the review
