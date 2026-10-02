@@ -331,3 +331,102 @@ def test_suspicious_document_is_flagged_before_saving():
     next(b for b in at.button if b.label == "Save anyway").click().run()
     assert not at.exception, at.exception
     assert any("Acme" in e.label for e in at.expander)
+
+
+# --- History page -----------------------------------------------------------------------------------
+
+
+def seed_scored_session(engine, user_id: int, application_id: int, started, overall: float, answer: str):
+    """One finished interview with a hand-written report, written straight into the DB (no models)."""
+    from interview_app.db import Evaluation, InterviewSession, Turn, session_scope
+    from interview_app.evaluation.schemas import Report
+    from interview_app.interview.persona import SessionConfig
+
+    report = Report(
+        overall=overall,
+        band="yes",
+        components={},
+        penalties=[],
+        exchanges=[],
+        session_items=[],
+        requirements=[],
+        strengths=[],
+        improvements=[],
+        better_answer=None,
+        summary=f"Summary for {overall:.0f}.",
+        talk_ratio=0.6,
+        judge_model="judge/test",
+        rubric_version="test",
+    )
+    with session_scope(engine) as s:
+        row = InterviewSession(
+            user_id=user_id,
+            application_id=application_id,
+            company="Northwind Robotics",
+            role="Perception Engineer",
+            config_json=SessionConfig().model_dump_json(),
+            documents_json="{}",
+            status="finished",
+            started_at=started,
+        )
+        s.add(row)
+        s.flush()
+        s.add(Turn(session_id=row.id, user_id=user_id, idx=0, speaker="interviewer", text="Tell me more."))
+        s.add(Turn(session_id=row.id, user_id=user_id, idx=1, speaker="candidate", text=answer))
+        s.add(
+            Evaluation(
+                session_id=row.id,
+                user_id=user_id,
+                judge_model="judge/test",
+                overall=overall,
+                band="yes",
+                report_json=report.model_dump_json(),
+            )
+        )
+        return row.id
+
+
+def test_history_page_empty_state():
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=30)
+    at.run()
+    at.switch_page("pages/history.py").run()
+    assert not at.exception, at.exception
+    assert "No interviews yet" in at.info[0].value
+
+
+def test_history_page_shows_trend_and_opens_a_transcript():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First try answer.")
+    newest = seed_scored_session(
+        engine, uid, app_id, datetime(2026, 9, 8, tzinfo=UTC), 71.0, "I improved mIoU to 0.74."
+    )
+
+    # Longer timeout: the first st.dataframe imports pyarrow, which is slow on a cold start.
+    at = run_page("history.py", timeout=90)
+    at.selectbox(key="history_app").set_value(app_id).run()
+    assert not at.exception, at.exception
+    assert any(s.value == "Overall score over time" for s in at.subheader)
+
+    at.selectbox(key="history_open").set_value(newest).run()
+    assert not at.exception, at.exception
+    assert any("I improved mIoU to 0.74." in m.markdown[0].value for m in at.chat_message)
+    assert any("Summary for 71." in m.value for m in at.markdown)
+
+    # Delete needs the confirmation tick first.
+    delete = next(b for b in at.button if b.label == "Delete interview")
+    assert delete.disabled
+    at.checkbox(key="history_confirm").check().run()
+    next(b for b in at.button if b.label == "Delete interview").click().run()
+    assert not at.exception, at.exception
+    from interview_app.history import list_sessions
+
+    remaining = [s.session_id for s in list_sessions(engine, uid)]
+    assert len(remaining) == 1 and newest not in remaining
