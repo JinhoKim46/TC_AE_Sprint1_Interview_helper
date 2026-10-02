@@ -79,6 +79,10 @@ class Limits(BaseModel):
     # Keep in step with `maxUploadSize` in .streamlit/config.toml: Streamlit rejects bigger files
     # before our code sees them, so a higher value here alone has no effect.
     max_upload_mb: float = Field(default=5.0, gt=0, le=50)
+    # PDF decompression-bomb bounds (see ingest.extract_pdf_text). A real CV page's text stream is tens
+    # of KB, so 5 MB per stream is generous.
+    pdf_max_stream_bytes: int = Field(default=5_000_000, gt=0)
+    pdf_extract_timeout_s: float = Field(default=20.0, gt=0, le=300)
     max_pdf_pages: int = Field(default=20, gt=0, le=200)
     max_document_chars: int = Field(default=40_000, gt=0, le=500_000)
     max_answer_chars: int = Field(default=4_000, gt=0, le=50_000)
@@ -108,6 +112,11 @@ class GuardSettings(BaseModel):
     # Long documents are split into chunks of about this many characters, so a short injected line
     # is not diluted by pages of normal text. All chunks still go in one Jev request.
     document_chunk_chars: int = Field(default=3000, gt=0)
+    # The most chunks one document may have before the model check refuses it (OWASP LLM10). Each chunk
+    # is one question in the Jev request, so without a cap a 1 MB paste would send ~330 questions at
+    # once. 20 x 3,000 characters is about 60,000: above the 40,000-character document limit, so a
+    # document that passed `ingest.validate_document` always fits.
+    max_document_chunks: int = Field(default=20, gt=0, le=200)
 
 
 class Features(BaseModel):
