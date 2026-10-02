@@ -140,3 +140,10 @@ def test_make_plan_uses_the_planner_model():
     assert plan == PLAN
     assert requests[0]["model"] == SETTINGS.models.planner
     assert json.loads(json.dumps(requests[0]["response_format"]))["type"] == "json_schema"
+
+
+@pytest.mark.parametrize("variant", list(PromptVariant))
+def test_no_variant_allows_numbered_multi_part_questions(variant):
+    """The shared rule is one thing to answer per turn; no variant (nor the guideline P4 quotes) undoes it."""
+    prompt = interviewer_system_prompt(ctx(variant)).lower()
+    assert "numbered multi-part" not in prompt and "number the parts" not in prompt
