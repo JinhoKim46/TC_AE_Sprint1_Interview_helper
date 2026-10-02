@@ -1,11 +1,17 @@
 """Evaluate a finished interview and store the report.
 
 Pipeline: transcript -> exchanges (code) -> metrics (code) -> judge (model) -> aggregate (code) -> Report.
+
+Median of several runs: the same transcript scored 56.6 and 71.5 on two single runs, so one run is not
+a reliable number. The judge runs `runs` times in parallel (latency stays about one run), each run is
+aggregated on its own, and the report is the run whose overall score is the median. Picking a whole run
+(rather than a median per item) keeps the numbers and the written feedback from the same judgement.
 The report is stored, so re-opening it costs nothing; `force=True` re-runs the judge.
 """
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import ValidationError
 from sqlmodel import select
@@ -27,6 +33,14 @@ log = logging.getLogger(__name__)
 
 class EvaluationError(Exception):
     """Shown to the user as is."""
+
+
+def median_run(scored: list[tuple]) -> tuple:
+    """The (judgement, numbers) pair whose overall score is the median. Runs without an overall score
+    sort last; with an even count the lower middle is taken (the more cautious score)."""
+    ordered = sorted(scored, key=lambda pair: (pair[1]["overall"] is None, pair[1]["overall"] or 0))
+    with_score = [p for p in ordered if p[1]["overall"] is not None] or ordered
+    return with_score[(len(with_score) - 1) // 2]
 
 
 def stored_report(deps: EngineDeps, user_id: int, session_id: int) -> Report | None:
@@ -61,14 +75,38 @@ def evaluate_session(
     metrics = compute_metrics(exchanges, rubric)
     model = judge_model or deps.settings.models.judge
     messages = judge_messages(rubric, view.company, view.role, documents, exchanges, plan)
-    try:
-        judgement = run_judge(deps.make_llm(user_id, session_id), deps.settings, messages, model)
-    except (LLMError, ValidationError) as e:
-        log.warning("Judge failed for session %s: %r", session_id, e)
-        raise EvaluationError("The evaluator could not produce a report. Please try again.") from e
+    runs = max(1, deps.settings.judge_runs or rubric.judge_runs)
+
+    # Each run gets its own client, but its call records are buffered and written to the call log from
+    # this thread after all runs finish: SQLite handles one writer at a time, so writes from three
+    # threads at once could fail or block.
+    buffered: list = []
+
+    def one_run(_: int):
+        llm = deps.make_llm(user_id, session_id)
+        llm.recorder = buffered.append  # list.append is thread-safe in CPython
+        try:
+            return run_judge(llm, deps.settings, messages, model)
+        except (LLMError, ValidationError) as e:
+            log.warning("Judge run failed for session %s: %r", session_id, e)
+            return None
+
+    with ThreadPoolExecutor(max_workers=runs) as pool:
+        judgements = [j for j in pool.map(one_run, range(runs)) if j is not None]
+    record = deps.make_llm(user_id, session_id).recorder
+    for call in buffered:
+        record(call)  # every run is billed, including failed ones, so every run is logged
+    if not judgements:
+        raise EvaluationError("The evaluator could not produce a report. Please try again.")
 
     turn_texts = {turn_id(t.idx): t.text for t in view.turns}
-    numbers = aggregate(judgement, exchanges, metrics, rubric, view.config.interview_type.value, turn_texts)
+    scored = [
+        (j, aggregate(j, exchanges, metrics, rubric, view.config.interview_type.value, turn_texts))
+        for j in judgements
+    ]
+    judgement, numbers = median_run(scored)
+    overalls = [n["overall"] for _, n in scored]
+    known = [o for o in overalls if o is not None]
     report = Report(
         **numbers,
         improvements=judgement.improvements,
@@ -77,6 +115,8 @@ def evaluate_session(
         talk_ratio=metrics.talk_ratio,
         judge_model=model,
         rubric_version=rubric.version,
+        runs=overalls,
+        spread=round(max(known) - min(known), 1) if len(known) > 1 else None,
     )
 
     with session_scope(deps.engine) as s:

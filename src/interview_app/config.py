@@ -111,6 +111,8 @@ class Settings(BaseSettings):
     rubric_path: Path = PROJECT_ROOT / "docs" / "rubric.json"
     guideline_path: Path = PROJECT_ROOT / "docs" / "01-interviewer-guideline.md"
 
+    # Independent judge runs per report; None = rubric.json judge_settings.runs (3). 1 = cheapest.
+    judge_runs: int | None = None
     request_timeout_s: float = 60.0
     max_retries: int = 3
 

@@ -265,8 +265,10 @@ JUDGEMENT = Judgement(
 
 
 @pytest.fixture
-def finished_session(engine):
-    """A real session (via the engine) with one answer, then ended."""
+def finished_session(engine, request):
+    """A real session (via the engine) with one answer, then ended. Judge runs = request.param (default 1),
+    so tests that script exactly one judge reply stay deterministic."""
+    settings = Settings(_env_file=None, judge_runs=getattr(request, "param", 1))
     from interview_app.demo import load_sample_application
     from interview_app.interview import engine as eng
     from interview_app.interview.persona import PromptVariant, SessionConfig
@@ -311,7 +313,7 @@ def finished_session(engine):
     uid = ensure_local_user(engine)
     app_id = load_sample_application(engine, uid)
     deps = eng.EngineDeps(
-        engine, SETTINGS, lambda u, sid: LLMClient(SETTINGS, make_db_recorder(engine, u, sid), sdk=sdk)
+        engine, settings, lambda u, sid: LLMClient(settings, make_db_recorder(engine, u, sid), sdk=sdk)
     )
     sid = eng.start_interview(deps, uid, app_id, SessionConfig(prompt_variant=PromptVariant.P1_ZERO_SHOT))
     eng.answer(deps, uid, sid, "I am an ML engineer with four years of computer vision experience.")
@@ -360,3 +362,84 @@ def test_judge_failure_is_a_friendly_error(finished_session):
     with pytest.raises(EvaluationError):
         evaluate_session(f.deps, f.uid, f.sid)
     assert stored_report(f.deps, f.uid, f.sid) is None
+
+
+# --- median of several judge runs ---------------------------------------------------------------
+
+
+def judged(a9: int, summary: str) -> str:
+    """A judgement whose overall score comes from one communication score (A9): with every other
+    component missing, its weight is redistributed and overall = norm(A9)."""
+    return JUDGEMENT.model_copy(
+        update={
+            "exchanges": [ExchangeJudgement(exchange_id="E01", items=[item("A9", a9, ["T02"])])],
+            "session_items": [],
+            "requirements": [],
+            "summary": summary,
+        }
+    ).model_dump_json()
+
+
+@pytest.mark.parametrize("finished_session", [3], indirect=True)
+def test_report_is_the_median_of_three_runs(finished_session):
+    f = finished_session
+    f.replies += [judged(5, "high"), judged(2, "low"), judged(4, "middle")]
+    report = evaluate_session(f.deps, f.uid, f.sid)
+    assert len([r for r in f.requests if r["model"] == SETTINGS.models.judge]) == 3
+    assert sorted(report.runs) == [25.0, 75.0, 100.0]
+    assert report.overall == 75.0 and report.summary == "middle"  # numbers and words from the same run
+    assert report.spread == 75.0
+    # 2 interviewer calls + 3 judge calls at $0.002 each: every run is billed, so every run is logged.
+    assert f.eng.session_cost(f.deps.engine, f.sid) == pytest.approx(0.010)
+
+
+@pytest.mark.parametrize("finished_session", [3], indirect=True)
+def test_a_failed_run_does_not_sink_the_report(finished_session):
+    f = finished_session
+    # Two good replies; the third run gets nothing (an API error) and its repair retry fails too.
+    f.replies += [judged(4, "a"), judged(2, "b")]
+    report = evaluate_session(f.deps, f.uid, f.sid)
+    assert sorted(report.runs) == [25.0, 75.0]
+    assert report.overall == 25.0  # even count: the lower middle, the more cautious score
+
+
+def test_median_run_ordering():
+    from interview_app.evaluation.service import median_run
+
+    runs = [
+        ("a", {"overall": 80.0}),
+        ("b", {"overall": None}),
+        ("c", {"overall": 40.0}),
+        ("d", {"overall": 60.0}),
+    ]
+    assert median_run(runs)[0] == "d"
+    assert median_run([("x", {"overall": None})])[0] == "x"
+
+
+def test_old_reports_without_runs_still_load():
+    from interview_app.evaluation.schemas import Report
+
+    old = {
+        k: v
+        for k, v in Report(
+            overall=50.0,
+            band="lean_no",
+            components={},
+            penalties=[],
+            exchanges=[],
+            session_items=[],
+            requirements=[],
+            strengths=[],
+            improvements=[],
+            better_answer=None,
+            summary="",
+            talk_ratio=None,
+            judge_model="m",
+            rubric_version="1",
+        )
+        .model_dump()
+        .items()
+        if k not in ("runs", "spread")
+    }
+    report = Report.model_validate(old)
+    assert report.runs == [] and report.spread is None

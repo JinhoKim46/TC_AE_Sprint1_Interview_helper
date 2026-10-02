@@ -5,6 +5,9 @@ import streamlit as st
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
 
+# Above this spread between judge runs (on the 0-100 scale) the overall score is flagged as approximate.
+UNSTABLE_SPREAD = 15
+
 BAND_LABELS = {
     "strong_yes": ("Strong hire signal", ":material/verified:"),
     "yes": ("Hire signal", ":material/thumb_up:"),
@@ -39,6 +42,15 @@ def render_report(report: Report, rubric_path) -> None:
     col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
     col2.markdown(f"### {label}")
     col2.write(report.summary)
+    runs = [r for r in report.runs if r is not None]
+    if len(runs) > 1:
+        scores = " · ".join(f"{r:.0f}" for r in report.runs if r is not None)
+        st.caption(f"Median of {len(runs)} independent judge runs ({scores}).")
+        if report.spread is not None and report.spread > UNSTABLE_SPREAD:
+            st.warning(
+                f"The judge's runs differ by {report.spread:.0f} points, so treat the overall score as "
+                "approximate and rely on the written feedback."
+            )
     for p in report.penalties:
         st.warning(p)
 
