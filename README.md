@@ -30,4 +30,5 @@ Every change goes through a branch + PR to `main`; CI runs lint and tests.
 |---|---|
 | [`docs/00-project-objective.md`](docs/00-project-objective.md) | The course brief and my understanding of every requirement |
 | [`docs/04-design-spec.md`](docs/04-design-spec.md) | The approved design |
+| [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md) | The five interviewer prompts compared with the `lab/` harness (R4/H5) and the reasoning-effort sweep (E8); winner: P4 |
 | [`docs/README.md`](docs/README.md) | Guide to the interviewer / evaluator reference docs |
