@@ -248,7 +248,8 @@ def _load(engine: Engine, user_id: int, session_id: int) -> tuple[InterviewSessi
     """The session and its transcript *without* superseded attempts.
 
     Everything that reasons about the interview (the interviewer's messages, progress counting, limits,
-    the final evaluation via get_session) goes through here, so a discarded attempt can never leak in.
+    the final evaluation via get_session) uses _kept turns, here or after _load_active, so a discarded
+    attempt can never leak in.
     """
     loaded = _load_all(engine, user_id, session_id)
     if loaded is None:
