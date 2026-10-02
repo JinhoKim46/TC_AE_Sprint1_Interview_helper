@@ -27,3 +27,7 @@ dist/
 .DS_Store
 .idea/
 .vscode/
+
+# --- Prompt lab: raw per-session CSVs stay local (the summary goes into docs/05-prompt-comparison.md)
+lab/results/*
+!lab/results/.gitkeep
