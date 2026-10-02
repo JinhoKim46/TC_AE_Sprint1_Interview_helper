@@ -17,6 +17,7 @@ import json
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC, timedelta
 
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
@@ -177,6 +178,13 @@ def next_directive(progress: Progress, config: SessionConfig, force_close: bool)
             "questions, close the interview and set is_final true."
         )
     if progress.main_asked >= config.main_questions:
+        # The last main question deserves the same chance of a follow-up as the others.
+        if progress.followups < config.max_followups:
+            return (
+                "All planned main questions are asked. Either one follow-up on the last answer (if it was "
+                "vague, unowned or unevidenced) or invite the candidate's own questions "
+                "(stage candidate_questions)."
+            )
         return (
             "All planned main questions are done. "
             "Invite the candidate's own questions now (stage candidate_questions)."
@@ -276,15 +284,32 @@ def get_session(engine: Engine, user_id: int, session_id: int) -> SessionView | 
     )
 
 
-def active_session(engine: Engine, user_id: int) -> SessionView | None:
-    """The user's unfinished interview, if any (so a refresh resumes it)."""
+def _is_stale_start(row: InterviewSession, settings: Settings) -> bool:
+    """A "preparing" session older than the start timeout was interrupted (crash, closed tab mid-plan)."""
+    if row.status != "preparing":
+        return False
+    # SQLite drops the timezone on read, so a stored UTC time comes back naive.
+    started = row.started_at if row.started_at.tzinfo else row.started_at.replace(tzinfo=UTC)
+    return utcnow() - started > timedelta(minutes=settings.limits.start_timeout_minutes)
+
+
+def active_session(engine: Engine, user_id: int, settings: Settings | None = None) -> SessionView | None:
+    """The user's unfinished interview, if any (so a refresh resumes it).
+
+    An interrupted start would otherwise lock the user out forever, so it is marked failed here.
+    """
+    settings = settings or Settings()
     with session_scope(engine) as s:
-        row = s.exec(
+        rows = s.exec(
             select(InterviewSession)
             .where(InterviewSession.user_id == user_id, col(InterviewSession.status).in_(ACTIVE_STATUSES))
             .order_by(col(InterviewSession.id).desc())
-        ).first()
-    return get_session(engine, user_id, row.id) if row else None
+        ).all()
+        stale = [r.id for r in rows if _is_stale_start(r, settings)]
+        live = [r.id for r in rows if r.id not in stale]
+    for session_id in stale:
+        _set_status(engine, session_id, "failed")
+    return get_session(engine, user_id, live[0]) if live else None
 
 
 def _add_turn(
@@ -330,6 +355,10 @@ def _messages(deps: EngineDeps, row: InterviewSession, turns: list[Turn], direct
         plan=plan,
     )
     messages = [{"role": "system", "content": interviewer_system_prompt(ctx)}]
+    if not turns:
+        # Anthropic and Gemini reject a request with no user message (OpenAI accepts one), so the opening
+        # turn gets a neutral cue. It is fixed text, not candidate input, so it needs no wrapping.
+        messages.append({"role": "user", "content": "(The candidate has joined the interview.)"})
     for t in turns:
         if t.speaker == "interviewer":
             payload = {
@@ -398,6 +427,9 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
     application = get_application(deps.engine, user_id, application_id)
     if application is None:
         raise InterviewError("That application no longer exists.")
+    # One interview at a time: a second active session would be hidden behind the first on resume.
+    if active_session(deps.engine, user_id, deps.settings) is not None:
+        raise InterviewError("Another interview is still in progress. Finish or end it first.")
     documents = {kind: doc.text for kind, doc in application.documents.items()}
     with session_scope(deps.engine) as s:
         row = InterviewSession(
@@ -422,12 +454,18 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
                 s.add(stored)
         row, turns = _load(deps.engine, user_id, session_id)
         turn = _interviewer_turn(deps, row, turns, force_close=False)
-    except (LLMError, InterviewError) as e:
+    except Exception as e:
+        # Any failure (not only model errors) must not leave a "preparing" row that blocks the next start.
         _set_status(deps.engine, session_id, "failed")
+        log.warning("Start failed for session %s: %r", session_id, e)
         raise InterviewError("Could not start the interview. Please try again.") from e
 
     _add_turn(deps.engine, row, 0, "interviewer", turn.message, turn)
-    _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
+    with session_scope(deps.engine) as s:
+        # The user may have ended the session (another tab) while planning ran; don't revive it.
+        still_preparing = s.get(InterviewSession, session_id).status == "preparing"
+    if still_preparing:
+        _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
     return session_id
 
 
@@ -517,6 +555,10 @@ def answer(deps: EngineDeps, user_id: int, session_id: int, text: str) -> Answer
     if loaded is None or loaded[0].status != "active":
         raise InterviewError("This interview is not active.")
     row, turns = loaded
+    if not turns or turns[-1].speaker != "interviewer":
+        # e.g. a double submit, or coaching mode waiting for Retry / Continue: two answers in a row
+        # would confuse the interviewer and the evaluation.
+        raise InterviewError("The interviewer hasn't asked the next question yet.")
 
     if (blocked := _check_answer(deps, user_id, session_id, text)) is not None:
         return AnswerOutcome(False, blocked, None, False)
@@ -554,7 +596,12 @@ def retry(deps: EngineDeps, user_id: int, session_id: int, text: str) -> AnswerO
 def respond(deps: EngineDeps, user_id: int, session_id: int, force_close: bool = False) -> AnswerOutcome:
     """Generate the interviewer's next turn. Also used to retry after a model failure, because the
     candidate's answer is already stored at that point."""
-    row, turns = _load(deps.engine, user_id, session_id)
+    loaded = _load(deps.engine, user_id, session_id)
+    if loaded is None or loaded[0].status != "active":
+        raise InterviewError("This interview is not active.")
+    row, turns = loaded
+    if not turns or turns[-1].speaker != "candidate":
+        raise InterviewError("There is no answer to respond to.")  # e.g. Continue pressed twice
     force_close = force_close or must_close(len(turns), session_cost(deps.engine, session_id), deps.settings)
     turn = _interviewer_turn(deps, row, turns, force_close)
     view = _add_turn(deps.engine, row, _next_idx(deps.engine, session_id), "interviewer", turn.message, turn)

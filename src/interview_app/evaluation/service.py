@@ -18,15 +18,16 @@ from sqlmodel import select
 
 from interview_app.db import Evaluation, InterviewSession, session_scope
 from interview_app.evaluation.aggregate import aggregate
-from interview_app.evaluation.exchanges import build_exchanges, turn_id
+from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.judge import judge_messages, run_judge
 from interview_app.evaluation.metrics import compute_metrics
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
 from interview_app.ingest import DocKind
-from interview_app.interview.engine import EngineDeps, get_session
+from interview_app.interview.engine import EngineDeps, get_session, session_cost
 from interview_app.interview.schemas import InterviewPlan
 from interview_app.llm.client import LLMError
+from interview_app.security import check_budget
 
 log = logging.getLogger(__name__)
 
@@ -76,6 +77,9 @@ def evaluate_session(
     model = judge_model or deps.settings.models.judge
     messages = judge_messages(rubric, view.company, view.role, documents, exchanges, plan)
     runs = max(1, deps.settings.judge_runs or rubric.judge_runs)
+    if not check_budget(session_cost(deps.engine, session_id), deps.settings.limits).allowed:
+        # The report must still be possible after a budget close, but at the cost of one run, not three.
+        runs = 1
 
     # Each run gets its own client, but its call records are buffered and written to the call log from
     # this thread after all runs finish: SQLite handles one writer at a time, so writes from three
@@ -91,18 +95,19 @@ def evaluate_session(
             log.warning("Judge run failed for session %s: %r", session_id, e)
             return None
 
-    with ThreadPoolExecutor(max_workers=runs) as pool:
-        judgements = [j for j in pool.map(one_run, range(runs)) if j is not None]
-    record = deps.make_llm(user_id, session_id).recorder
-    for call in buffered:
-        record(call)  # every run is billed, including failed ones, so every run is logged
+    try:
+        with ThreadPoolExecutor(max_workers=runs) as pool:
+            judgements = [j for j in pool.map(one_run, range(runs)) if j is not None]
+    finally:
+        # Also on an unexpected error: every run is billed, including failed ones, so every run is logged.
+        record = deps.make_llm(user_id, session_id).recorder
+        for call in buffered:
+            record(call)
     if not judgements:
         raise EvaluationError("The evaluator could not produce a report. Please try again.")
 
-    turn_texts = {turn_id(t.idx): t.text for t in view.turns}
     scored = [
-        (j, aggregate(j, exchanges, metrics, rubric, view.config.interview_type.value, turn_texts))
-        for j in judgements
+        (j, aggregate(j, exchanges, metrics, rubric, view.config.interview_type.value)) for j in judgements
     ]
     judgement, numbers = median_run(scored)
     overalls = [n["overall"] for _, n in scored]

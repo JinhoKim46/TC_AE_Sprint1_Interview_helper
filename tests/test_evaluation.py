@@ -89,9 +89,7 @@ def test_exchange_score_is_the_weighted_mean_of_applicable_items():
         improvements=[],
         summary="",
     )
-    result = aggregate(
-        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", {"T06"}
-    )
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     e02 = next(r for r in result["exchanges"] if r.exchange_id == "E02")
     assert e02.score == pytest.approx((2.0 * 100 + 2.0 * 50) / 4.0)  # 75.0
     assert result["components"]["experience_technical"] == pytest.approx(75.0)
@@ -118,10 +116,7 @@ def test_items_without_evidence_or_not_applicable_are_ignored():
         improvements=[],
         summary="",
     )
-    valid = {"T02", "T04", "T06"}
-    result = aggregate(
-        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", valid
-    )
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     by_id = {r.exchange_id: r for r in result["exchanges"]}
     assert [i.item for i in by_id["E02"].items] == ["A2"]
     assert by_id["E02"].score == pytest.approx(25.0)
@@ -161,10 +156,7 @@ def test_requirement_coverage_weights_must_double_and_skips_not_addressed():
     judgement = Judgement(
         exchanges=[], session_items=[], requirements=reqs, strengths=[], improvements=[], summary=""
     )
-    valid = {"T04", "T06"}
-    result = aggregate(
-        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", valid
-    )
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     assert result["components"]["requirement_coverage"] == pytest.approx((2 * 100 + 1 * 35) / 3, abs=0.1)
 
 
@@ -184,9 +176,7 @@ def test_cv_only_credit_is_removed():
         improvements=[],
         summary="",
     )
-    result = aggregate(
-        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", {"T06"}
-    )
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     assert result["requirements"][0].level == "not_addressed"
     assert result["components"]["requirement_coverage"] is None  # nothing left to rate
     assert [s.point for s in result["strengths"]] == ["Said it"]
@@ -223,9 +213,7 @@ def test_no_company_motivation_costs_five_points_and_bands_come_from_rubric():
         improvements=[],
         summary="",
     )
-    result = aggregate(
-        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", {"T02"}
-    )
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     # coverage 100 (w 0.3) and S1 norm(1) = 0 (w 0.1): 30 / 0.4 = 75, minus 5 = 70 -> "yes" (65-79)
     assert result["overall"] == pytest.approx(70.0)
     assert result["band"] == "yes" and result["penalties"]
@@ -443,3 +431,106 @@ def test_old_reports_without_runs_still_load():
     }
     report = Report.model_validate(old)
     assert report.runs == [] and report.spread is None
+
+
+# --- evidence rules (audit fixes) ---------------------------------------------------------------
+
+
+def judgement_with(**kw):
+    base = dict(exchanges=[], session_items=[], requirements=[], strengths=[], improvements=[], summary="")
+    return Judgement(**{**base, **kw})
+
+
+def run_aggregate(judgement):
+    exchanges = build_exchanges(TRANSCRIPT)
+    return aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
+
+
+def test_unverified_positive_level_on_a_discussed_requirement_counts_as_zero():
+    """Downgrading to not_addressed would drop it from coverage, which favours the candidate."""
+    reqs = [
+        RequirementEvidence(
+            requirement="a",
+            priority="must",
+            rationale="",
+            evidence=["T06"],
+            quote="I designed the data pipeline",
+            level="convincingly_demonstrated",
+        ),
+        RequirementEvidence(
+            requirement="b",
+            priority="must",
+            rationale="",
+            evidence=["T04"],
+            quote="I have ten years of Kubernetes",  # never said
+            level="claimed",
+        ),
+    ]
+    result = run_aggregate(judgement_with(requirements=reqs))
+    assert [r.level for r in result["requirements"]] == ["convincingly_demonstrated", "not_demonstrated"]
+    assert result["components"]["requirement_coverage"] == pytest.approx(50.0)
+
+
+def test_not_demonstrated_needs_a_cited_candidate_turn():
+    req = RequirementEvidence(requirement="a", priority="must", rationale="", level="not_demonstrated")
+    assert run_aggregate(judgement_with(requirements=[req]))["requirements"][0].level == "not_addressed"
+
+
+def test_exchange_items_must_cite_their_own_exchange():
+    # T06 is a real candidate turn, but it belongs to E02, not E01.
+    judgement = judgement_with(
+        exchanges=[ExchangeJudgement(exchange_id="E01", items=[item("A3", 5, ["T06"])])]
+    )
+    e01 = next(r for r in run_aggregate(judgement)["exchanges"] if r.exchange_id == "E01")
+    assert e01.items == []
+
+
+def test_duplicate_items_count_once():
+    items = [item("A3", 5, ["T06"]), item("A3", 5, ["T06"]), item("A4", 1, ["T06"])]
+    judgement = judgement_with(exchanges=[ExchangeJudgement(exchange_id="E02", items=items)])
+    e02 = next(r for r in run_aggregate(judgement)["exchanges"] if r.exchange_id == "E02")
+    assert [i.item for i in e02.items] == ["A3", "A4"] and e02.score == pytest.approx(50.0)
+
+
+def test_session_items_need_evidence_and_rf5_needs_an_evidenced_s1():
+    result = run_aggregate(judgement_with(session_items=[item("S1", 1, []), item("S3", 4, ["T99"])]))
+    assert result["session_items"] == [] and result["penalties"] == []
+
+
+def test_s4_needs_a_candidate_questions_exchange():
+    exchanges = [ex for ex in build_exchanges(TRANSCRIPT) if ex.category != "CQ"]
+    judgement = judgement_with(session_items=[item("S4", 1, ["T02"])])
+    result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
+    assert result["components"]["S4"] is None
+
+
+def test_quote_must_appear_in_order_not_as_scattered_words():
+    from interview_app.evaluation.aggregate import quote_found
+
+    texts = {"T02": "We shipped the model and then the team measured the latency on the device every week."}
+    assert quote_found("the team measured the latency on the device", ["T02"], texts)
+    assert quote_found("the team measured latency on the device", ["T02"], texts)  # one dropped word
+    assert not quote_found("the device measured the team", ["T02"], texts)  # same words, scrambled
+    assert not quote_found("the model", ["T02"], texts)  # too short to prove anything
+
+
+def test_length_flags_use_the_main_answer_not_the_followups():
+    transcript = [
+        tv(0, "interviewer", "Walk me through the project.", "experience", "EXP-DEEP-01"),
+        tv(1, "candidate", "word " * 300),
+        tv(2, "interviewer", "What was your part?", "experience", "EXP-OWN-01", followup=True),
+        tv(3, "candidate", "word " * 300),
+    ]
+    m = compute_metrics(build_exchanges(transcript), RUBRIC).exchanges[0]
+    assert m.answer_words == 600 and not m.long_answer  # EXP long limit is 550 per answer
+
+
+def test_case_length_limits_apply_per_turn():
+    transcript = [
+        tv(0, "interviewer", "Estimate it.", "technical", "CASE-01"),
+        tv(1, "candidate", "word " * 300),
+        tv(2, "interviewer", "And then?", "technical", "CASE-01", followup=True),
+        tv(3, "candidate", "word " * 300),
+    ]
+    m = compute_metrics(build_exchanges(transcript), RUBRIC).exchanges[0]
+    assert not m.long_answer and not m.short_answer  # each turn is within CASE's 400-word limit

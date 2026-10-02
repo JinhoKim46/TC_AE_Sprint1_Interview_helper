@@ -116,3 +116,10 @@ def test_category_without_items_makes_no_call():
     fake = FakeJev()
     assert run(fake, category="CQ") is None
     assert fake.requests == []
+
+
+def test_half_levels_round_up():
+    # Python's round() would show 2.5 as 2 (half to even); a coach reads 2.5 as "nearly 3".
+    half = {**score_answer(1), "score": 1.5}  # 0-based 1.5 -> 2.5 on the 1-5 scale
+    feedback = run(FakeJev({"A3": half}))
+    assert feedback.items[0].score == 2.5 and feedback.items[0].level == 3

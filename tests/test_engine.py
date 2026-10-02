@@ -133,7 +133,7 @@ def test_candidate_questions_and_close_are_not_main_questions():
     ("progress", "expected"),
     [
         (eng.Progress(0, 0, 0, False, None), "Open the interview"),
-        (eng.Progress(7, 0, 7, False, "candidate"), "Invite the candidate's own questions"),
+        (eng.Progress(7, 2, 9, False, "candidate"), "Invite the candidate's own questions"),
         (eng.Progress(3, 2, 5, False, "candidate"), "No more follow-ups"),
         (eng.Progress(3, 1, 5, False, "candidate"), "single best next move"),
         (eng.Progress(7, 0, 8, True, "candidate"), "candidate-questions stage"),
@@ -419,6 +419,7 @@ def test_retry_needs_a_candidate_answer_and_coaching_mode(setup):
     sid = coaching(setup)
     with pytest.raises(eng.InterviewError, match="no answer"):
         eng.retry(setup.deps, setup.user_id, sid, "Nothing to retry yet")
+    eng.end_interview(setup.deps, setup.user_id, sid)  # one interview at a time
 
     realistic = start(setup)  # p1, realistic
     setup.sdk.replies.append(turn())
@@ -496,3 +497,109 @@ def test_jev_calls_are_bound_to_the_session(setup):
     eng.answer(setup.deps, setup.user_id, sid, "I led the data engine at Fieldsight.")
     assert bound and all(b == (setup.user_id, sid) for b in bound)
     assert len(bound) == 2  # one client for the guard check, one for live scoring
+
+
+# --- state checks and interrupted starts (audit fixes) ---------------------------------------------
+
+
+def test_opening_request_includes_a_user_cue(setup):
+    # Anthropic and Gemini reject a request without a user message.
+    start(setup)
+    roles = [m["role"] for m in setup.sdk.requests[0]["messages"]]
+    assert "user" in roles and roles[-1] == "system"
+
+
+def test_start_crash_of_any_kind_marks_the_session_failed(setup, monkeypatch):
+    def boom(*_a, **_k):
+        raise KeyError("unexpected")
+
+    monkeypatch.setattr(eng, "_interviewer_turn", boom)
+    with pytest.raises(eng.InterviewError):
+        eng.start_interview(setup.deps, setup.user_id, setup.app_id, p1_config())
+    assert eng.active_session(setup.deps.engine, setup.user_id, setup.settings) is None
+
+
+def test_second_start_is_refused_while_one_is_active(setup):
+    start(setup)
+    with pytest.raises(eng.InterviewError, match="in progress"):
+        start(setup)
+
+
+def test_stale_preparing_session_is_marked_failed(setup):
+    from datetime import timedelta
+
+    from interview_app.db import InterviewSession, session_scope, utcnow
+
+    with session_scope(setup.deps.engine) as s:
+        row = InterviewSession(
+            user_id=setup.user_id,
+            application_id=setup.app_id,
+            company="c",
+            role="r",
+            config_json=p1_config().model_dump_json(),
+            documents_json="{}",
+            started_at=utcnow() - timedelta(minutes=setup.settings.limits.start_timeout_minutes + 1),
+        )
+        s.add(row)
+        s.flush()
+        stale_id = row.id
+    assert eng.active_session(setup.deps.engine, setup.user_id, setup.settings) is None
+    assert eng.get_session(setup.deps.engine, setup.user_id, stale_id).status == "failed"
+    start(setup)  # no longer blocked
+
+
+def test_fresh_preparing_session_still_counts_as_active(setup):
+    from interview_app.db import InterviewSession, session_scope
+
+    with session_scope(setup.deps.engine) as s:
+        s.add(
+            InterviewSession(
+                user_id=setup.user_id,
+                application_id=setup.app_id,
+                company="c",
+                role="r",
+                config_json=p1_config().model_dump_json(),
+                documents_json="{}",
+            )
+        )
+    assert eng.active_session(setup.deps.engine, setup.user_id, setup.settings).status == "preparing"
+
+
+def test_respond_needs_an_active_session_and_a_pending_answer(setup):
+    sid = start(setup)
+    calls = len(setup.sdk.requests)
+    with pytest.raises(eng.InterviewError):
+        eng.respond(setup.deps, setup.user_id, sid)  # nothing to respond to yet
+    with pytest.raises(eng.InterviewError):
+        eng.respond(setup.deps, setup.user_id + 99, sid)  # another user's session
+    eng.end_interview(setup.deps, setup.user_id, sid)
+    with pytest.raises(eng.InterviewError):
+        eng.respond(setup.deps, setup.user_id, sid)  # ended
+    assert len(setup.sdk.requests) == calls  # no model call was made
+
+
+def test_coaching_answer_twice_without_continue_is_refused(setup):
+    sid = coaching(setup)
+    eng.answer(setup.deps, setup.user_id, sid, "First answer.")
+    with pytest.raises(eng.InterviewError):
+        eng.answer(setup.deps, setup.user_id, sid, "Second answer in a row.")
+
+
+def test_last_main_question_can_still_get_a_followup():
+    config = SessionConfig(main_questions=7, max_followups=2)
+    after_last = eng.next_directive(eng.Progress(7, 0, 7, False, "candidate"), config, force_close=False)
+    assert "follow-up" in after_last and "candidate_questions" in after_last
+    capped = eng.next_directive(eng.Progress(7, 2, 9, False, "candidate"), config, force_close=False)
+    assert "All planned main questions are done" in capped
+
+
+def test_ending_a_preparing_session_is_not_undone_by_the_start(setup, monkeypatch):
+    real_turn = eng._interviewer_turn
+
+    def end_meanwhile(deps, row, turns, force_close):
+        eng.end_interview(deps, row.user_id, row.id)  # the user ends it from another tab
+        return real_turn(deps, row, turns, force_close)
+
+    monkeypatch.setattr(eng, "_interviewer_turn", end_meanwhile)
+    sid = start(setup)
+    assert eng.get_session(setup.deps.engine, setup.user_id, sid).status == "ended_early"
