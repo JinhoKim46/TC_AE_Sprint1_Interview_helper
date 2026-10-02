@@ -2,23 +2,33 @@
 
 Values come from (highest priority first): real environment variables, the `.env` file,
 then the defaults below. Nested groups use a double underscore in env vars, e.g.
-`MODELS__INTERVIEWER=openai/gpt-5` or `LIMITS__MAX_MAIN_QUESTIONS=6`.
+`MODELS__INTERVIEWER=openai/gpt-5-nano` or `LIMITS__MAX_TURNS=40`.
+
+Every value is validated at startup: out-of-range numbers and misspelled nested keys
+(e.g. `LIMITS__MAX_TURN=40`) stop the app with a clear error instead of being silently ignored.
 """
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Self
 
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # The project root (the folder that holds pyproject.toml), so paths work no matter
 # which directory Streamlit or pytest is started from.
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
+# For the nested groups below: an unknown key is a typo (`LIMITS__MAX_TURN=40`), and silently
+# ignoring it would leave the default in place without anyone noticing, so fail loudly instead.
+_STRICT = ConfigDict(extra="forbid")
+
 
 class RoleModels(BaseModel):
     """Which model plays which role. Different families on purpose: a judge from the
     same family as the interviewer tends to prefer that family's style (self-preference bias)."""
+
+    model_config = _STRICT
 
     interviewer: str = "openai/gpt-5-mini"  # on the course allow-list (requirement R3)
     planner: str = "openai/gpt-5-mini"  # JD + CV -> interview plan
@@ -29,6 +39,8 @@ class RoleModels(BaseModel):
 
 class ModelChoice(BaseModel):
     """One entry of the model picker on the Settings page (course tasks M7 and H4)."""
+
+    model_config = _STRICT
 
     id: str  # OpenRouter model id
     # Open-weight = the weights are published (anyone can self-host it). The UI labels these,
@@ -56,38 +68,52 @@ DEFAULT_MODEL_CHOICES: list[ModelChoice] = [
 
 
 class Limits(BaseModel):
-    """Hard limits enforced in code (OWASP LLM10: unbounded consumption)."""
+    """Hard limits enforced in code (OWASP LLM10: unbounded consumption).
 
-    max_upload_mb: float = 5.0
-    max_pdf_pages: int = 20
-    max_document_chars: int = 40_000
-    max_answer_chars: int = 4_000
-    max_turns: int = 60
-    max_session_cost_usd: float = 1.00
+    The upper bounds are sanity caps, not recommendations: a limit raised far beyond them is almost
+    certainly a typo (an extra zero) that would let one session burn through the budget.
+    """
+
+    model_config = _STRICT
+
+    # Keep in step with `maxUploadSize` in .streamlit/config.toml: Streamlit rejects bigger files
+    # before our code sees them, so a higher value here alone has no effect.
+    max_upload_mb: float = Field(default=5.0, gt=0, le=50)
+    max_pdf_pages: int = Field(default=20, gt=0, le=200)
+    max_document_chars: int = Field(default=40_000, gt=0, le=500_000)
+    max_answer_chars: int = Field(default=4_000, gt=0, le=50_000)
+    max_turns: int = Field(default=60, gt=0, le=500)
+    max_session_cost_usd: float = Field(default=1.00, gt=0, le=50)
     # Coaching mode: how many times one answer may be retried (so 1 + this many attempts in total).
     # A cap keeps a session from turning into an endless loop of re-answers (and Jev calls).
-    max_retries_per_answer: int = 2
+    # 0 is allowed on purpose: it means "no retries", a valid way to practise without coaching loops.
+    max_retries_per_answer: int = Field(default=2, ge=0, le=10)
     # A start (planning + opening turn) still "preparing" after this long was interrupted; it is marked
     # failed so it can't block new interviews.
-    start_timeout_minutes: int = 5
+    start_timeout_minutes: int = Field(default=5, gt=0, le=60)
 
 
 class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
+    model_config = _STRICT
+
     # Jev's probability at or above which text counts as an injection. The model only reports a
     # probability; this threshold is where *our code* draws the line.
     # Tune it on the red-team examples in tests/test_guards.py.
-    injection_threshold: float = 0.7
+    # It is compared with a probability, so anything outside [0, 1] would block everything or nothing.
+    injection_threshold: float = Field(default=0.7, ge=0, le=1)
     # Switch off the Jev check (rules still run), e.g. to save cost or when offline.
     use_model_check: bool = True
     # Long documents are split into chunks of about this many characters, so a short injected line
     # is not diluted by pages of normal text. All chunks still go in one Jev request.
-    document_chunk_chars: int = 3000
+    document_chunk_chars: int = Field(default=3000, gt=0)
 
 
 class Features(BaseModel):
     """Feature flags, so an unfinished or broken feature can be switched off without code changes."""
+
+    model_config = _STRICT
 
     live_scoring: bool = True
 
@@ -96,6 +122,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=PROJECT_ROOT / ".env",
         env_nested_delimiter="__",
+        # Top level stays lenient (unlike the nested groups): .env also holds values for other tools
+        # (APP_UID/APP_GID for Docker Compose) and old keys such as APP_SECRET_KEY from the dropped
+        # login feature, and none of those should stop the app from starting.
         extra="ignore",
     )
 
@@ -107,14 +136,19 @@ class Settings(BaseSettings):
     openrouter_decisions_url: str = "https://openrouter.ai/api/alpha/decisions"
 
     data_dir: Path = PROJECT_ROOT / "data"
-    database_url: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}"
+    # Empty = `sqlite:///<data_dir>/app.db` (filled in below), so moving DATA_DIR moves the database
+    # with it. Set DATABASE_URL only to point somewhere else entirely.
+    database_url: str = ""
     rubric_path: Path = PROJECT_ROOT / "docs" / "rubric.json"
     guideline_path: Path = PROJECT_ROOT / "docs" / "01-interviewer-guideline.md"
 
     # Independent judge runs per report; None = rubric.json judge_settings.runs (3). 1 = cheapest.
-    judge_runs: int | None = None
-    request_timeout_s: float = 60.0
-    max_retries: int = 3
+    judge_runs: int | None = Field(default=None, ge=1, le=5)
+    # Output budget for one judge call. The report for a long interview is big structured JSON, and a
+    # reasoning model spends part of the budget on thinking, so too small a value truncates the JSON.
+    judge_max_tokens: int = Field(default=16000, ge=1000, le=64000)
+    request_timeout_s: float = Field(default=60.0, gt=0, le=600)
+    max_retries: int = Field(default=3, ge=0, le=10)
 
     models: RoleModels = RoleModels()
     # Models offered in the Settings page pickers. Override in .env as JSON, e.g.
@@ -123,6 +157,12 @@ class Settings(BaseSettings):
     limits: Limits = Limits()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
+
+    @model_validator(mode="after")
+    def _derive_database_url(self) -> Self:
+        if not self.database_url:
+            self.database_url = f"sqlite:///{self.data_dir / 'app.db'}"
+        return self
 
 
 @lru_cache
