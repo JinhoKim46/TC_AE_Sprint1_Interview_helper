@@ -224,3 +224,83 @@ def test_interview_form_starts_from_saved_preferences():
     assert at.slider[0].value == 9
     assert next(s for s in at.selectbox if s.label == "Interview type").value == InterviewType.ML_CASE.value
     assert not any(e.label == "Developer options" for e in at.expander)
+
+
+def test_feedback_report_after_ending_the_interview(monkeypatch):
+    """End an interview from the sidebar, request feedback, and see the rendered report."""
+    import json
+    from types import SimpleNamespace
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.evaluation.schemas import ExchangeJudgement, ItemScore, Judgement, Strength
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.llm.client import LLMClient
+
+    judgement = Judgement(
+        exchanges=[
+            ExchangeJudgement(
+                exchange_id="E01",
+                items=[ItemScore(item="A1", rationale="On topic.", evidence=["T02"], score=4)],
+            )
+        ],
+        session_items=[],
+        requirements=[],
+        strengths=[Strength(point="Concrete numbers.", evidence=["T02"], quote="mIoU from 0.61 to 0.74")],
+        improvements=[],
+        summary="A focused first answer.",
+    )
+    replies = [
+        json.dumps(
+            {
+                "stage": "opening",
+                "question_id": "OPEN-01",
+                "is_followup": False,
+                "message": "Walk me through your background.",
+                "is_final": False,
+            }
+        ),
+        json.dumps(
+            {
+                "stage": "experience",
+                "question_id": "EXP-DEEP-01",
+                "is_followup": False,
+                "message": "Tell me more.",
+                "is_final": False,
+            }
+        ),
+        judgement.model_dump_json(),
+    ]
+
+    def create(**kwargs):
+        return SimpleNamespace(
+            model=kwargs["model"],
+            choices=[SimpleNamespace(message=SimpleNamespace(content=replies.pop(0)))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, cost=0.0),
+        )
+
+    sdk = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+    def fake_deps():
+        settings = ui_common.get_settings()
+        return EngineDeps(ui_common.get_engine(), settings, lambda uid, sid: LLMClient(settings, sdk=sdk))
+
+    monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
+    load_sample_application(ui_common.get_engine(), ui_common.ensure_local_user(ui_common.get_engine()))
+
+    from interview_app.interview.persona import PromptVariant
+    from interview_app.preferences import Preferences, save_preferences
+
+    uid = ui_common.ensure_local_user(ui_common.get_engine())
+    save_preferences(ui_common.get_engine(), uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
+
+    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=120)
+    at.run()
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    at.chat_input[0].set_value("I improved mIoU from 0.61 to 0.74 on the field set.").run()
+    next(b for b in at.button if b.label == "End interview").click().run()
+    next(b for b in at.button if b.label == "Get my feedback report").click().run()
+    assert not at.exception, at.exception
+    assert any("A focused first answer." in m.value for m in at.markdown)
+    assert any("Concrete numbers." in m.value for m in at.markdown)

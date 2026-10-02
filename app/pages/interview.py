@@ -7,9 +7,11 @@ page re-reads it on each rerun, so refreshing the browser resumes the interview 
 import time
 
 import streamlit as st
-from ui_common import current_user_id, engine_deps, get_engine
+from report_view import render_report
+from ui_common import current_user_id, engine_deps, get_engine, settings
 
 from interview_app.applications import list_applications
+from interview_app.evaluation.service import EvaluationError, evaluate_session, stored_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
@@ -17,7 +19,7 @@ from interview_app.interview.persona import (
     Difficulty,
     InterviewType,
 )
-from interview_app.preferences import load_preferences, to_session_config
+from interview_app.preferences import judge_model, load_preferences, to_session_config
 
 engine = get_engine()
 user_id = current_user_id()
@@ -133,10 +135,34 @@ def chat(view: eng.SessionView) -> None:
                 st.rerun()
     else:
         st.success("Interview complete." if view.status == "finished" else "Interview ended.")
-        st.metric("Cost", f"${view.cost_usd:.4f}")
+        feedback(view)
         if st.button("Start a new interview", type="primary"):
             st.session_state.pop("viewing_session", None)
             st.rerun()
+
+
+def feedback(view: eng.SessionView) -> None:
+    """The report for a finished interview: generated once on request, then stored."""
+    st.divider()
+    st.header("Feedback")
+    if not any(t.speaker == "candidate" for t in view.turns):
+        st.caption("No answers were given, so there is nothing to evaluate.")
+        return
+    report = stored_report(engine_deps(), user_id, view.id)
+    if report is None:
+        if not st.button("Get my feedback report", type="primary", icon=":material/assessment:"):
+            return
+        with st.spinner("The evaluator is reading your interview (about a minute)…"):
+            try:
+                prefs = load_preferences(engine, user_id)
+                report = evaluate_session(
+                    engine_deps(), user_id, view.id, judge_model=judge_model(prefs, settings())
+                )
+            except EvaluationError as e:
+                st.error(str(e))
+                return
+    render_report(report, settings().rubric_path)
+    st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
 
 
 active = eng.active_session(engine, user_id)
