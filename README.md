@@ -20,6 +20,8 @@ uv run streamlit run app/main.py
 3. Answer in the chat. When it ends (or you click **End interview**), click **Get my feedback report**.
 4. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature,
    max tokens, reasoning effort, judge model; and usage and cost.
+5. **History** → past interviews with their transcripts and reports; pick one application to see
+   its progress (score trend, weakest rubric skills, job requirements over time, recurring advice).
 
 Everything runs locally: a SQLite database in `data/`, model calls through OpenRouter.
 
@@ -45,6 +47,7 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
 | `src/interview_app/interview/` | Personas, prompt rendering, the planning call, the interview engine |
 | `src/interview_app/prompts/` | Jinja2 templates: 5 interviewer variants, planner, judge |
 | `src/interview_app/evaluation/` | Exchanges, metrics, LLM judge, rubric aggregation, report storage |
+| `src/interview_app/history.py` | Past sessions and per-application progress, computed in code from stored reports (no model calls) |
 | `docs/rubric.json` | The single source of truth for rubric items, weights and bands |
 
 Design rule throughout: **the model judges, code computes.** Models decide what to ask and how good an answer
@@ -178,7 +181,7 @@ the OWASP Top 10 for LLM applications:
 
 - The N-item red-flag checks with Jev.
 - Jev live scoring after each answer, plus a Coaching mode with tips and retries.
-- History and progress dashboard across sessions; voice (speech-to-text / text-to-speech); JD import from URL.
+- Voice (speech-to-text / text-to-speech); JD import from URL.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.
 
 ## Development
