@@ -19,3 +19,41 @@ gatherUsageStats = false
 # Show only the exception type in the browser, not the message and traceback: those can contain
 # document text or request details. The full error still goes to the terminal log.
 showErrorDetails = "type"
+# Hide the "Deploy" button and developer menu items: this is a local tool, not a Cloud app, and the
+# button only invites a click that leads nowhere useful. Settings (light/dark) stay in the menu.
+toolbarMode = "minimal"
+
+# Theme. One calm accent (indigo) instead of Streamlit's default red, because red already means
+# "error" and "weak score" in this app: a red Start button and red score bars sent mixed signals.
+# Colours were picked for WCAG AA: body text is ~15:1 on its background in both modes, white button
+# text on the accent is 6.3:1 (light) and 4.5:1 (dark). Fonts stay the built-in ones on purpose: a
+# web font would make every page load call Google's servers, and this app is meant to stay local.
+# The viewer's system setting picks light or dark; the app menu (top right) can switch it.
+[theme]
+baseRadius = "0.6rem"
+buttonRadius = "0.6rem"
+showWidgetBorder = true
+headingFontWeights = [700, 650, 600, 600, 600, 600]
+chartCategoricalColors = ["#4F46E5", "#0EA5A4", "#F59E0B", "#E11D48", "#64748B"]
+
+[theme.light]
+primaryColor = "#4F46E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F5F9"
+textColor = "#1F2333"
+borderColor = "#E2E4EC"
+linkColor = "#4338CA"
+
+[theme.light.sidebar]
+backgroundColor = "#F7F7FB"
+
+[theme.dark]
+primaryColor = "#6366F1"
+backgroundColor = "#0F1117"
+secondaryBackgroundColor = "#1A1D29"
+textColor = "#E6E8F0"
+borderColor = "#2B2F3E"
+linkColor = "#A5B4FC"
+
+[theme.dark.sidebar]
+backgroundColor = "#141722"

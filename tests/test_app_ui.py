@@ -1171,3 +1171,131 @@ def test_developer_settings_survive_hiding_the_section(offline_catalog):
     assert not at.exception, at.exception
     assert at.selectbox(key="pref_interviewer_model").value == "google/gemma-4-31b-it"
     assert at.slider(key="pref_temperature").value == 1.3
+
+
+# --- UX: next step, score summary, shortcuts -----------------------------------------------------
+
+
+def _home_buttons() -> list[str]:
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+    return [b.label for b in at.button]
+
+
+def test_home_next_step_follows_the_journey():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    assert "Add an application" in _home_buttons()
+
+    app_id = load_sample_application(engine, uid)
+    assert "Start an interview" in _home_buttons()
+
+    # The newest interview has no report yet: the next step is its feedback (with a way out).
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 60.0, "An answer.")
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 8, tzinfo=UTC), 0, "x", status="ended_early")
+    labels = _home_buttons()
+    assert "Get feedback on the last interview" in labels and "Start a new interview" in labels
+
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 9, tzinfo=UTC), 0, "x", status="active")
+    assert "Resume the interview" in _home_buttons()
+
+
+def test_home_lists_applications_with_their_latest_score():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 64.0, "An answer.")
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=60)
+    at.run()
+    assert not at.exception, at.exception
+    assert "Practise again" in " ".join(m.value for m in at.markdown)
+    assert any("latest score **64**" in m.value and "Hire signal" in m.value for m in at.markdown)
+
+
+def test_history_shows_latest_best_and_change():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First.")
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 8, tzinfo=UTC), 71.0, "Second.")
+    at = run_page("history.py", timeout=90)
+    metrics = {m.label: m for m in at.metric}
+    assert metrics["Interviews"].value == "2"
+    assert metrics["Latest score"].value == "71"
+    assert metrics["Latest score"].delta == "+19 vs previous"
+    assert metrics["Best score"].value == "71"
+
+
+def test_history_offers_the_report_for_an_interview_without_one():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    sid = seed_scored_session(
+        engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 0, "An answer.", status="ended_early"
+    )
+    at = run_page("history.py", timeout=90)
+    at.selectbox(key="history_open").set_value(sid).run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Open it to get feedback" for b in at.button)
+
+
+def test_practise_this_application_preselects_it_on_the_start_form():
+    import ui_common
+
+    from interview_app.applications import DocumentIn, create_application
+    from interview_app.demo import load_sample_application
+    from interview_app.ingest import DocKind, DocSource
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    load_sample_application(engine, uid)
+    docs = [
+        DocumentIn(kind=DocKind.JD, source=DocSource.PASTE, text="We need a data engineer. " * 20),
+        DocumentIn(kind=DocKind.CV, source=DocSource.PASTE, text="Data engineer, five years. " * 20),
+    ]
+    other = create_application(engine, uid, "Fjordlight Analytics", "Data Engineer", docs)
+
+    at = run_page("applications.py")
+    next(b for b in at.button if b.key == f"practise_{other}").click().run()
+    assert at.session_state["start_app_pick"] == other
+
+    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=30)
+    at.session_state["start_app_pick"] = other
+    at.run()
+    assert not at.exception, at.exception
+    assert next(s for s in at.selectbox if s.label == "Application").value == other
+
+
+def test_question_slider_range_comes_from_config(monkeypatch):
+    monkeypatch.setenv("LIMITS__MIN_MAIN_QUESTIONS", "4")
+    monkeypatch.setenv("LIMITS__MAX_MAIN_QUESTIONS", "9")
+    get_settings.cache_clear()
+    sample_with_p1()
+    at = run_page("interview.py")
+    slider = next(s for s in at.slider if s.label.startswith("Main questions"))
+    assert (slider.min, slider.max) == (4, 9)

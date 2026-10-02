@@ -468,12 +468,12 @@
     {
      "comment": "",
      "default": "True",
-     "line": 128,
+     "line": 138,
      "name": "live_scoring",
      "type": "bool"
     }
    ],
-   "line": 123
+   "line": 133
   },
   "GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
@@ -481,33 +481,33 @@
     {
      "comment": "",
      "default": "Field(default=0.7, ge=0, le=1)",
-     "line": 110,
+     "line": 120,
      "name": "injection_threshold",
      "type": "float"
     },
     {
      "comment": "",
      "default": "True",
-     "line": 112,
+     "line": 122,
      "name": "use_model_check",
      "type": "bool"
     },
     {
      "comment": "",
      "default": "Field(default=3000, gt=0)",
-     "line": 115,
+     "line": 125,
      "name": "document_chunk_chars",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=20, gt=0, le=200)",
-     "line": 120,
+     "line": 130,
      "name": "max_document_chunks",
      "type": "int"
     }
    ],
-   "line": 101
+   "line": 111
   },
   "Limits": {
    "doc": "Hard limits enforced in code (OWASP LLM10: unbounded consumption).",
@@ -581,6 +581,20 @@
      "line": 98,
      "name": "start_timeout_minutes",
      "type": "int"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=3, ge=2, le=15)",
+     "line": 101,
+     "name": "min_main_questions",
+     "type": "int"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=12, ge=2, le=15)",
+     "line": 102,
+     "name": "max_main_questions",
+     "type": "int"
     }
    ],
    "line": 70
@@ -652,124 +666,124 @@
     {
      "comment": "",
      "default": "SecretStr('')",
-     "line": 141,
+     "line": 151,
      "name": "openrouter_api_key",
      "type": "SecretStr"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1'",
-     "line": 142,
+     "line": 152,
      "name": "openrouter_base_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1/models'",
-     "line": 144,
+     "line": 154,
      "name": "openrouter_models_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/alpha/decisions'",
-     "line": 146,
+     "line": 156,
      "name": "openrouter_decisions_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'data'",
-     "line": 148,
+     "line": 158,
      "name": "data_dir",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "''",
-     "line": 151,
+     "line": 161,
      "name": "database_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / 'rubric.json'",
-     "line": 152,
+     "line": 162,
      "name": "rubric_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / '01-interviewer-guideline.md'",
-     "line": 153,
+     "line": 163,
      "name": "guideline_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "Field(default=None, ge=1, le=5)",
-     "line": 156,
+     "line": 166,
      "name": "judge_runs",
      "type": "int | None"
     },
     {
      "comment": "",
      "default": "Field(default=16000, ge=1000, le=64000)",
-     "line": 159,
+     "line": 169,
      "name": "judge_max_tokens",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=60.0, gt=0, le=600)",
-     "line": 160,
+     "line": 170,
      "name": "request_timeout_s",
      "type": "float"
     },
     {
      "comment": "",
      "default": "Field(default=3, ge=0, le=10)",
-     "line": 161,
+     "line": 171,
      "name": "max_retries",
      "type": "int"
     },
     {
      "comment": "",
      "default": "RoleModels()",
-     "line": 163,
+     "line": 173,
      "name": "models",
      "type": "RoleModels"
     },
     {
      "comment": "",
      "default": "DEFAULT_MODEL_CHOICES",
-     "line": 166,
+     "line": 176,
      "name": "model_choices",
      "type": "list[ModelChoice]"
     },
     {
      "comment": "",
      "default": "Limits()",
-     "line": 167,
+     "line": 177,
      "name": "limits",
      "type": "Limits"
     },
     {
      "comment": "",
      "default": "GuardSettings()",
-     "line": 168,
+     "line": 178,
      "name": "guard",
      "type": "GuardSettings"
     },
     {
      "comment": "",
      "default": "Features()",
-     "line": 169,
+     "line": 179,
      "name": "features",
      "type": "Features"
     }
    ],
-   "line": 131
+   "line": 141
   }
  },
  "edges": [
@@ -876,7 +890,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    254
+    274
    ],
    "to": "app.pages.applications:_check_length"
   },
@@ -884,8 +898,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    180,
-    201
+    199,
+    220
    ],
    "to": "app.pages.applications:_collect_documents"
   },
@@ -893,10 +907,10 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    173,
-    174,
-    176,
-    177
+    192,
+    193,
+    195,
+    196
    ],
    "to": "app.pages.applications:_document_input"
   },
@@ -904,7 +918,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    184
+    203
    ],
    "to": "app.pages.applications:_flag_documents"
   },
@@ -912,8 +926,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    193,
-    201
+    212,
+    220
    ],
    "to": "app.pages.applications:_save"
   },
@@ -921,8 +935,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    263,
-    268
+    283,
+    288
    ],
    "to": "app.pages.applications:_save_edit"
   },
@@ -938,7 +952,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    258
+    278
    ],
    "to": "app.ui_common:document_guard"
   },
@@ -954,10 +968,18 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    197,
-    225,
-    226,
-    265
+    247
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.pages.applications:<module>",
+   "kind": "call",
+   "lines": [
+    216,
+    234,
+    235,
+    285
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -965,8 +987,8 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    225,
-    226
+    234,
+    235
    ],
    "to": "app.ui_common:short"
   },
@@ -974,7 +996,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    282
+    301
    ],
    "to": "interview_app.applications:delete_application"
   },
@@ -982,7 +1004,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    227
+    236
    ],
    "to": "interview_app.applications:get_application"
   },
@@ -991,8 +1013,8 @@
    "kind": "call",
    "lines": [
     166,
-    208,
-    217
+    176,
+    224
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1008,7 +1030,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    212
+    180
    ],
    "to": "interview_app.demo:load_sample_application"
   },
@@ -1016,7 +1038,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    222
+    231
    ],
    "to": "interview_app.history:list_sessions"
   },
@@ -1024,7 +1046,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    220
+    229
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1032,7 +1054,7 @@
    "from": "app.pages.applications:<module>",
    "kind": "call",
    "lines": [
-    258
+    278
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_document"
   },
@@ -1154,7 +1176,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    182
+    226
    ],
    "to": "app.pages.history:progress_block"
   },
@@ -1162,7 +1184,15 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    203
+    223
+   ],
+   "to": "app.pages.history:score_metrics"
+  },
+  {
+   "from": "app.pages.history:<module>",
+   "kind": "call",
+   "lines": [
+    247
    ],
    "to": "app.pages.history:session_detail"
   },
@@ -1170,7 +1200,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    198
+    242
    ],
    "to": "app.pages.history:session_label"
   },
@@ -1178,7 +1208,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    190
+    234
    ],
    "to": "app.pages.history:sessions_table"
   },
@@ -1186,7 +1216,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    19
+    28
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1194,7 +1224,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    18
+    27
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1202,7 +1232,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    165
+    206
    ],
    "to": "app.ui_common:page_link"
   },
@@ -1210,7 +1240,7 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    168
+    209
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1218,8 +1248,8 @@
    "from": "app.pages.history:<module>",
    "kind": "call",
    "lines": [
-    162,
-    179
+    203,
+    220
    ],
    "to": "interview_app.history:list_sessions"
   },
@@ -1227,7 +1257,7 @@
    "from": "app.pages.history:progress_block",
    "kind": "call",
    "lines": [
-    114
+    124
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1235,7 +1265,7 @@
    "from": "app.pages.history:progress_block",
    "kind": "call",
    "lines": [
-    68
+    78
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1243,15 +1273,23 @@
    "from": "app.pages.history:progress_block",
    "kind": "call",
    "lines": [
-    68
+    78
    ],
    "to": "interview_app.history:progress"
+  },
+  {
+   "from": "app.pages.history:score_metrics",
+   "kind": "call",
+   "lines": [
+    129
+   ],
+   "to": "interview_app.journey:score_summary"
   },
   {
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    144
+    175
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -1259,15 +1297,7 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    122
-   ],
-   "to": "app.pages.history:session_label"
-  },
-  {
-   "from": "app.pages.history:session_detail",
-   "kind": "call",
-   "lines": [
-    143
+    174
    ],
    "to": "app.report_view:render_report"
   },
@@ -1275,9 +1305,19 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    122,
-    134,
-    137
+    178,
+    183
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.pages.history:session_detail",
+   "kind": "call",
+   "lines": [
+    149,
+    163,
+    164,
+    168
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1285,7 +1325,7 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    143
+    174
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1293,7 +1333,7 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    155
+    196
    ],
    "to": "interview_app.history:delete_session"
   },
@@ -1301,7 +1341,7 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    141
+    172
    ],
    "to": "interview_app.history:load_report"
   },
@@ -1309,15 +1349,23 @@
    "from": "app.pages.history:session_detail",
    "kind": "call",
    "lines": [
-    118
+    143
    ],
    "to": "interview_app.interview.engine:get_session"
+  },
+  {
+   "from": "app.pages.history:session_detail",
+   "kind": "construct",
+   "lines": [
+    147
+   ],
+   "to": "interview_app.interview.persona:InterviewType"
   },
   {
    "from": "app.pages.history:session_label",
    "kind": "construct",
    "lines": [
-    28
+    38
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1325,7 +1373,7 @@
    "from": "app.pages.history:sessions_table",
    "kind": "ref",
    "lines": [
-    61
+    71
    ],
    "to": "app.pages.history:sessions_table.open_selected"
   },
@@ -1333,7 +1381,7 @@
    "from": "app.pages.history:sessions_table",
    "kind": "construct",
    "lines": [
-    44
+    54
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1341,7 +1389,15 @@
    "from": "app.pages.home:<module>",
    "kind": "call",
    "lines": [
-    12
+    109
+   ],
+   "to": "app.report_view:band_badge"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
+    14
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1349,7 +1405,7 @@
    "from": "app.pages.home:<module>",
    "kind": "call",
    "lines": [
-    12
+    13
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1357,7 +1413,22 @@
    "from": "app.pages.home:<module>",
    "kind": "call",
    "lines": [
-    19
+    56,
+    59,
+    62,
+    68,
+    75,
+    87,
+    88
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
+    103,
+    104
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1365,16 +1436,41 @@
    "from": "app.pages.home:<module>",
    "kind": "call",
    "lines": [
-    12
+    103,
+    104
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
+    22
    ],
    "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
+    23
+   ],
+   "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.pages.home:<module>",
+   "kind": "call",
+   "lines": [
+    24
+   ],
+   "to": "interview_app.journey:next_step"
   },
   {
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    329,
-    335
+    435,
+    441
    ],
    "to": "app.pages.interview:chat"
   },
@@ -1382,7 +1478,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    337
+    443
    ],
    "to": "app.pages.interview:start_form"
   },
@@ -1390,7 +1486,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    27
+    38
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1398,7 +1494,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    26
+    37
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1406,7 +1502,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    326
+    432
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1414,7 +1510,7 @@
    "from": "app.pages.interview:<module>",
    "kind": "call",
    "lines": [
-    332
+    438
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -1422,7 +1518,7 @@
    "from": "app.pages.interview:blocked_answer_editor",
    "kind": "call",
    "lines": [
-    173
+    235
    ],
    "to": "app.pages.interview:submit"
   },
@@ -1430,7 +1526,7 @@
    "from": "app.pages.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    173
+    235
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1438,7 +1534,7 @@
    "from": "app.pages.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    173
+    235
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1446,7 +1542,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    263
+    343
    ],
    "to": "app.pages.interview:blocked_answer_editor"
   },
@@ -1454,7 +1550,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    266
+    346
    ],
    "to": "app.pages.interview:coaching_choice"
   },
@@ -1462,7 +1558,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    259
+    339
    ],
    "to": "app.pages.interview:earlier_attempts"
   },
@@ -1470,7 +1566,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    293
+    387
    ],
    "to": "app.pages.interview:feedback"
   },
@@ -1478,7 +1574,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    258
+    338
    ],
    "to": "app.pages.interview:live_chips"
   },
@@ -1486,7 +1582,15 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    279
+    323
+   ],
+   "to": "app.pages.interview:progress_text"
+  },
+  {
+   "from": "app.pages.interview:chat",
+   "kind": "call",
+   "lines": [
+    364
    ],
    "to": "app.pages.interview:submit"
   },
@@ -1494,9 +1598,9 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    232,
-    273,
-    289
+    311,
+    353,
+    380
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1504,18 +1608,28 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    220,
-    239,
-    252,
-    255
+    294,
+    300,
+    318,
+    330,
+    331,
+    335
    ],
    "to": "app.ui_common:safe_md"
   },
   {
    "from": "app.pages.interview:chat",
+   "kind": "call",
+   "lines": [
+    362
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.pages.interview:chat",
    "kind": "ref",
    "lines": [
-    279
+    364
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1523,8 +1637,8 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    232,
-    289
+    311,
+    380
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -1532,7 +1646,7 @@
    "from": "app.pages.interview:chat",
    "kind": "call",
    "lines": [
-    273
+    353
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1540,7 +1654,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    191
+    253
    ],
    "to": "app.pages.interview:submit"
   },
@@ -1548,7 +1662,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    206
+    271
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1556,7 +1670,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    182
+    244
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1564,7 +1678,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    206
+    271
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1572,7 +1686,7 @@
    "from": "app.pages.interview:coaching_choice",
    "kind": "ref",
    "lines": [
-    191
+    253
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1580,7 +1694,7 @@
    "from": "app.pages.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    126
+    188
    ],
    "to": "app.pages.interview:live_chips"
   },
@@ -1588,7 +1702,7 @@
    "from": "app.pages.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    124
+    186
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1596,7 +1710,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    323
+    429
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -1604,7 +1718,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    321
+    427
    ],
    "to": "app.report_view:render_report"
   },
@@ -1612,7 +1726,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    316
+    419
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1620,8 +1734,8 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    316,
-    321
+    419,
+    427
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1629,7 +1743,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    315
+    418
    ],
    "to": "interview_app.evaluation.service:evaluate_session"
   },
@@ -1637,7 +1751,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    308
+    403
    ],
    "to": "interview_app.history:load_report"
   },
@@ -1645,7 +1759,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    322
+    428
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -1653,7 +1767,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    316
+    419
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -1661,7 +1775,7 @@
    "from": "app.pages.interview:feedback",
    "kind": "call",
    "lines": [
-    314
+    417
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -1669,15 +1783,23 @@
    "from": "app.pages.interview:live_chips",
    "kind": "call",
    "lines": [
-    115
+    177
    ],
    "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.pages.interview:progress_text",
+   "kind": "construct",
+   "lines": [
+    283
+   ],
+   "to": "interview_app.interview.schemas:Stage"
   },
   {
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    99
+    150
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1685,7 +1807,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    70
+    111
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -1693,8 +1815,8 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    42,
-    87
+    67,
+    132
    ],
    "to": "app.ui_common:page_link"
   },
@@ -1702,7 +1824,15 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    39
+    114
+   ],
+   "to": "app.ui_common:slider_start"
+  },
+  {
+   "from": "app.pages.interview:start_form",
+   "kind": "call",
+   "lines": [
+    64
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1710,7 +1840,15 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    99
+    87
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.pages.interview:start_form",
+   "kind": "call",
+   "lines": [
+    150
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -1718,7 +1856,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    93
+    138
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -1726,8 +1864,8 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    54,
-    58
+    93,
+    97
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1735,7 +1873,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "construct",
    "lines": [
-    95
+    140
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -1743,7 +1881,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    47
+    72
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -1751,7 +1889,7 @@
    "from": "app.pages.interview:start_form",
    "kind": "call",
    "lines": [
-    90
+    135
    ],
    "to": "interview_app.preferences:to_session_config"
   },
@@ -1759,7 +1897,7 @@
    "from": "app.pages.interview:submit",
    "kind": "call",
    "lines": [
-    136
+    198
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1767,7 +1905,7 @@
    "from": "app.pages.interview:submit",
    "kind": "ref",
    "lines": [
-    151
+    213
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1775,8 +1913,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    169,
-    232
+    170,
+    233
    ],
    "to": "app.pages.settings:_model_picker"
   },
@@ -1784,8 +1922,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    294,
-    295
+    300,
+    301
    ],
    "to": "app.pages.settings:_price"
   },
@@ -1793,8 +1931,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    284,
-    286
+    290,
+    292
    ],
    "to": "app.pages.settings:_rows"
   },
@@ -1818,7 +1956,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    110
+    111
    ],
    "to": "app.ui_common:get_price_catalog"
   },
@@ -1826,14 +1964,22 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    157,
-    178,
-    183,
-    195,
-    200,
-    213
+    158,
+    179,
+    184,
+    196,
+    201,
+    214
    ],
    "to": "app.ui_common:kept_widget"
+  },
+  {
+   "from": "app.pages.settings:<module>",
+   "kind": "call",
+   "lines": [
+    99
+   ],
+   "to": "app.ui_common:slider_start"
   },
   {
    "from": "app.pages.settings:<module>",
@@ -1847,7 +1993,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    247
+    253
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -1855,8 +2001,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    55,
-    59
+    56,
+    60
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1864,7 +2010,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    224
+    225
    ],
    "to": "interview_app.interview.persona:LLMSettings"
   },
@@ -1872,7 +2018,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    248
+    254
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -1880,8 +2026,8 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    156,
-    163
+    157,
+    164
    ],
    "to": "interview_app.interview.persona:PromptVariant"
   },
@@ -1889,7 +2035,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "construct",
    "lines": [
-    114
+    115
    ],
    "to": "interview_app.llm.pricing:ModelOption"
   },
@@ -1897,7 +2043,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    110
+    111
    ],
    "to": "interview_app.llm.pricing:model_options"
   },
@@ -1905,7 +2051,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    152
+    153
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -1921,7 +2067,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    241
+    247
    ],
    "to": "interview_app.preferences:save_preferences"
   },
@@ -1929,7 +2075,7 @@
    "from": "app.pages.settings:<module>",
    "kind": "call",
    "lines": [
-    262
+    268
    ],
    "to": "interview_app.usage:usage_summary"
   },
@@ -1937,7 +2083,7 @@
    "from": "app.pages.settings:_model_label",
    "kind": "call",
    "lines": [
-    128
+    129
    ],
    "to": "app.pages.settings:_price"
   },
@@ -1945,7 +2091,7 @@
    "from": "app.pages.settings:_model_picker",
    "kind": "ref",
    "lines": [
-    134
+    135
    ],
    "to": "app.pages.settings:_model_label"
   },
@@ -1953,7 +2099,7 @@
    "from": "app.pages.settings:_model_picker",
    "kind": "call",
    "lines": [
-    133
+    134
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -1961,20 +2107,29 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    46,
-    57,
-    70,
+    59
+   ],
+   "to": "app.report_view:band_badge"
+  },
+  {
+   "from": "app.report_view:render_report",
+   "kind": "call",
+   "lines": [
+    60,
     72,
-    79,
-    80,
-    84,
-    87,
-    88,
-    109,
-    112,
-    115,
-    116,
-    119
+    89,
+    90,
+    91,
+    97,
+    98,
+    104,
+    107,
+    108,
+    131,
+    134,
+    137,
+    138,
+    141
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1982,8 +2137,8 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    84,
-    108
+    104,
+    130
    ],
    "to": "app.ui_common:short"
   },
@@ -1991,7 +2146,7 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    39
+    51
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -1999,7 +2154,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "call",
    "lines": [
-    142
+    174
    ],
    "to": "app.ui_common:_user_decider"
   },
@@ -2007,7 +2162,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "call",
    "lines": [
-    142
+    174
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2015,7 +2170,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "construct",
    "lines": [
-    142
+    174
    ],
    "to": "interview_app.security.injection:InjectionGuard"
   },
@@ -2023,7 +2178,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    110
+    142
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -2031,7 +2186,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    110
+    142
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2039,7 +2194,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    110
+    142
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -2047,7 +2202,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "construct",
    "lines": [
-    110
+    142
    ],
    "to": "interview_app.llm.decide:DecisionClient"
   },
@@ -2071,7 +2226,7 @@
    "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    147
+    179
    ],
    "to": "app.ui_common:_document_guard_for"
   },
@@ -2079,7 +2234,7 @@
    "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    147
+    179
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -2087,7 +2242,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    127
+    159
    ],
    "to": "app.ui_common:_user_decider"
   },
@@ -2095,7 +2250,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    118
+    150
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -2103,7 +2258,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "ref",
    "lines": [
-    134
+    166
    ],
    "to": "app.ui_common:engine_deps.make_decider"
   },
@@ -2111,7 +2266,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "ref",
    "lines": [
-    131
+    163
    ],
    "to": "app.ui_common:engine_deps.make_llm"
   },
@@ -2119,7 +2274,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    118
+    150
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -2127,7 +2282,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    118
+    150
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2135,7 +2290,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "construct",
    "lines": [
-    128
+    160
    ],
    "to": "interview_app.interview.engine:EngineDeps"
   },
@@ -2143,7 +2298,7 @@
    "from": "app.ui_common:engine_deps",
    "kind": "construct",
    "lines": [
-    132
+    164
    ],
    "to": "interview_app.security.injection:InjectionGuard"
   },
@@ -2151,7 +2306,7 @@
    "from": "app.ui_common:engine_deps.make_decider",
    "kind": "call",
    "lines": [
-    125
+    157
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -2159,7 +2314,7 @@
    "from": "app.ui_common:engine_deps.make_decider",
    "kind": "construct",
    "lines": [
-    125
+    157
    ],
    "to": "interview_app.llm.decide:DecisionClient"
   },
@@ -2167,7 +2322,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "call",
    "lines": [
-    121
+    153
    ],
    "to": "app.ui_common:get_price_catalog"
   },
@@ -2175,7 +2330,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "call",
    "lines": [
-    121
+    153
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -2183,7 +2338,7 @@
    "from": "app.ui_common:engine_deps.make_llm",
    "kind": "construct",
    "lines": [
-    121
+    153
    ],
    "to": "interview_app.llm.client:LLMClient"
   },
@@ -2226,6 +2381,14 @@
     40
    ],
    "to": "interview_app.llm.pricing:PriceCatalog"
+  },
+  {
+   "from": "app.ui_common:slider_start",
+   "kind": "call",
+   "lines": [
+    114
+   ],
+   "to": "interview_app.config:get_settings"
   },
   {
    "from": "interview_app.applications:_clean_label",
@@ -2488,7 +2651,7 @@
    "from": "interview_app.config:get_settings",
    "kind": "construct",
    "lines": [
-    181
+    191
    ],
    "to": "interview_app.config:Settings"
   },
@@ -3377,7 +3540,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_decider",
    "kind": "binds",
    "lines": [
-    128
+    160
    ],
    "to": "app.ui_common:engine_deps.make_decider"
   },
@@ -3385,7 +3548,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_llm",
    "kind": "binds",
    "lines": [
-    128
+    160
    ],
    "to": "app.ui_common:engine_deps.make_llm"
   },
@@ -4430,6 +4593,31 @@
     59
    ],
    "to": "interview_app.interview.prompting:_env"
+  },
+  {
+   "from": "interview_app.journey:next_step",
+   "kind": "call",
+   "lines": [
+    34
+   ],
+   "to": "interview_app.journey:_newest_first"
+  },
+  {
+   "from": "interview_app.journey:score_summary",
+   "kind": "construct",
+   "lines": [
+    50,
+    52
+   ],
+   "to": "interview_app.journey:ScoreSummary"
+  },
+  {
+   "from": "interview_app.journey:score_summary",
+   "kind": "call",
+   "lines": [
+    48
+   ],
+   "to": "interview_app.journey:_newest_first"
   },
   {
    "from": "interview_app.lab.candidate:candidate_messages",
@@ -6099,7 +6287,7 @@
    "imported_by": [],
    "imports": [],
    "layer": "ui",
-   "lines": 23,
+   "lines": 27,
    "path": "app/main.py",
    "symbols": []
   },
@@ -6123,7 +6311,7 @@
     "interview_app.interview.engine"
    ],
    "layer": "ui",
-   "lines": 284,
+   "lines": 303,
    "path": "app/pages/applications.py",
    "symbols": [
     "app.pages.applications:<module>",
@@ -6153,14 +6341,16 @@
     "interview_app.config",
     "interview_app.history",
     "interview_app.interview.engine",
-    "interview_app.interview.persona"
+    "interview_app.interview.persona",
+    "interview_app.journey"
    ],
    "layer": "ui",
-   "lines": 204,
+   "lines": 248,
    "path": "app/pages/history.py",
    "symbols": [
     "app.pages.history:<module>",
     "app.pages.history:progress_block",
+    "app.pages.history:score_metrics",
     "app.pages.history:session_detail",
     "app.pages.history:session_label",
     "app.pages.history:sessions_table",
@@ -6168,18 +6358,22 @@
    ]
   },
   "app.pages.home": {
-   "doc": "",
+   "doc": "Home: what the app does, where the user is in the flow, and the one thing to do next.",
    "doc_more": "",
    "external_imports": [
+    "collections",
     "streamlit"
    ],
    "imported_by": [],
    "imports": [
+    "app.report_view",
     "app.ui_common",
-    "interview_app.applications"
+    "interview_app.applications",
+    "interview_app.history",
+    "interview_app.journey"
    ],
    "layer": "ui",
-   "lines": 21,
+   "lines": 112,
    "path": "app/pages/home.py",
    "symbols": [
     "app.pages.home:<module>"
@@ -6202,10 +6396,11 @@
     "interview_app.history",
     "interview_app.interview.engine",
     "interview_app.interview.persona",
+    "interview_app.interview.schemas",
     "interview_app.preferences"
    ],
    "layer": "ui",
-   "lines": 338,
+   "lines": 444,
    "path": "app/pages/interview.py",
    "symbols": [
     "app.pages.interview:<module>",
@@ -6215,6 +6410,7 @@
     "app.pages.interview:earlier_attempts",
     "app.pages.interview:feedback",
     "app.pages.interview:live_chips",
+    "app.pages.interview:progress_text",
     "app.pages.interview:start_form",
     "app.pages.interview:submit"
    ]
@@ -6235,7 +6431,7 @@
     "interview_app.usage"
    ],
    "layer": "ui",
-   "lines": 299,
+   "lines": 305,
    "path": "app/pages/settings.py",
    "symbols": [
     "app.pages.settings:<module>",
@@ -6253,6 +6449,7 @@
    ],
    "imported_by": [
     "app.pages.history",
+    "app.pages.home",
     "app.pages.interview"
    ],
    "imports": [
@@ -6261,9 +6458,10 @@
     "interview_app.evaluation.schemas"
    ],
    "layer": "ui",
-   "lines": 123,
+   "lines": 145,
    "path": "app/report_view.py",
    "symbols": [
+    "app.report_view:band_badge",
     "app.report_view:render_report"
    ]
   },
@@ -6296,7 +6494,7 @@
     "interview_app.users"
    ],
    "layer": "ui",
-   "lines": 148,
+   "lines": 180,
    "path": "app/ui_common.py",
    "symbols": [
     "app.ui_common:_document_guard_for",
@@ -6308,10 +6506,12 @@
     "app.ui_common:engine_deps.make_llm",
     "app.ui_common:get_engine",
     "app.ui_common:get_price_catalog",
+    "app.ui_common:go_button",
     "app.ui_common:kept_widget",
     "app.ui_common:page_link",
     "app.ui_common:safe_md",
-    "app.ui_common:short"
+    "app.ui_common:short",
+    "app.ui_common:slider_start"
    ]
   },
   "interview_app": {
@@ -6404,13 +6604,14 @@
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 182,
+   "lines": 192,
    "path": "src/interview_app/config.py",
    "symbols": [
     "interview_app.config:<module>",
     "interview_app.config:Features",
     "interview_app.config:GuardSettings",
     "interview_app.config:Limits",
+    "interview_app.config:Limits._slider_range",
     "interview_app.config:ModelChoice",
     "interview_app.config:RoleModels",
     "interview_app.config:Settings",
@@ -6771,8 +6972,10 @@
    "imported_by": [
     "app.pages.applications",
     "app.pages.history",
+    "app.pages.home",
     "app.pages.interview",
-    "interview_app.evaluation.service"
+    "interview_app.evaluation.service",
+    "interview_app.journey"
    ],
    "imports": [
     "interview_app.config",
@@ -7074,6 +7277,7 @@
     "pydantic"
    ],
    "imported_by": [
+    "app.pages.interview",
     "interview_app.evaluation.judge",
     "interview_app.interview.engine",
     "interview_app.interview.plan",
@@ -7095,6 +7299,31 @@
     "interview_app.interview.schemas:Requirement",
     "interview_app.interview.schemas:Stage",
     "interview_app.interview.schemas:private_fields"
+   ]
+  },
+  "interview_app.journey": {
+   "doc": "Where the user is in the app's flow (add an application -> interview -> report -> practise again).",
+   "doc_more": "Pure functions over the History rows, so the Home and History pages can show \"what to do next\" and a score summary without any counting in the UI (\"the model judges, code computes\").",
+   "external_imports": [
+    "dataclasses",
+    "enum"
+   ],
+   "imported_by": [
+    "app.pages.history",
+    "app.pages.home"
+   ],
+   "imports": [
+    "interview_app.history"
+   ],
+   "layer": "core",
+   "lines": 53,
+   "path": "src/interview_app/journey.py",
+   "symbols": [
+    "interview_app.journey:ScoreSummary",
+    "interview_app.journey:Step",
+    "interview_app.journey:_newest_first",
+    "interview_app.journey:next_step",
+    "interview_app.journey:score_summary"
    ]
   },
   "interview_app.lab": {
@@ -7934,6 +8163,18 @@
      "default": "15",
      "description": null,
      "name": "start_timeout_minutes",
+     "type": "int"
+    },
+    {
+     "default": "3",
+     "description": null,
+     "name": "min_main_questions",
+     "type": "int"
+    },
+    {
+     "default": "12",
+     "description": null,
+     "name": "max_main_questions",
      "type": "int"
     }
    ]
@@ -10096,28 +10337,28 @@
    ]
   }
  },
- "source_sha256": "9b8fe7fa803bcabc00088bcc8d336395b23849379ef670e162ebf29033e452e4",
+ "source_sha256": "f276d776599448857b34ce7ae59da3e93843340bc383d8e2ecc6dc04dc76b126",
  "stats": {
   "agents": 7,
   "call_sites": {
-   "builtin": 478,
-   "external": 706,
-   "resolved": 707,
-   "unresolved": 39
+   "builtin": 510,
+   "external": 764,
+   "resolved": 742,
+   "unresolved": 42
   },
-  "classes": 101,
+  "classes": 103,
   "edges": {
    "binds": 3,
-   "call": 439,
-   "construct": 128,
+   "call": 456,
+   "construct": 131,
    "ref": 27
   },
-  "functions": 244,
+  "functions": 253,
   "model_call_sites": 9,
-  "modules": 52,
+  "modules": 53,
   "tables": 8,
   "templates": 12,
-  "unresolved_listed": 39
+  "unresolved_listed": 42
  },
  "symbols": {
   "app.drill_ui:_joined": {
@@ -10163,15 +10404,19 @@
     "streamlit.caption",
     "streamlit.checkbox",
     "streamlit.columns",
+    "streamlit.columns()[0].caption",
     "streamlit.columns()[0].text_input",
+    "streamlit.columns()[1].button",
     "streamlit.columns()[1].text_input",
     "streamlit.divider",
     "streamlit.error",
     "streamlit.expander",
     "streamlit.info",
+    "streamlit.markdown",
     "streamlit.rerun",
     "streamlit.session_state.get",
     "streamlit.session_state.pop",
+    "streamlit.subheader",
     "streamlit.tabs",
     "streamlit.text_area",
     "streamlit.title",
@@ -10327,7 +10572,7 @@
   },
   "app.pages.history:progress_block": {
    "doc": "",
-   "end_line": 114,
+   "end_line": 124,
    "externals": [
     "streamlit.caption",
     "streamlit.column_config.ProgressColumn",
@@ -10338,32 +10583,48 @@
     "streamlit.subheader"
    ],
    "kind": "function",
-   "line": 66,
+   "line": 76,
    "module": "app.pages.history",
    "name": "progress_block",
    "qualname": "progress_block",
    "signature": "progress_block(application_id: int) -> None"
   },
+  "app.pages.history:score_metrics": {
+   "doc": "Three numbers to answer \"am I improving?\" before any table has to be read.",
+   "end_line": 139,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.columns()[0].metric",
+    "streamlit.columns()[1].metric",
+    "streamlit.columns()[2].metric"
+   ],
+   "kind": "function",
+   "line": 127,
+   "module": "app.pages.history",
+   "name": "score_metrics",
+   "qualname": "score_metrics",
+   "signature": "score_metrics(sessions: list[SessionSummary]) -> None"
+  },
   "app.pages.history:session_detail": {
    "doc": "",
-   "end_line": 159,
+   "end_line": 200,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.chat_message",
     "streamlit.checkbox",
     "streamlit.expander",
-    "streamlit.header",
     "streamlit.info",
     "streamlit.markdown",
     "streamlit.rerun",
     "streamlit.session_state.pop",
+    "streamlit.subheader",
     "streamlit.tabs",
     "streamlit.toast",
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 117,
+   "line": 142,
    "module": "app.pages.history",
    "name": "session_detail",
    "qualname": "session_detail",
@@ -10371,9 +10632,9 @@
   },
   "app.pages.history:session_label": {
    "doc": "",
-   "end_line": 29,
+   "end_line": 39,
    "kind": "function",
-   "line": 26,
+   "line": 36,
    "module": "app.pages.history",
    "name": "session_label",
    "qualname": "session_label",
@@ -10381,7 +10642,7 @@
   },
   "app.pages.history:sessions_table": {
    "doc": "",
-   "end_line": 63,
+   "end_line": 73,
    "externals": [
     "streamlit.column_config.DatetimeColumn",
     "streamlit.column_config.NumberColumn",
@@ -10389,7 +10650,7 @@
     "streamlit.dataframe"
    ],
    "kind": "function",
-   "line": 32,
+   "line": 42,
    "module": "app.pages.history",
    "name": "sessions_table",
    "qualname": "sessions_table",
@@ -10397,9 +10658,9 @@
   },
   "app.pages.history:sessions_table.open_selected": {
    "doc": "",
-   "end_line": 37,
+   "end_line": 47,
    "kind": "nested",
-   "line": 33,
+   "line": 43,
    "module": "app.pages.history",
    "name": "open_selected",
    "parent": "app.pages.history:sessions_table",
@@ -10410,9 +10671,13 @@
    "doc": "",
    "end_line": 1,
    "externals": [
+    "collections.defaultdict",
+    "collections.defaultdict().get",
+    "streamlit.caption",
+    "streamlit.columns",
+    "streamlit.container",
     "streamlit.info",
     "streamlit.markdown",
-    "streamlit.page_link",
     "streamlit.subheader",
     "streamlit.title",
     "streamlit.write"
@@ -10422,7 +10687,19 @@
    "module": "app.pages.home",
    "name": "<module>",
    "qualname": "<module>",
-   "signature": "module-level code"
+   "signature": "module-level code",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 38,
+     "text": "col.container"
+    },
+    {
+     "candidates": [],
+     "line": 101,
+     "text": "cols[i % len(cols)].container"
+    }
+   ]
   },
   "app.pages.interview:<module>": {
    "doc": "",
@@ -10440,7 +10717,7 @@
   },
   "app.pages.interview:blocked_answer_editor": {
    "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
-   "end_line": 177,
+   "end_line": 239,
    "externals": [
     "streamlit.columns",
     "streamlit.columns()[0].button",
@@ -10451,7 +10728,7 @@
     "streamlit.text_area"
    ],
    "kind": "function",
-   "line": 160,
+   "line": 222,
    "module": "app.pages.interview",
    "name": "blocked_answer_editor",
    "qualname": "blocked_answer_editor",
@@ -10459,12 +10736,13 @@
   },
   "app.pages.interview:chat": {
    "doc": "",
-   "end_line": 296,
+   "end_line": 391,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.chat_input",
     "streamlit.chat_message",
+    "streamlit.divider",
     "streamlit.error",
     "streamlit.info",
     "streamlit.markdown",
@@ -10478,7 +10756,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 213,
+   "line": 287,
    "module": "app.pages.interview",
    "name": "chat",
    "qualname": "chat",
@@ -10486,14 +10764,17 @@
   },
   "app.pages.interview:coaching_choice": {
    "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
-   "end_line": 210,
+   "end_line": 275,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.chat_input",
-    "streamlit.columns",
-    "streamlit.columns()[0].button",
-    "streamlit.columns()[1].button",
+    "streamlit.container",
+    "streamlit.container().caption",
+    "streamlit.container().columns",
+    "streamlit.container().columns()[0].button",
+    "streamlit.container().columns()[1].button",
+    "streamlit.container().markdown",
     "streamlit.error",
     "streamlit.rerun",
     "streamlit.session_state.get",
@@ -10501,7 +10782,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 180,
+   "line": 242,
    "module": "app.pages.interview",
    "name": "coaching_choice",
    "qualname": "coaching_choice",
@@ -10509,13 +10790,13 @@
   },
   "app.pages.interview:earlier_attempts": {
    "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
-   "end_line": 126,
+   "end_line": 188,
    "externals": [
     "streamlit.expander",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 118,
+   "line": 180,
    "module": "app.pages.interview",
    "name": "earlier_attempts",
    "qualname": "earlier_attempts",
@@ -10523,17 +10804,20 @@
   },
   "app.pages.interview:feedback": {
    "doc": "The report for a finished interview: generated once on request, then stored.",
-   "end_line": 323,
+   "end_line": 429,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.divider",
     "streamlit.error",
     "streamlit.header",
-    "streamlit.spinner"
+    "streamlit.markdown",
+    "streamlit.status",
+    "streamlit.status().update",
+    "streamlit.write"
    ],
    "kind": "function",
-   "line": 299,
+   "line": 394,
    "module": "app.pages.interview",
    "name": "feedback",
    "qualname": "feedback",
@@ -10541,35 +10825,51 @@
   },
   "app.pages.interview:live_chips": {
    "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
-   "end_line": 115,
+   "end_line": 177,
    "externals": [
     "streamlit.caption",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 106,
+   "line": 161,
    "module": "app.pages.interview",
    "name": "live_chips",
    "qualname": "live_chips",
    "signature": "live_chips(live) -> None"
   },
+  "app.pages.interview:progress_text": {
+   "doc": "'Question 3 of 7 · Experience (follow-up)': where the interview is, in words.",
+   "end_line": 284,
+   "kind": "function",
+   "line": 278,
+   "module": "app.pages.interview",
+   "name": "progress_text",
+   "qualname": "progress_text",
+   "signature": "progress_text(view: eng.SessionView, done: int) -> str"
+  },
   "app.pages.interview:start_form": {
    "doc": "",
-   "end_line": 103,
+   "end_line": 158,
    "externals": [
     "streamlit.button",
+    "streamlit.caption",
     "streamlit.columns",
     "streamlit.columns()[0].selectbox",
     "streamlit.columns()[1].segmented_control",
+    "streamlit.container",
     "streamlit.error",
     "streamlit.info",
+    "streamlit.markdown",
     "streamlit.radio",
     "streamlit.rerun",
     "streamlit.selectbox",
-    "streamlit.spinner"
+    "streamlit.session_state.pop",
+    "streamlit.status",
+    "streamlit.status().update",
+    "streamlit.write"
    ],
    "kind": "function",
-   "line": 38,
+   "line": 63,
    "module": "app.pages.interview",
    "name": "start_form",
    "qualname": "start_form",
@@ -10577,7 +10877,7 @@
   },
   "app.pages.interview:submit": {
    "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
-   "end_line": 157,
+   "end_line": 219,
    "externals": [
     "streamlit.rerun",
     "streamlit.session_state.get",
@@ -10586,7 +10886,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 129,
+   "line": 191,
    "module": "app.pages.interview",
    "name": "submit",
    "qualname": "submit",
@@ -10594,7 +10894,7 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 136,
+     "line": 198,
      "text": "action"
     }
    ]
@@ -10634,9 +10934,9 @@
   },
   "app.pages.settings:_model_label": {
    "doc": "",
-   "end_line": 128,
+   "end_line": 129,
    "kind": "function",
-   "line": 124,
+   "line": 125,
    "module": "app.pages.settings",
    "name": "_model_label",
    "qualname": "_model_label",
@@ -10644,12 +10944,12 @@
   },
   "app.pages.settings:_model_picker": {
    "doc": "",
-   "end_line": 146,
+   "end_line": 147,
    "externals": [
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 131,
+   "line": 132,
    "module": "app.pages.settings",
    "name": "_model_picker",
    "qualname": "_model_picker",
@@ -10657,9 +10957,9 @@
   },
   "app.pages.settings:_price": {
    "doc": "",
-   "end_line": 121,
+   "end_line": 122,
    "kind": "function",
-   "line": 118,
+   "line": 119,
    "module": "app.pages.settings",
    "name": "_price",
    "qualname": "_price",
@@ -10667,44 +10967,62 @@
   },
   "app.pages.settings:_rows": {
    "doc": "",
-   "end_line": 278,
+   "end_line": 284,
    "kind": "function",
-   "line": 268,
+   "line": 274,
    "module": "app.pages.settings",
    "name": "_rows",
    "qualname": "_rows",
    "signature": "_rows(rows, name: str) -> list[dict]"
   },
+  "app.report_view:band_badge": {
+   "doc": "The hiring signal as a coloured badge with an icon and words, so colour is never the only cue. Static text only (labels from BAND_LABELS), so it is safe in markdown as it is.",
+   "end_line": 47,
+   "kind": "function",
+   "line": 41,
+   "module": "app.report_view",
+   "name": "band_badge",
+   "qualname": "band_badge",
+   "signature": "band_badge(band: str | None) -> str"
+  },
   "app.report_view:render_report": {
    "doc": "",
-   "end_line": 122,
+   "end_line": 144,
    "externals": [
     "streamlit.caption",
     "streamlit.columns",
+    "streamlit.columns()[0].container",
     "streamlit.columns()[0].metric",
-    "streamlit.columns()[1].markdown",
+    "streamlit.columns()[1].container",
+    "streamlit.container",
     "streamlit.dataframe",
     "streamlit.expander",
     "streamlit.markdown",
-    "streamlit.progress",
     "streamlit.subheader",
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 38,
+   "line": 50,
    "module": "app.report_view",
    "name": "render_report",
    "qualname": "render_report",
-   "signature": "render_report(report: Report, rubric_path) -> None"
+   "signature": "render_report(report: Report, rubric_path) -> None",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 80,
+     "text": "cols[i % 2].progress"
+    }
+   ]
   },
   "app.ui_common:_document_guard_for": {
    "decorators": [
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 142,
+   "end_line": 174,
    "kind": "function",
-   "line": 139,
+   "line": 171,
    "module": "app.ui_common",
    "name": "_document_guard_for",
    "qualname": "_document_guard_for",
@@ -10718,9 +11036,9 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 110,
+   "end_line": 142,
    "kind": "function",
-   "line": 107,
+   "line": 139,
    "module": "app.ui_common",
    "name": "_user_decider",
    "qualname": "_user_decider",
@@ -10738,9 +11056,9 @@
   },
   "app.ui_common:document_guard": {
    "doc": "Injection guard for uploaded documents (rules first, then Jev).",
-   "end_line": 147,
+   "end_line": 179,
    "kind": "function",
-   "line": 145,
+   "line": 177,
    "module": "app.ui_common",
    "name": "document_guard",
    "qualname": "document_guard",
@@ -10748,9 +11066,9 @@
   },
   "app.ui_common:engine_deps": {
    "doc": "Wire the interview engine to real models, the call log, pricing and the injection guard.",
-   "end_line": 135,
+   "end_line": 167,
    "kind": "function",
-   "line": 113,
+   "line": 145,
    "module": "app.ui_common",
    "name": "engine_deps",
    "qualname": "engine_deps",
@@ -10758,9 +11076,9 @@
   },
   "app.ui_common:engine_deps.make_decider": {
    "doc": "",
-   "end_line": 125,
+   "end_line": 157,
    "kind": "nested",
-   "line": 123,
+   "line": 155,
    "module": "app.ui_common",
    "name": "make_decider",
    "parent": "app.ui_common:engine_deps",
@@ -10769,9 +11087,9 @@
   },
   "app.ui_common:engine_deps.make_llm": {
    "doc": "",
-   "end_line": 121,
+   "end_line": 153,
    "kind": "nested",
-   "line": 120,
+   "line": 152,
    "module": "app.ui_common",
    "name": "make_llm",
    "parent": "app.ui_common:engine_deps",
@@ -10807,14 +11125,29 @@
    "qualname": "get_price_catalog",
    "signature": "get_price_catalog() -> PriceCatalog"
   },
+  "app.ui_common:go_button": {
+   "doc": "A button that opens another page, for a call to action that must stand out (a page link looks like plain navigation). `state` is written to session_state first, e.g. which interview to open.",
+   "end_line": 108,
+   "externals": [
+    "streamlit.button",
+    "streamlit.caption",
+    "streamlit.switch_page"
+   ],
+   "kind": "function",
+   "line": 92,
+   "module": "app.ui_common",
+   "name": "go_button",
+   "qualname": "go_button",
+   "signature": "go_button(page: str, label: str, icon: str | None=None, key: str | None=None, primary: bool=True, state: dict | None=None) -> None"
+  },
   "app.ui_common:kept_widget": {
    "doc": "Draw a widget whose value survives runs in which it isn't drawn (a hidden section, a slider that only shows for one interview type).",
-   "end_line": 100,
+   "end_line": 132,
    "externals": [
     "streamlit.session_state.get"
    ],
    "kind": "function",
-   "line": 86,
+   "line": 118,
    "module": "app.ui_common",
    "name": "kept_widget",
    "qualname": "kept_widget",
@@ -10822,20 +11155,20 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 98,
+     "line": 130,
      "text": "widget"
     }
    ]
   },
   "app.ui_common:page_link": {
    "doc": "st.page_link, falling back to plain text when the page runs on its own (tests run one page file without main.py's st.navigation, and then Streamlit can't resolve the page path).",
-   "end_line": 83,
+   "end_line": 89,
    "externals": [
     "streamlit.caption",
     "streamlit.page_link"
    ],
    "kind": "function",
-   "line": 77,
+   "line": 83,
    "module": "app.ui_common",
    "name": "page_link",
    "qualname": "page_link",
@@ -10871,6 +11204,16 @@
    "tested_by": [
     "tests.test_app_ui"
    ]
+  },
+  "app.ui_common:slider_start": {
+   "doc": "A saved or usual question count clamped into the slider's range (Limits), so a value saved before the range was changed in .env can't make st.slider raise.",
+   "end_line": 115,
+   "kind": "function",
+   "line": 111,
+   "module": "app.ui_common",
+   "name": "slider_start",
+   "qualname": "slider_start",
+   "signature": "slider_start(questions: int) -> int"
   },
   "interview_app.applications:ApplicationDetail": {
    "doc": "",
@@ -10915,6 +11258,7 @@
    "schema": true,
    "signature": "class DocumentIn(BaseModel)",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_applications"
    ]
   },
@@ -11014,6 +11358,7 @@
    "qualname": "create_application",
    "signature": "create_application(engine: Engine, user_id: int, company: str, role: str, documents: list[DocumentIn], limits: Limits | None=None) -> int",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_applications"
    ]
   },
@@ -11144,9 +11489,9 @@
   },
   "interview_app.config:Features": {
    "doc": "Feature flags, so an unfinished or broken feature can be switched off without code changes.",
-   "end_line": 128,
+   "end_line": 138,
    "kind": "class",
-   "line": 123,
+   "line": 133,
    "module": "interview_app.config",
    "name": "Features",
    "qualname": "Features",
@@ -11155,9 +11500,9 @@
   },
   "interview_app.config:GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
-   "end_line": 120,
+   "end_line": 130,
    "kind": "class",
-   "line": 101,
+   "line": 111,
    "module": "interview_app.config",
    "name": "GuardSettings",
    "qualname": "GuardSettings",
@@ -11169,7 +11514,7 @@
   },
   "interview_app.config:Limits": {
    "doc": "Hard limits enforced in code (OWASP LLM10: unbounded consumption).",
-   "end_line": 98,
+   "end_line": 108,
    "kind": "class",
    "line": 70,
    "module": "interview_app.config",
@@ -11186,6 +11531,20 @@
     "tests.test_lab",
     "tests.test_users_demo"
    ]
+  },
+  "interview_app.config:Limits._slider_range": {
+   "class": "interview_app.config:Limits",
+   "decorators": [
+    "model_validator(mode='after')"
+   ],
+   "doc": "",
+   "end_line": 108,
+   "kind": "method",
+   "line": 105,
+   "module": "interview_app.config",
+   "name": "_slider_range",
+   "qualname": "Limits._slider_range",
+   "signature": "_slider_range(self) -> Self"
   },
   "interview_app.config:ModelChoice": {
    "doc": "One entry of the model picker on the Settings page (course tasks M7 and H4).",
@@ -11214,9 +11573,9 @@
   },
   "interview_app.config:Settings": {
    "doc": "",
-   "end_line": 175,
+   "end_line": 185,
    "kind": "class",
-   "line": 131,
+   "line": 141,
    "module": "interview_app.config",
    "name": "Settings",
    "qualname": "Settings",
@@ -11249,9 +11608,9 @@
     "model_validator(mode='after')"
    ],
    "doc": "",
-   "end_line": 175,
+   "end_line": 185,
    "kind": "method",
-   "line": 172,
+   "line": 182,
    "module": "interview_app.config",
    "name": "_derive_database_url",
    "qualname": "Settings._derive_database_url",
@@ -11262,9 +11621,9 @@
     "lru_cache"
    ],
    "doc": "One shared Settings object. Tests build their own `Settings(...)` instead.",
-   "end_line": 181,
+   "end_line": 191,
    "kind": "function",
-   "line": 179,
+   "line": 189,
    "module": "interview_app.config",
    "name": "get_settings",
    "qualname": "get_settings",
@@ -12480,7 +12839,10 @@
    "name": "SessionSummary",
    "qualname": "SessionSummary",
    "schema": true,
-   "signature": "class SessionSummary(BaseModel)"
+   "signature": "class SessionSummary(BaseModel)",
+   "tested_by": [
+    "tests.test_journey"
+   ]
   },
   "interview_app.history:_reports_oldest_first": {
    "db": {
@@ -13904,6 +14266,65 @@
    "name": "private_fields",
    "qualname": "private_fields",
    "signature": "private_fields(turn: AnyTurn) -> dict[str, str]"
+  },
+  "interview_app.journey:ScoreSummary": {
+   "decorators": [
+    "dataclass(frozen=True)"
+   ],
+   "doc": "",
+   "end_line": 44,
+   "kind": "class",
+   "line": 40,
+   "module": "interview_app.journey",
+   "name": "ScoreSummary",
+   "qualname": "ScoreSummary",
+   "signature": "class ScoreSummary"
+  },
+  "interview_app.journey:Step": {
+   "doc": "",
+   "end_line": 18,
+   "kind": "class",
+   "line": 13,
+   "module": "interview_app.journey",
+   "name": "Step",
+   "qualname": "Step",
+   "signature": "class Step(StrEnum)"
+  },
+  "interview_app.journey:_newest_first": {
+   "doc": "",
+   "end_line": 22,
+   "kind": "function",
+   "line": 21,
+   "module": "interview_app.journey",
+   "name": "_newest_first",
+   "qualname": "_newest_first",
+   "signature": "_newest_first(sessions: list[SessionSummary]) -> list[SessionSummary]"
+  },
+  "interview_app.journey:next_step": {
+   "doc": "The one most useful next action. Only the newest interview decides \"get feedback\": an older interview without a report was most likely left without one on purpose.",
+   "end_line": 36,
+   "kind": "function",
+   "line": 25,
+   "module": "interview_app.journey",
+   "name": "next_step",
+   "qualname": "next_step",
+   "signature": "next_step(applications: int, sessions: list[SessionSummary]) -> Step",
+   "tested_by": [
+    "tests.test_journey"
+   ]
+  },
+  "interview_app.journey:score_summary": {
+   "doc": "",
+   "end_line": 52,
+   "kind": "function",
+   "line": 47,
+   "module": "interview_app.journey",
+   "name": "score_summary",
+   "qualname": "score_summary",
+   "signature": "score_summary(sessions: list[SessionSummary]) -> ScoreSummary",
+   "tested_by": [
+    "tests.test_journey"
+   ]
   },
   "interview_app.lab.candidate:CandidatePersona": {
    "doc": "",

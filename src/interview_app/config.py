@@ -96,6 +96,16 @@ class Limits(BaseModel):
     # failed so it can't block new interviews. Generous on purpose: with the default 60 s request timeout
     # and 3 retries, a slow but healthy start (plan + opening turn + one repair) can take over 10 minutes.
     start_timeout_minutes: int = Field(default=15, gt=0, le=60)
+    # Range of the "main questions" slider on the start form and Settings page. It must stay inside
+    # SessionConfig.main_questions' bounds (2-15), which the engine enforces.
+    min_main_questions: int = Field(default=3, ge=2, le=15)
+    max_main_questions: int = Field(default=12, ge=2, le=15)
+
+    @model_validator(mode="after")
+    def _slider_range(self) -> Self:
+        if self.min_main_questions >= self.max_main_questions:
+            raise ValueError("min_main_questions must be below max_main_questions")
+        return self
 
 
 class GuardSettings(BaseModel):

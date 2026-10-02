@@ -74,6 +74,12 @@ def short(text: str | None, limit: int = 90) -> str:
     return cut.rstrip(",;:.-—") + "…"
 
 
+# Chat avatars: neutral icons for both speakers. Streamlit's default user avatar is red, which in this
+# app reads as "error" or "weak score".
+INTERVIEWER_AVATAR = ":material/person:"
+CANDIDATE_AVATAR = ":material/account_circle:"
+
+
 def page_link(page: str, label: str, icon: str | None = None) -> None:
     """st.page_link, falling back to plain text when the page runs on its own (tests run one page
     file without main.py's st.navigation, and then Streamlit can't resolve the page path)."""
@@ -81,6 +87,32 @@ def page_link(page: str, label: str, icon: str | None = None) -> None:
         st.page_link(page, label=label, icon=icon)
     except StreamlitAPIException:
         st.caption(label)
+
+
+def go_button(
+    page: str,
+    label: str,
+    icon: str | None = None,
+    key: str | None = None,
+    primary: bool = True,
+    state: dict | None = None,
+) -> None:
+    """A button that opens another page, for a call to action that must stand out (a page link looks
+    like plain navigation). `state` is written to session_state first, e.g. which interview to open."""
+    if st.button(label, icon=icon, key=key, type="primary" if primary else "secondary"):
+        for name, value in (state or {}).items():
+            st.session_state[name] = value
+        try:
+            st.switch_page(page)
+        except StreamlitAPIException:
+            st.caption(label)  # a page run on its own (tests) has no navigation to switch with
+
+
+def slider_start(questions: int) -> int:
+    """A saved or usual question count clamped into the slider's range (Limits), so a value saved
+    before the range was changed in .env can't make st.slider raise."""
+    limits = get_settings().limits
+    return min(max(questions, limits.min_main_questions), limits.max_main_questions)
 
 
 def kept_widget(widget, key: str, default, *args, **kwargs):

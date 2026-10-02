@@ -7,7 +7,7 @@ Everything saved here is read by the Interview page when a new interview starts 
 """
 
 import streamlit as st
-from ui_common import current_user_id, get_engine, get_price_catalog, kept_widget
+from ui_common import current_user_id, get_engine, get_price_catalog, kept_widget, slider_start
 
 from interview_app.config import get_settings
 from interview_app.interview.persona import (
@@ -43,6 +43,7 @@ VARIANT_HELP: dict[PromptVariant, str] = {
 EFFORT_OPTIONS = ["default", "none", "low", "medium", "high"]
 
 st.title("Settings")
+st.caption("Defaults for new interviews, optional developer settings, and what the app has spent so far.")
 
 # --- Interview defaults (candidate-facing, plain language) --------------------------------------
 
@@ -93,9 +94,9 @@ main_questions = None
 if not usual_length:
     main_questions = st.slider(
         "Main questions (follow-ups come on top)",
-        3,
-        12,
-        prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type],
+        cfg.limits.min_main_questions,
+        cfg.limits.max_main_questions,
+        slider_start(prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type]),
         key="pref_main_questions",
     )
 
@@ -237,7 +238,12 @@ if show_dev:
         key="pref_judge_model",
     )
 
-if st.button("Save settings", type="primary", icon=":material/save:"):
+if st.button(
+    "Save settings",
+    type="primary",
+    icon=":material/save:",
+    help="Saves the interview defaults (and the developer settings, if you changed them).",
+):
     save_preferences(
         engine,
         user_id,

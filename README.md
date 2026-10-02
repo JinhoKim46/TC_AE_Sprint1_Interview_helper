@@ -14,11 +14,15 @@ The app listens on 127.0.0.1 only (set in `.streamlit/config.toml`), so it isn't
 
 To keep it running as a local service in Docker instead: `cp .env.example .env`, set the key, then `make up` and open http://localhost:8501. Run `make` to list every command (`down`, `logs`, `status`, `backup`, `rebuild` …). Details: [`docs/06-docker.md`](docs/06-docker.md).
 
-1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one.
-2. **Interview** → pick the application, the interview type and the difficulty, then **Start interview**.
-3. Answer in the chat. When it ends (or you click **End interview**), click **Get my feedback report**.
-4. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
-5. **History** → past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice).
+The **Home** page shows where you are (add an application → practise an interview → read your feedback) and one **Next step** button: add an application, start or resume an interview, get the missing report of your last interview, or practise again.
+
+1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one. **Practise this application** on any saved one opens the start form with it selected.
+2. **Interview** → pick the application, the interview type, the difficulty and the length, and the feedback style (realistic or coaching), then **Start interview** (about 30 seconds to prepare). The screen shows the question count and the current stage, e.g. "Question 3 of 7 · Experience (follow-up)".
+3. Answer in the chat. When it ends (or you click **End interview** in the sidebar), click **Get my feedback report** (about a minute). The report opens with the overall score, the hiring signal and the judge's summary, then the score breakdown, what went well and what to improve (with quotes), the job requirements and every answer's scores.
+4. **History** → your latest score (with the change against the previous report), best score, and past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice). An interview without a report offers **Open it to get feedback**.
+5. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
+
+The theme (one indigo accent, light and dark) is set in `.streamlit/config.toml`; switch light/dark from the app menu (top right).
 
 Everything runs locally: a SQLite database in `data/`, model calls through OpenRouter.
 
