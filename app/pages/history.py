@@ -5,6 +5,7 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 """
 
 import streamlit as st
+from drill_ui import drill_offer
 from report_view import BAND_LABELS, LEVEL_LABELS, render_report
 from ui_common import current_user_id, get_engine, settings
 
@@ -139,6 +140,7 @@ def session_detail(summary: SessionSummary) -> None:
         report = load_report(engine, user_id, summary.session_id)
         if report is not None:
             render_report(report, settings().rubric_path)
+            drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")
         else:
