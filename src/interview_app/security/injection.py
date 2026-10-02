@@ -45,13 +45,6 @@ log = logging.getLogger(__name__)
 # document, but we never echo more than this (it may be long, personal, or itself an attack).
 MAX_EXCERPT_CHARS = 60
 
-# The most chunks one document may have before the model check refuses it (OWASP LLM10). Each chunk is
-# one question in the Jev request, so without a cap a 1 MB paste would send ~330 questions at once.
-# 20 chunks of the default 3,000 characters is about 60,000 characters: well above the 40,000-character
-# document limit, so a document that passed `ingest.validate_document` always fits.
-# It belongs in config.GuardSettings; it lives here until config.py next changes (a parallel PR owns it).
-MAX_DOCUMENT_CHUNKS = 20
-
 ANSWER_BLOCKED_REASON = (
     "Your answer looks like an instruction to the AI rather than an interview answer. Please rephrase."
 )
@@ -300,7 +293,7 @@ class InjectionGuard:
         too_long = False
         if self._model_enabled:
             chunks = split_into_chunks(canonical(text), self.settings.guard.document_chunk_chars)
-            if len(chunks) > MAX_DOCUMENT_CHUNKS:
+            if len(chunks) > self.settings.guard.max_document_chunks:
                 # Refuse rather than check part of it: an unchecked tail could hide the attack.
                 # Rules (linear time) already ran on the whole text above.
                 too_long = True
@@ -328,7 +321,7 @@ class InjectionGuard:
         if too_long:
             reason = (
                 f"This {kind} is too long to check for instructions to an AI "
-                f"(more than {MAX_DOCUMENT_CHUNKS} parts of about "
+                f"(more than {self.settings.guard.max_document_chunks} parts of about "
                 f"{self.settings.guard.document_chunk_chars:,} characters). Shorten it to the relevant parts."
             )
             if hits:

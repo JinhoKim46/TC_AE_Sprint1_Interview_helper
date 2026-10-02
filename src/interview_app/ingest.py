@@ -66,18 +66,17 @@ MIN_DOCUMENT_CHARS = 200
 
 # A PDF is a small file that can describe a huge amount of work: one 80 KB page with a compressed
 # 33 MB content stream took 26 s and 1.5 GB of memory to read (a "decompression bomb"). Three bounds:
-# 1. Decompressed streams are capped by pypdf itself. A real CV page's text stream is tens of KB, so
-#    5 MB is generous; a bigger stream raises LimitReachedError instead of being inflated.
-PDF_MAX_STREAM_BYTES = 5_000_000
+# 1. Decompressed streams are capped by pypdf itself (limits.pdf_max_stream_bytes); a bigger stream
+#    raises LimitReachedError instead of being inflated.
 # 2. Reading stops once the text is clearly over the document limit; the rest can't be used anyway.
 #    The margin allows for the whitespace `clean_text` removes later.
 PDF_TEXT_MARGIN = 2
 # 3. The whole read runs in a worker thread and we stop waiting after this many seconds. Python
 #    can't kill a thread, so a stuck read finishes in the background; the bounds above keep that short.
-PDF_EXTRACT_TIMEOUT_S = 20.0
+#    (limits.pdf_extract_timeout_s, overridable per call for tests.)
 
 
-def extract_pdf_text(data: bytes, limits: Limits, timeout_s: float = PDF_EXTRACT_TIMEOUT_S) -> ExtractResult:
+def extract_pdf_text(data: bytes, limits: Limits, timeout_s: float | None = None) -> ExtractResult:
     """Extract the text layer of a PDF, page by page.
 
     Size is checked *before* parsing so a huge file never reaches the PDF parser. `timeout_s` is a
@@ -106,6 +105,7 @@ def extract_pdf_text(data: bytes, limits: Limits, timeout_s: float = PDF_EXTRACT
     # daemon=True: a read still running when the app exits must not keep the process alive.
     worker = threading.Thread(target=work, name="pdf-extract", daemon=True)
     worker.start()
+    timeout_s = limits.pdf_extract_timeout_s if timeout_s is None else timeout_s
     worker.join(timeout_s)
     if worker.is_alive():
         log.warning("PDF extraction timed out after %.0f s", timeout_s)
@@ -122,11 +122,11 @@ def _read_pdf(data: bytes, limits: Limits) -> ExtractResult:
     # pypdf keeps its limits in a ContextVar, and a new thread starts with the defaults, so they are
     # applied here, inside the worker thread.
     with apply_configuration(
-        zlib_maximum_output_length=PDF_MAX_STREAM_BYTES,
-        lzw_maximum_output_length=PDF_MAX_STREAM_BYTES,
-        run_length_maximum_output_length=PDF_MAX_STREAM_BYTES,
-        array_based_stream_maximum_output_length=PDF_MAX_STREAM_BYTES,
-        maximum_declared_stream_length=PDF_MAX_STREAM_BYTES,
+        zlib_maximum_output_length=limits.pdf_max_stream_bytes,
+        lzw_maximum_output_length=limits.pdf_max_stream_bytes,
+        run_length_maximum_output_length=limits.pdf_max_stream_bytes,
+        array_based_stream_maximum_output_length=limits.pdf_max_stream_bytes,
+        maximum_declared_stream_length=limits.pdf_max_stream_bytes,
     ):
         try:
             return _extract_pages(data, limits)

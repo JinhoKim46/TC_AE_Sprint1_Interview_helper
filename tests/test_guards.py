@@ -353,7 +353,7 @@ def test_unicode_and_entity_closing_tags_cannot_break_out(attack):
 
 
 def test_overlong_document_is_flagged_without_calling_the_model():
-    from interview_app.security.injection import MAX_DOCUMENT_CHUNKS
+    max_chunks = Settings(_env_file=None).guard.max_document_chunks
 
     decider = FakeDecider(p=0.0)
     text = "\n\n".join("Built and shipped services. " * 100 for _ in range(400))  # ~1 MB paste
@@ -364,9 +364,9 @@ def test_overlong_document_is_flagged_without_calling_the_model():
     assert "too long" in result.reason
 
     # A document at the cap is still checked, in one request.
-    at_cap = "\n\n".join(["x" * 2900] * MAX_DOCUMENT_CHUNKS)
+    at_cap = "\n\n".join(["x" * 2900] * max_chunks)
     make_guard(decider).check_document("cv", at_cap)
-    assert len(decider.calls) == 1 and len(decider.calls[0][2]) == MAX_DOCUMENT_CHUNKS
+    assert len(decider.calls) == 1 and len(decider.calls[0][2]) == max_chunks
 
 
 def test_model_check_sees_the_canonical_text():

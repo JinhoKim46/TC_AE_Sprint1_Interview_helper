@@ -8,7 +8,6 @@ from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from interview_app.config import Limits
 from interview_app.ingest import (
-    PDF_MAX_STREAM_BYTES,
     DocKind,
     IngestError,
     clean_text,
@@ -168,7 +167,7 @@ def test_validate_accepts_a_normal_document():
 
 def test_decompression_bomb_is_refused_quickly():
     # Before the fix an 80 KB PDF inflating to 33 MB took 26 s and 1.5 GB to read.
-    data = make_bomb_pdf(PDF_MAX_STREAM_BYTES + 1_000_000)
+    data = make_bomb_pdf(Limits().pdf_max_stream_bytes + 1_000_000)
     assert len(data) < 100_000
     start = time.perf_counter()
     with pytest.raises(IngestError, match="too large to read safely"):
