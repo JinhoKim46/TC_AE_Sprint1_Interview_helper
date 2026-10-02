@@ -217,3 +217,31 @@ uv run python lab/sweep_setting.py --variant p4 --efforts low,medium     # 4 ses
 
 Both write a CSV per run to `lab/results/` and print the tables above. `--budget-usd` stops a run cleanly
 once the logged spend passes it. The lab uses its own database (`data/lab.db`), never the app's.
+
+## Re-run after the shared-prompt fix (question stacking)
+
+Every variant stacked questions (I7 = 100%), so the shared base prompt (`_base.md`) now spells out what "one
+question" means (one thing to answer: no lists of sub-topics, no "X, Y and Z" chains, no options in
+parentheses). It also says to answer the candidate's own questions only from the JD and company notes (the P4
+near-miss on fabrication). P2 and P4 were re-run on the same setup (3 personas × 1 session, $0.14 total):
+
+| Arm | I1 | I3 | I9 | I7 | follow-ups | words/turn | $/session | s/turn | gate |
+|---|---|---|---|---|---|---|---|---|---|
+| P2 before | 4.95 | 4.75 | 4.06 | 100% | 5.7 | 54 | 0.0099 | 2.9 | pass |
+| P2 after | 4.81 | 4.64 | 3.80 | 100% | 4.7 | 39 | 0.0091 | 3.4 | pass |
+| P4 before | 4.94 | 4.72 | 4.07 | 100% | 3.3 | 60 | 0.0159 | 2.9 | pass |
+| P4 after | 4.87 | 4.54 | 3.88 | 100% | 4.0 | 49 | 0.0166 | 3.2 | pass |
+
+What this shows, honestly:
+
+- **Turns got 20–28% shorter**, which is closer to the guideline's 1–4 sentences. That is the clear, measurable gain.
+- **I7 did not move.** It is a session-level item ("does *any* turn stack questions?"), so a single stacked turn
+  in a 20-turn interview still makes it "yes". It can't show a partial improvement. The next step is to measure
+  stacking per turn.
+- **Realism and follow-up quality moved by less than run-to-run noise.** P4's adaptive follow-ups (2 / 2 / 6 in
+  the first run) became 4 / 4 / 4 here, so that earlier finding was not robust at n = 1 per persona.
+- No fabrication, coaching, illegal question or role break in either run, and the safety release gate still passes.
+
+Decision: keep the change (shorter turns, no regressions). P4 remains the default for its persona and plan-based
+structure, with P2 as the cheaper alternative. A larger run (≥ 3 sessions per persona) is needed before
+claiming differences in realism between P2, P4 and P5.
