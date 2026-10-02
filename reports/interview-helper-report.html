@@ -213,7 +213,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   <header class="hero">
     <div class="eyebrow">Turing College AE · Sprint 1 capstone · status 2 October 2026</div>
     <h1>An interview rehearsal built from one job description and one CV</h1>
-    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
+    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
     <div class="flowline" aria-label="Core flow">
       <span class="step">Upload JD + CV</span><span class="arrow">→</span>
       <span class="step">cover letter (optional)</span><span class="arrow">→</span>
@@ -223,8 +223,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="stats">
       <div class="stat"><b>5 / 5</b><span>mandatory requirements met</span></div>
       <div class="stat"><b>13</b><span>optional tasks (bonus needs 2 medium + 1 hard)</span></div>
-      <div class="stat"><b>33</b><span>pull requests merged through CI</span></div>
-      <div class="stat"><b>403</b><span>automated tests, no network</span></div>
+      <div class="stat"><b>37</b><span>pull requests merged through CI</span></div>
+      <div class="stat"><b>406</b><span>automated tests, no network</span></div>
     </div>
   </header>
 
@@ -322,7 +322,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       <p class="note" id="chartNote"></p>
     </div>
     <div class="variants" id="variantCards"></div>
-    <p class="note">A re-run of P2 and P4 after a shared-prompt fix (same models and setup, 6 sessions, $0.14) made turns 18–28% shorter (P2 −28%, P4 −18%). It did not reproduce P4's apparently adaptive follow-ups (2 / 2 / 6 became 4 / 4 / 4), so P2, P4 and P5 are treated as tied. Both runs used the prompts of PRs #16/#17; later prompt edits (PRs #28, #33) were not re-run, so the numbers are indicative. Full details: <code>docs/05-prompt-comparison.md</code>.</p>
+    <p class="note">A re-run of P2 and P4 after a shared-prompt fix (same models and setup, 6 sessions, $0.14) made turns 18–28% shorter (P2 −28%, P4 −18%). It did not reproduce P4's apparently adaptive follow-ups (2 / 2 / 6 became 4 / 4 / 4), so P2, P4 and P5 are treated as tied. Both runs used the prompts of PRs #16/#17; later prompt edits (PRs #26, #28, #33) were not re-run, so the numbers are indicative. Full details: <code>docs/05-prompt-comparison.md</code>.</p>
   </section>
 
   <section id="runs">
@@ -342,12 +342,20 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   <section id="risks">
     <div class="section-head">
       <h2>Risks and limitations</h2>
-      <p>None blocks the review. Judge variance and the small evaluation sample are the most likely reviewer questions and should be raised first.</p>
+      <p>None blocks the review. Judge variance and the small evaluation sample are the most likely reviewer questions and should be raised first. The issues the audit fixed are listed below the open ones.</p>
     </div>
     <div class="tablewrap">
       <table>
         <thead><tr><th>Issue</th><th>Impact</th><th>Mitigation now</th><th>Next step</th></tr></thead>
         <tbody id="riskRows"></tbody>
+      </table>
+    </div>
+    <h3>Resolved by the audit before the review</h3>
+    <p class="note">An independent pass over the core, security, UI, infrastructure and documentation, with a second review of the fixes. Each fix came with a regression test.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Issue</th><th>Fixed in</th><th>What changed</th></tr></thead>
+        <tbody id="resolvedRows"></tbody>
       </table>
     </div>
   </section>
@@ -360,11 +368,13 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="checklist" id="checklist"></div>
     <div class="checkgroup">
       <h3>After the review, in order of value for long-term use</h3>
-      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service. Login with MFA was dropped: the app has one user and is served on localhost only.</p>
+      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service, and the audit fixes (PRs #30–#38). Login with MFA was dropped: the app has one user and is served on localhost only.</p>
       <ol class="roadmap">
+        <li>Re-run the prompt lab on the current prompts: the published numbers predate PRs #26, #28 and #33</li>
         <li>A larger evaluation set (more applications, at least 3 sessions per persona, a few human-rated transcripts) to calibrate the judge and separate P2, P4 and P5</li>
         <li>Calibrate the live Jev scores against the final judge (they are indicative until then)</li>
         <li>The rubric's red-flag checks (N-items) as Jev yes/no questions</li>
+        <li>Code checks on each interviewer turn for the follow-up cap and question stacking (today the cap is only an instruction)</li>
         <li>Voice: spoken questions and speech-to-text answers</li>
         <li>DOCX upload and JD import from a URL (MarkItDown for those formats only; pypdf stays for PDFs)</li>
         <li>Interviewer avatars (image generation), if still wanted</li>
@@ -385,11 +395,11 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "applications_page", layer: "ui", name: "Applications", sub: "app/pages", x: 130, y: 70,
       files: ["app/pages/applications.py"],
       job: "Create an application from a job description and CV (required) plus an optional cover letter and company notes, by PDF upload or paste. Extracted text is editable before saving. New and edited documents pass the injection check; suspicious text is flagged for the user to confirm.",
-      facts: ["Includes a Load sample application button with a fictional company and candidate"], grades: ["M6", "R2", "E3"] },
+      facts: ["Includes a Load sample application button with a fictional company and candidate", "Deleting an application says how many interviews go with it, and is locked while one of them runs"], grades: ["M6", "R2", "E3"] },
     { id: "interview_page", layer: "ui", name: "Interview", sub: "app/pages", x: 380, y: 70,
       files: ["app/pages/interview.py", "app/report_view.py", "app/drill_ui.py"],
       job: "Pick the application, interview type, difficulty, mode (Realistic or Coaching) and number of main questions; chat with the interviewer; see progress and cost; end the interview; read the feedback report and start a weak-spot drill from it.",
-      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue"], grades: ["H1", "R2", "E4"] },
+      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere"], grades: ["H1", "R2", "E4"] },
     { id: "history_page", layer: "ui", name: "History", sub: "app/pages", x: 630, y: 70,
       files: ["app/pages/history.py"],
       job: "Past interviews with their transcripts and reports. Pick one application to see its progress: score trend, weakest rubric skills, job requirements over time and recurring advice. Each report offers a weak-spot drill.",
@@ -402,23 +412,23 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "ingest", layer: "core", name: "Ingest", sub: "ingest.py", x: 90, y: 200,
       files: ["src/interview_app/ingest.py", "src/interview_app/applications.py"],
       job: "Extracts PDF text with size and page limits, cleans and validates it, and stores applications scoped by user. Each application owns its own copies of its documents.",
-      facts: ["Every owned row carries a user_id, and the application, interview and history queries filter on it"], grades: ["M6"] },
+      facts: ["Every owned row carries a user_id, and the application, interview and history queries filter on it", "PDF bounds: 5 MB per decompressed stream and a 20 s read timeout, so a PDF bomb is refused in 0.01 s"], grades: ["M6"] },
     { id: "security", layer: "core", name: "Guards", sub: "security/", x: 250, y: 200,
       files: ["security/limits.py", "security/injection.py", "security/spotlight.py"],
-      job: "Length, turn and spend limits (OWASP LLM10). Prompt-injection detection: regex rules first, then a Jev yes/no check (LLM01). Spotlighting wraps every untrusted text in tags it cannot close.",
-      facts: ["A reworded attack no rule caught was blocked at p = 0.99", "A benign answer about writing a system prompt passed at p = 0.02", "Answers are blocked; documents are flagged, never blocked"], grades: ["R5", "E3", "M9"] },
+      job: "Length, turn and spend limits (OWASP LLM10). Prompt-injection detection: regex rules first, then a Jev yes/no check (LLM01). Rules and wrapping work on a canonical form of the text (NFKC, zero-width characters removed), so Unicode look-alikes still match. Spotlighting wraps every untrusted text in tags it cannot close, including model-written text built from documents: the P4 plan, the judge's requirement list and the interviewer turns.",
+      facts: ["A reworded attack no rule caught was blocked at p = 0.99", "A benign answer about writing a system prompt passed at p = 0.02", "Answers are blocked; documents are flagged, never blocked", "Rules run in linear time: 200k newlines in 0.02 s (one rule was quadratic before PR #33)", "A document over 20 chunks is flagged as too long to check, without a Jev call"], grades: ["R5", "E3", "M9"] },
     { id: "engine", layer: "core", name: "Interview engine", sub: "interview/engine.py", x: 420, y: 200,
       files: ["interview/engine.py", "interview/persona.py", "interview/plan.py"],
       job: "A stateless loop over the database. Start: snapshot documents, plan (for P4), opening turn. Answer: run the guards, then get the next turn; in Coaching mode, score the answer live and wait for Retry or Continue. Code counts main questions and follow-ups, picks the phase, forces a close at limits, and makes sure the candidate is invited to ask questions.",
-      facts: ["About 25 s to start, about 3 s per interviewer turn (gpt-5-mini, low effort)", "Interview type + difficulty derive the persona", "Guard and live-score Jev calls are billed to the session"], grades: ["H1", "E4", "E7", "R1"] },
+      facts: ["About 25 s to start, about 3 s per interviewer turn (gpt-5-mini, low effort)", "Interview type + difficulty derive the persona", "Guard and live-score Jev calls are billed to the session", "One interview at a time; a start stuck in preparing for 15 minutes is marked failed", "answer and respond check whose turn it is, so a double click can't add two turns"], grades: ["H1", "E4", "E7", "R1"] },
     { id: "prompts", layer: "core", name: "Prompts", sub: "prompts/*.md", x: 590, y: 200,
       files: ["src/interview_app/prompts/", "interview/prompting.py", "interview/schemas.py"],
       job: "Five interviewer variants, each the zero-shot baseline plus one technique, and the planner and judge templates. Assembles the system, user and assistant messages. Reasoning fields sit before the message in the JSON schema.",
-      facts: ["The live-status message goes last, so the long prompt prefix stays cacheable"], grades: ["R4", "M2"] },
+      facts: ["The live-status message goes last, so the long prompt prefix stays cacheable", "The opening request carries a fixed user cue, because Anthropic and Gemini reject a request with no user message"], grades: ["R4", "M2"] },
     { id: "evaluation", layer: "core", name: "Evaluation", sub: "evaluation/", x: 750, y: 200,
       files: ["evaluation/exchanges.py", "evaluation/metrics.py", "evaluation/judge.py", "evaluation/aggregate.py", "evaluation/service.py", "evaluation/live.py"],
-      job: "Transcript to exchanges and metrics (code), then three parallel judge runs that write rationale and evidence before every score (model), then weights, penalties and a band from rubric.json (code); the report is the median run. The judge must quote the candidate, and code checks each quote. evaluation/live.py scores single answers with Jev in Coaching mode.",
-      facts: ["About 60 s and $0.10 per report (Claude Haiku 4.5 × 3)", "Quote check added after a real run credited CV-only facts"], grades: ["H5", "M2", "R1"] },
+      job: "Transcript to exchanges and metrics (code), then three parallel judge runs that write rationale and evidence before every score (model), then weights, penalties and a band from rubric.json (code); the report is the median run. The judge must quote the candidate, and code checks each quote: in order, at least two words, with parts from different turns joined by ... or ;. An unverified positive rating scores 0 (not demonstrated). evaluation/live.py scores single answers with Jev in Coaching mode.",
+      facts: ["About 60 s and $0.10 per report (Claude Haiku 4.5 × 3)", "Quote check added after a real run credited CV-only facts", "Over the session budget, the judge runs once instead of three times", "Judge max tokens is a setting (JUDGE_MAX_TOKENS, 16000)"], grades: ["H5", "M2", "R1"] },
     { id: "preferences", layer: "core", name: "Preferences", sub: "preferences.py", x: 910, y: 200,
       files: ["src/interview_app/preferences.py", "src/interview_app/usage.py"],
       job: "Saved interview defaults and developer settings per user. Spend summaries by role and by model, computed from the call log.",
@@ -427,7 +437,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "lab", layer: "lab", name: "Prompt lab", sub: "lab/", x: 90, y: 340,
       files: ["src/interview_app/lab/", "lab/compare_prompts.py", "lab/sweep_setting.py"],
       job: "A simulated candidate (Gemini 2.5 Flash playing strong, weak and evasive personas) drives the real engine. Jev judges interviewer quality on rubric §12. Also runs the reasoning-effort sweep.",
-      facts: ["15 sessions + sweep cost $0.52", "Uses its own database, never the app's"], grades: ["R4", "H5", "E8"] },
+      facts: ["15 sessions + sweep cost $0.52", "Uses its own database, never the app's", "A failed run ends its session, so it can't block the later runs"], grades: ["R4", "H5", "E8"] },
     { id: "decide", layer: "core", name: "Jev client", sub: "llm/decide.py", x: 250, y: 340,
       files: ["src/interview_app/llm/decide.py"],
       job: "Asks the Jev decision model typed questions (yes/no, score, choice) in one request and returns probabilities. Used by the injection guard, Coaching-mode live scores and the lab judge. Code sets every threshold.",
@@ -435,7 +445,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "llm", layer: "core", name: "LLM gateway", sub: "llm/client.py", x: 470, y: 340,
       files: ["src/interview_app/llm/client.py", "src/interview_app/llm/calllog.py"],
       job: "The one gateway for chat models: OpenAI SDK pointed at OpenRouter, retries, optional settings sent only when set, reasoning effort, real cost from usage.cost. Every call is logged. chat_json validates against a schema and repairs once.",
-      facts: ["Switching provider is a base URL and a key"], grades: ["R3", "M3"] },
+      facts: ["Switching provider is a base URL and a key", "An empty reply, or one cut off at max tokens, fails with a clear error instead of crashing or a useless repair"], grades: ["R3", "M3"] },
     { id: "drill", layer: "core", name: "Weak-spot drill", sub: "interview/drill.py", x: 620, y: 340,
       files: ["src/interview_app/interview/drill.py", "app/drill_ui.py"],
       job: "Turns a report into a focused interview for the same application: code picks the requirements not yet shown (must-haves first) and the lowest-scoring rubric skills; the targets reach every prompt variant and the planner, wrapped as data.",
@@ -452,7 +462,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "sqlite", layer: "svc", name: "SQLite", sub: "data/app.db", x: 120, y: 500,
       files: ["src/interview_app/db.py", "data/app.db (gitignored)"],
       job: "Local database: users, applications, documents, interview sessions, turns (with live scores and retried attempts), evaluations, preferences and the call log. Upgrades itself when new columns are added. Every owned row has a user_id, so accounts can be added later without migration.",
-      facts: ["Real CVs never leave the machine except as model calls"], grades: ["H1"] },
+      facts: ["Real CVs never leave the machine except as model calls", "secure_delete overwrites deleted rows; the file is owner-only (mode 600) where the disk allows it"], grades: ["H1"] },
     { id: "jevapi", layer: "svc", name: "Jev decisions API", sub: "OpenRouter", x: 300, y: 500,
       files: ["POST /api/alpha/decisions"],
       job: "The decision-model endpoint. The model is pinned to an exact build (typesafe/jev-1.13-20260917), never a moving alias.",
@@ -509,13 +519,13 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       text: "Upload or paste the job description and CV, optionally a cover letter and company notes. Ingest extracts and cleans the text; the guard checks every document with rules and Jev and flags anything that looks like an instruction to an AI. You confirm or edit, then one copy is stored per application." },
     { title: "Start the interview", nodes: ["interview_page", "engine", "prompts", "docs", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "prompts"], ["prompts", "docs"], ["engine", "llm"], ["llm", "openrouter"], ["engine", "sqlite"]],
-      text: "The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
+      text: "Only one interview runs at a time. The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
     { title: "Answer a question", nodes: ["interview_page", "engine", "security", "decide", "prompts", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "security"], ["security", "decide"], ["engine", "prompts"], ["engine", "llm"], ["llm", "openrouter"], ["llm", "sqlite"], ["engine", "sqlite"]],
-      text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent on to the interviewer or the judge (the guard itself sends the answer to Jev to check it). Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
+      text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent on to the interviewer or the judge (the guard itself sends the answer to Jev to check it), and it comes back to you for editing. Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
     { title: "Get the feedback report", nodes: ["interview_page", "evaluation", "docs", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "evaluation"], ["evaluation", "docs"], ["evaluation", "llm"], ["llm", "openrouter"], ["evaluation", "sqlite"]],
-      text: "Code splits the transcript into exchanges and computes word metrics. Three parallel judge runs (Claude Haiku 4.5, a different family from the interviewer) write rationale and evidence before each score. Code verifies the quotes, scores each run with the weights in rubric.json, and keeps the median run, showing all three scores. Stored, so reopening is free." },
+      text: "Code splits the transcript into exchanges and computes word metrics. Three parallel judge runs (Claude Haiku 4.5, a different family from the interviewer) write rationale and evidence before each score. Code verifies the quotes (a rating without a verified quote earns nothing), scores each run with the weights in rubric.json, and keeps the median run, showing all three scores. Stored, so reopening is free." },
     { title: "Answer in coaching mode", nodes: ["interview_page", "engine", "security", "decide", "jevapi", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "security"], ["security", "decide"], ["engine", "decide"], ["decide", "jevapi"], ["engine", "sqlite"]],
       text: "The answer passes the guards, then one Jev request scores it on the three rubric items that weigh most for that kind of question (about 0.5 s). Code builds the tip from the rubric's next-level text. Retry replaces the attempt (the old one is kept but hidden from the interviewer and the judge); Continue asks the interviewer for the next turn." },
@@ -563,20 +573,21 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["Output types", "Schema-validated JSON, Jev's typed probabilities, free text inside JSON fields", "interview/schemas.py, evaluation/schemas.py"],
     ["Project works", "A live interview with the sample application", "Demo: strong answer, vague answer, injection attempt, report"],
     ["Correct OpenRouter calls", "One gateway with a call log of tokens, cost and latency", "Settings → Usage and cost"],
-    ["Weaknesses", "Small evaluation sample, uncalibrated live scores, stacking not fully solved, partial rubric, latency", "Risks table"],
+    ["Security", "Limits, regex rules then Jev, spotlighting of documents, answers and model-written text; hardened by the audit (Unicode, ReDoS, PDF bombs, XSS)", "Paste an injection attempt live; the resolved table under Risks"],
+    ["Weaknesses", "Small evaluation sample run on older prompts, uncalibrated live scores, stacking not fully solved, partial rubric, latency", "Risks table"],
     ["Improvements", "Larger evaluation set, calibrated live scores, red-flag checks, voice", "Next steps"],
   ];
   const STACK = [
     { t: "Python 3.12 + uv", s: "Language and tooling", why: "One language end to end; uv gives a locked, reproducible environment. ruff and pytest run in CI.", alt: "pip + requirements.txt (no lockfile)" },
-    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
-    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 403 tests run here.", alt: "Logic inside Streamlit pages" },
-    { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt.", alt: "Parsing dicts by hand" },
+    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core. .streamlit/config.toml binds it to 127.0.0.1, caps uploads at 5 MB and turns telemetry off.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
+    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 406 tests run here.", alt: "Logic inside Streamlit pages" },
+    { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt. Settings have bounds, and a misspelt key in a settings group fails at start instead of being ignored.", alt: "Parsing dicts by hand" },
     { t: "SQLite + SQLModel", s: "Storage", why: "One user, local data, zero setup. Moving to Postgres is a connection-string change.", alt: "Supabase (cloud; sends CVs to a third party)" },
     { t: "OpenAI SDK → OpenRouter", s: "Model access", why: "One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of every call.", alt: "LiteLLM or LangChain (more layers between you and the API parameters)" },
     { t: "Jev decision model", s: "Typed judgements", why: "Returns probabilities instead of text: about 0.4 s and cheap, with no sampling temperature. Used for the injection guard and the lab judge.", alt: "A second LLM classifier (slower, writes text that must be parsed)" },
     { t: "Jinja2 templates", s: "Prompts as files", why: "Prompts are readable documents, versioned and reviewed like code; a missing variable is an error, not empty text.", alt: "f-strings scattered through the code" },
-    { t: "Docker + Makefile", s: "Local service", why: "make up builds and starts the app as a long-running service on http://localhost:8501, with data/ mounted so the database survives rebuilds; make lists every command.", alt: "Typing docker compose commands, or running streamlit by hand" },
-    { t: "GitHub + worktrees + CI", s: "Delivery", why: "Every change on its own branch, tested by GitHub Actions, squash-merged when green.", alt: "Committing straight to main" },
+    { t: "Docker + Makefile", s: "Local service", why: "make up builds and starts the app as a long-running service on http://localhost:8501, with data/ mounted so the database survives rebuilds; make lists every command. The base image is pinned, and the container drops every Linux capability and runs with no-new-privileges.", alt: "Typing docker compose commands, or running streamlit by hand" },
+    { t: "GitHub + worktrees + CI", s: "Delivery", why: "Every change on its own branch, tested by GitHub Actions (lint, format, unit tests and a Docker build, with read-only permissions), squash-merged when green.", alt: "Committing straight to main" },
   ];
   const MODELS = [
     ["Interviewer and planner", "openai/gpt-5-mini", "The brief's recommended default"],
@@ -595,7 +606,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { t: "Rules first, then Jev, for injection", s: "Cheap and explainable, then robust", alt: "An LLM classifier only", why: "Rules are free and explain themselves; Jev catches paraphrases in about 0.4 s.", res: "Reworded attack blocked at p = 0.99; benign answer passed at p = 0.02." },
     { t: "Three parallel judge runs, median, a different model family", s: "Stable scores, less bias", alt: "A single run; the interviewer's own model", why: "One transcript scored 56.6 and 71.5 on two single runs; the median run keeps numbers and feedback from the same judgement, and parallel runs cost no extra time.", res: "A real report: 54.7 / 45.0 / 45.0, median 45.0, in about 60 s." },
     { t: "The judge must quote; code checks the quote", s: "Grounding in the transcript", alt: "Trust the cited turn ids", why: "On a real run the judge credited CV facts never said in the interview.", res: "Requirement credit and strengths now need a verified quote." },
-    { t: "Local SQLite, one user, no login", s: "Privacy and scope", alt: "Supabase; login with MFA", why: "Data stays on the owner's machine, and Docker serves it on localhost only, so a login would protect nothing.", res: "MFA dropped; user_id kept on every table, so accounts can be added without migration." },
+    { t: "Local SQLite, one user, no login", s: "Privacy and scope", alt: "Supabase; login with MFA", why: "Data stays on the owner's machine, and Docker serves it on localhost only, so a login would protect nothing.", res: "MFA dropped; user_id kept on every table, so accounts can be added without migration. The database file uses secure_delete and owner-only permissions." },
+    { t: "Audit everything before the review", s: "Find what tests miss", alt: "Feature work until the deadline", why: "A tool the owner keeps using must be honest about its scores and safe with real CVs; an outside pass looks where the author does not.", res: "PRs #30–#38: interview-state bugs, two scoring rules that inflated the score, five security issues and the UI escaping fixed, each with a regression test; claims in the docs corrected." },
     { t: "Public repo, privacy-first .gitignore", s: "Reviewer access, no personal data", alt: "A private repository", why: "The reviewer can open it without extra setup.", res: "Real applications never committed; a fictional sample ships instead." },
   ];
   const VARIANTS = [
@@ -610,22 +622,50 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { key: "cost", label: "$ per session", fmt: v => "$" + v.toFixed(4), lo: 0, hi: 0.02, ticks: [0, 0.005, 0.01, 0.015, 0.02], better: "low", note: "Real OpenRouter cost per simulated session. P2 is the cheapest of the realistic three, at about 60% of P4's cost." },
     { key: "sturn", label: "Seconds per turn", fmt: v => v.toFixed(1) + " s", lo: 0, hi: 6, ticks: [0, 2, 4, 6], better: "low", note: "Mean latency per interviewer turn. Self-critique writes three passes per turn and is the slowest." },
     { key: "fu", label: "Follow-ups per session", fmt: v => v.toFixed(1), lo: 0, hi: 8, ticks: [0, 2, 4, 6, 8], better: "none", note: "How hard the interviewer probes. P4's low count looked adaptive in the first run but did not reproduce in a second run." },
-    { key: "words", label: "Words per turn", fmt: v => v.toFixed(0), lo: 0, hi: 70, ticks: [0, 20, 40, 60], better: "none", note: "Length of interviewer turns. A later shared-prompt fix cut turns by 20–28% for P2 and P4." },
+    { key: "words", label: "Words per turn", fmt: v => v.toFixed(0), lo: 0, hi: 70, ticks: [0, 20, 40, 60], better: "none", note: "Length of interviewer turns. A later shared-prompt fix cut turns by 18–28% for P2 and P4." },
   ];
   const RISKS = [
     ["Small evaluation sample (1 session per persona, 1 fictional application)", "P2, P4 and P5 can't be ranked", "Conclusions limited to what the data supports", "≥ 3 sessions per persona, more applications, human-rated transcripts"],
+    ["Lab numbers predate later prompt changes (PRs #26, #28, #33)", "The comparison describes slightly older prompts", "docs/05 names the code version of every run and calls the numbers indicative", "Re-run the lab on the current prompts"],
     ["Live coaching scores are not calibrated against the final judge", "A chip can disagree with the report", "Labelled as indicative; the report is the reference", "Compare live and final scores on the same answers"],
     ["Judge scores still vary a little", "Lower than before: median of 3 runs", "All three scores and their spread are shown; a wide spread is flagged", "More runs or a calibrated rubric if the spread stays high"],
-    ["Question stacking still occurs", "Less realistic interviews", "Shared rule tightened; turns 20–28% shorter", "Measure stacking per turn; consider a code check"],
+    ["Stricter quote checks can under-credit", "A paraphrased quote earns 0 for that requirement", "The judge is told to quote exactly and may join parts with ... or ; (PR #37)", "Watch for good answers scored not demonstrated in real reports"],
+    ["Question stacking still occurs; the follow-up cap is an instruction, not a code check", "Less realistic interviews; one lab session asked 10 follow-ups", "Shared rule tightened; turns 18–28% shorter", "Measure stacking per turn; check the cap in code"],
     ["Partial rubric: red-flag checks and logistics not judged", "Overall score omits some penalties", "Their weight is redistributed transparently", "Add red-flag checks as Jev yes/no questions"],
     ["Latency: about 25 s to start, about 60 s for a report", "Two waits", "Spinners say how long", "Stream the report; cache plans per application"],
-    ["No login", "Anyone who can reach the port can use the app", "Docker binds 127.0.0.1 only", "Add a login only if the app is ever hosted for others"],
+    ["DB file permissions can't be enforced on a Docker Desktop bind mount", "data/app.db may stay readable by other local users", "The app logs a warning and keeps running (PR #38); docs/06 explains it", "Run chmod 600 data/app.db on the host once"],
+    ["Cyrillic and other homoglyphs are not canonicalised", "A look-alike spelling can slip past the regex rules", "Jev still checks every answer that no rule caught; documents stay wrapped as data", "A confusables table, if attacks of this kind show up"],
+    ["No login", "Anyone who can reach the port can use the app", "The app binds 127.0.0.1, both locally (.streamlit/config.toml) and through Docker", "Add a login only if the app is ever hosted for others"],
     ["Old CV-derived examples remain in public git history", "Minor privacy exposure", "Removed from all current files", "Owner decides: rewrite history or accept"],
     ["openai/gpt-5 blocked by the account guardrail", "The brief's high-capability option is unavailable", "gpt-5-mini is the recommended default", "Optional: allow it in OpenRouter"],
   ];
+  const RESOLVED = [
+    ["A start that crashed stayed in preparing and blocked the page; two interviews could run at once", "#30, #37", "Any start failure marks the session failed; a preparing session older than 15 minutes is marked failed; only one interview at a time"],
+    ["A double submit or double Continue could add two answers or two interviewer turns in a row", "#30", "answer and respond check the session state and whose turn it is"],
+    ["Anthropic and Gemini rejected the opening request (no user message)", "#30", "A fixed user cue is sent with the opening request"],
+    ["The last main question could never get a follow-up", "#30", "One follow-up is allowed there too, within the cap"],
+    ["An unverified rating dropped the requirement from coverage, which raised the score", "#30", "It now counts as not demonstrated (0 points)"],
+    ["Quotes were checked as a bag of words; valid split or 2-word quotes were rejected", "#30, #37", "Ordered match, at least two words; parts joined with ... or ; may come from different cited turns"],
+    ["Session items and length flags used the wrong evidence; live levels rounded half to even", "#30", "RF5 needs an evidenced S1, S4 needs a candidate-questions exchange; length uses the main answer; live levels round half up"],
+    ["Empty model reply crashed with IndexError; a cut-off reply was sent for a useless repair", "#30", "Logged as a failed, billed call and raised as a clear error; no repair for a cut-off reply"],
+    ["Judge max tokens hard-coded; three judge runs even over budget; call records lost on an error", "#30, #32", "judge_max_tokens setting (16000); one run over budget; records flushed in finally"],
+    ["Misspelt settings were ignored silently; local runs listened on every interface", "#32", "Bounds and extra=forbid on settings groups; 127.0.0.1 binding, 5 MB uploads, telemetry off"],
+    ["Docker image unpinned, container with full capabilities, CI without a Docker build", "#32", "Pinned python:3.12.14-slim-bookworm, cap_drop ALL, no-new-privileges, docker-build CI job"],
+    ["A regex rule was quadratic (40k newlines took 20 s)", "#33", "Linear rule: 200k newlines in 0.02 s"],
+    ["Zero-width and fullwidth look-alikes bypassed the rules and the wrapper", "#33", "Rules and wrapping use NFKC text with format characters removed"],
+    ["A 1 MB paste made one Jev request with about 330 questions", "#33", "Documents over max_document_chunks (20) are flagged without a Jev call"],
+    ["An 80 KB PDF inflating to 33 MB took 26 s and 1.5 GB", "#33", "5 MB per decompressed stream (pdf_max_stream_bytes) and a 20 s read timeout (pdf_extract_timeout_s)"],
+    ["Model-written plan, requirement list and interviewer turns entered prompts unwrapped", "#33", "Wrapped as data like the documents (second-order injection)"],
+    ["Deleted text stayed in the database file; the file was readable by others", "#33, #38", "secure_delete on; mode 600, best effort where the mount refuses chmod"],
+    ["A quote in the report rendered raw HTML; model text could render markdown images or links", "#31, #37", "No unsafe_allow_html; safe_md escapes every model and document text, the guard warning included"],
+    ["Delete without warning, duplicate saves and drills, a blocked answer lost, unsaved settings reset", "#31", "Warnings with counts, locks while an interview runs, single-click guards, the blocked answer returned for editing"],
+    ["Duplicate load-and-decode code and an import cycle in the engine", "#35", "_load_active, session_documents and session_plan; config parsed once per turn; no behaviour change"],
+    ["A failed lab run stayed active and blocked every later run; lab metrics counted retried attempts", "#36, #37", "A failed run ends its session; leftovers are ended at start; superseded turns are dropped"],
+    ["Docs overstated some results and test and PR counts", "#36", "Claims aligned with the data; lab code versions disclosed in docs/05"],
+  ];
   const CHECKS = [
     { group: "Decisions this week", items: ["Rewrite git history to remove old CV-derived examples, or accept them", "Allow openai/gpt-5 in the OpenRouter guardrail (optional)"] },
-    { group: "Before the review (3–8 October)", items: ["make up, then run one real application end to end: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
+    { group: "Before the review (3–8 October)", items: ["make rebuild after the audit fixes and open the database inside the container (PR #38 check)", "On Docker Desktop, run chmod 600 data/app.db on the host once", "make up, then run one real application end to end with a real CV PDF: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
     { group: "Review: Friday 9 October (hard deadline 12 October)", items: ["Explain techniques, settings, roles and output types using the map, the chart and the models table", "Raise the small evaluation sample before the reviewer does"] },
   ];
   const RUNS = [
@@ -866,6 +906,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   // ------------------------------------------------------------------ risks, checklist
   $("#runRows").innerHTML = RUNS.map(r => `<tr>${r.map((c, i) => `<td class="${i === 6 ? "num" : ""}">${esc(c)}</td>`).join("")}</tr>`).join("");
   $("#riskRows").innerHTML = RISKS.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("");
+  $("#resolvedRows").innerHTML = RESOLVED.map(r => `<tr>${r.map((c, i) => `<td class="${i === 1 ? "mono" : ""}">${esc(c)}</td>`).join("")}</tr>`).join("");
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem("ih-checks") || "{}"); } catch (e) { saved = {}; }
   $("#checklist").innerHTML = CHECKS.map((g, gi) => `
