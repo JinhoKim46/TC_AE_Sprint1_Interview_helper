@@ -7,6 +7,7 @@ page re-reads it on each rerun, so refreshing the browser resumes the interview 
 import time
 
 import streamlit as st
+from drill_ui import drill_offer
 from report_view import render_report
 from ui_common import current_user_id, engine_deps, get_engine, settings
 
@@ -174,6 +175,9 @@ def chat(view: eng.SessionView) -> None:
         f"{view.company} — {view.role} · {TYPE_LABELS[view.config.interview_type]}"
         + (" · Coaching mode" if coaching else "")
     )
+    if focus := view.config.focus:
+        targets = focus.requirements + focus.skills
+        st.info("Focused practice on: " + "; ".join(targets), icon=":material/target:")
     progress = view.progress
     done = min(progress.main_asked, view.config.main_questions)
     st.progress(
@@ -249,6 +253,7 @@ def feedback(view: eng.SessionView) -> None:
                 return
     render_report(report, settings().rubric_path)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
+    drill_offer(view, report, key="drill-interview")
 
 
 active = eng.active_session(engine, user_id)

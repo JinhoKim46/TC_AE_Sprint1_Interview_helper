@@ -29,7 +29,10 @@ def temp_database(tmp_path: Path, monkeypatch):
     yield
     get_settings.cache_clear()
     st.cache_resource.clear()
-    sys.modules.pop("ui_common", None)
+    # Helper modules that import ui_common keep a reference to the old module (and to any fake a test
+    # patched into it), so they are dropped too and re-imported fresh by the next test.
+    for name in ("ui_common", "drill_ui", "report_view"):
+        sys.modules.pop(name, None)
 
 
 def run_page(name: str, timeout: float = 30) -> AppTest:
@@ -515,3 +518,79 @@ def test_history_page_shows_trend_and_opens_a_transcript():
 
     remaining = [s.session_id for s in list_sessions(engine, uid)]
     assert len(remaining) == 1 and newest not in remaining
+
+
+def test_weak_spot_drill_starts_a_focused_interview(monkeypatch):
+    """A report with an unshown must-have offers a drill; starting it opens a focused interview."""
+    import json
+    from types import SimpleNamespace
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.evaluation.schemas import ExchangeJudgement, ItemScore, Judgement, RequirementEvidence
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.interview.persona import PromptVariant
+    from interview_app.llm.client import LLMClient
+    from interview_app.preferences import Preferences, save_preferences
+
+    def turn(stage, qid, message):
+        return json.dumps(
+            {"stage": stage, "question_id": qid, "is_followup": False, "message": message, "is_final": False}
+        )
+
+    judgement = Judgement(
+        exchanges=[
+            ExchangeJudgement(
+                exchange_id="E01", items=[ItemScore(item="A3", rationale="Vague.", evidence=["T02"], score=2)]
+            )
+        ],
+        session_items=[],
+        requirements=[
+            RequirementEvidence(requirement="Production C++", priority="must", rationale="", level="claimed")
+        ],
+        strengths=[],
+        improvements=[],
+        summary="Needs evidence.",
+    )
+    replies = [
+        turn("opening", "OPEN-01", "Walk me through your background."),
+        turn("experience", "EXP-DEEP-01", "Tell me more."),
+        judgement.model_dump_json(),
+        turn("opening", "OPEN-01", "Let's start with your C++ work."),
+    ]
+    requests = []
+
+    def create(**kwargs):
+        requests.append(kwargs)
+        reply = replies.pop(0) if replies else "not json"
+        return SimpleNamespace(
+            model=kwargs["model"],
+            choices=[SimpleNamespace(message=SimpleNamespace(content=reply))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, cost=0.0),
+        )
+
+    sdk = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+    def fake_deps():
+        settings = ui_common.get_settings().model_copy(update={"judge_runs": 1})
+        return EngineDeps(ui_common.get_engine(), settings, lambda uid, sid: LLMClient(settings, sdk=sdk))
+
+    monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    load_sample_application(engine, uid)
+    save_preferences(engine, uid, Preferences(prompt_variant=PromptVariant.P1_ZERO_SHOT))
+
+    at = AppTest.from_file(str(APP_DIR / "pages" / "interview.py"), default_timeout=120)
+    at.run()
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    at.chat_input[0].set_value("I worked on many things with my team.").run()
+    next(b for b in at.button if b.label == "End interview").click().run()
+    next(b for b in at.button if b.label == "Get my feedback report").click().run()
+    assert any("Production C++" in m.value for m in at.markdown)  # the offer lists the weak requirement
+    next(b for b in at.button if b.label == "Start a focused practice interview").click().run()
+    assert not at.exception, at.exception
+    assert any("Focused practice on" in i.value and "Production C++" in i.value for i in at.info)
+    # The new interviewer prompt carries the focus block.
+    assert "Production C++" in requests[-1]["messages"][0]["content"]

@@ -110,6 +110,9 @@ def interviewer_system_prompt(ctx: PromptContext) -> str:
         fields=_contract_fields(TURN_SCHEMA[variant]),
         guideline=ctx.guideline,
         plan_json=ctx.plan.model_dump_json(indent=1) if ctx.plan else "",
+        # A weak-spot drill's targets (None for a normal interview). They come from our own validated
+        # report, not from the user, so they sit in the instructions; every variant gets them via _base.md.
+        focus=ctx.config.focus,
     )
 
 
@@ -145,6 +148,7 @@ def plan_messages(
         data_note=UNTRUSTED_DATA_NOTE,
         documents=blocks,
         missing=missing,
+        focus=config.focus,
     )
     return [
         {"role": "system", "content": "You are an experienced interviewer preparing for an interview."},

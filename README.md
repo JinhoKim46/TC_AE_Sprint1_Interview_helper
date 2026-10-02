@@ -49,6 +49,8 @@ Design rule throughout: **the model judges, code computes.** Models decide what 
 
 **Coaching mode** (pick it on the start form): after each answer, Jev scores it on the three rubric items that weigh most for that kind of question (one request, about 0.5 s; `evaluation/live.py`), and the app shows them as chips with a tip. The tip is built in code: it quotes the rubric's description of the next level up for the weakest item, so it is grounded in the rubric and costs nothing. The candidate can then **Retry** the answer (up to `LIMITS__MAX_RETRIES_PER_ANSWER`, default 2) or **Continue**. A retried attempt is kept in the database but marked superseded, so neither the interviewer nor the final judge ever sees it. Realistic mode shows nothing until the report.
 
+**Weak-spot drill** (under every feedback report, on the Interview and History pages): code takes the job requirements the report rated *not discussed*, *not demonstrated* or *claimed only* (must-haves first, up to 4) and the rubric skills with the lowest average (below 3.5 of 5, up to 3), and starts a new interview for the same application with the same type, difficulty and models. The targets reach every prompt variant through the shared base prompt and the planner, so the plan and the questions aim at them (`interview/drill.py`).
+
 ## Course requirements and where they are met
 
 | Requirement | Where |

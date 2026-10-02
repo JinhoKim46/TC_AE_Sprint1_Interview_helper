@@ -94,6 +94,15 @@ class LLMSettings(BaseModel):
     reasoning_effort: str | None = "low"
 
 
+class Focus(BaseModel):
+    """A weak-spot drill: what this session should target, taken from an earlier report."""
+
+    source_session_id: int | None = None  # the interview whose report this came from
+    requirements: list[str] = Field(default_factory=list)  # job requirements not yet shown well
+    skills: list[str] = Field(default_factory=list)  # answer qualities that scored lowest (rubric names)
+    advice: list[str] = Field(default_factory=list)  # the report's top improvement areas, shown to the user
+
+
 class SessionConfig(BaseModel):
     interview_type: InterviewType = InterviewType.HIRING_MANAGER
     difficulty: Difficulty = Difficulty.STANDARD
@@ -102,6 +111,7 @@ class SessionConfig(BaseModel):
     prompt_variant: PromptVariant = PromptVariant.P4_ROLE_RICH
     override: PersonaOverride = PersonaOverride()
     llm: LLMSettings = LLMSettings()
+    focus: Focus | None = None  # set for a weak-spot drill; None = a normal interview
 
     @property
     def max_followups(self) -> int:
