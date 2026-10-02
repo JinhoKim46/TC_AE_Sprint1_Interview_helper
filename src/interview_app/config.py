@@ -60,6 +60,8 @@ class Settings(BaseSettings):
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     # Public model catalog with per-token prices and capabilities (see llm/pricing.py).
     openrouter_models_url: str = "https://openrouter.ai/api/v1/models"
+    # Jev decision model (llm/decide.py). Not OpenAI-compatible, so it has its own URL.
+    openrouter_decisions_url: str = "https://openrouter.ai/api/alpha/decisions"
     # Encrypts the TOTP secret at rest (see auth.py). Must be a Fernet key.
     app_secret_key: SecretStr = SecretStr("")
 
