@@ -6,10 +6,14 @@ more users later then needs no migration of existing data.
 New tables are added by the feature that needs them (applications, sessions, turns...).
 """
 
+import contextlib
 import logging
+import os
+import stat
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
 from sqlalchemy import Column, ForeignKey, Integer, event, text
 from sqlalchemy.engine import Engine
@@ -83,18 +87,40 @@ class Document(SQLModel, table=True):
 
 
 @event.listens_for(Engine, "connect")
-def _sqlite_foreign_keys(dbapi_connection, _record) -> None:
-    # SQLite ignores foreign keys unless asked, so "delete application -> delete its
-    # sessions" would silently leave orphans without this.
+def _sqlite_pragmas(dbapi_connection, _record) -> None:
     if dbapi_connection.__class__.__module__.startswith("sqlite3"):
+        # SQLite ignores foreign keys unless asked, so "delete application -> delete its
+        # sessions" would silently leave orphans without this.
         dbapi_connection.execute("PRAGMA foreign_keys=ON")
+        # By default a deleted row only marks its page as free; the CV text stays readable in the
+        # file until the page is reused. secure_delete overwrites it with zeros on delete.
+        dbapi_connection.execute("PRAGMA secure_delete=ON")
+
+
+# Owner read/write only: the database holds CVs, transcripts and login secrets.
+DB_FILE_MODE = 0o600
+
+
+def _protect_db_file(path: Path) -> None:
+    """Create the SQLite file owner-only, or tighten an existing one that others can read.
+
+    SQLite would create the file with the process umask (usually 644: world-readable), so we create
+    it first. Journal and WAL files copy the main file's permissions, so they are covered too.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        # O_EXCL: if another process created it in the meantime, leave it to the check below.
+        with contextlib.suppress(FileExistsError):
+            os.close(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, DB_FILE_MODE))
+    mode = stat.S_IMODE(path.stat().st_mode)
+    if mode & 0o077:
+        log.warning("Database file %s was readable by other users (mode %o); setting it to 600", path, mode)
+        path.chmod(DB_FILE_MODE)
 
 
 def make_engine(database_url: str) -> Engine:
     if database_url.startswith("sqlite:///") and ":memory:" not in database_url:
-        from pathlib import Path
-
-        Path(database_url.removeprefix("sqlite:///")).parent.mkdir(parents=True, exist_ok=True)
+        _protect_db_file(Path(database_url.removeprefix("sqlite:///")))
     # check_same_thread=False: Streamlit serves each rerun from a different thread.
     connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     return create_engine(database_url, connect_args=connect_args)

@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import select
 
-from interview_app.db import Application, LLMCall, User, make_engine, session_scope
+from interview_app.db import Application, LLMCall, User, init_db, make_engine, session_scope
 from interview_app.llm.calllog import make_db_recorder
 from interview_app.llm.client import CallRecord
 
@@ -90,3 +90,63 @@ def test_init_db_adds_missing_columns_to_an_old_database(tmp_path):
     with session_scope(engine) as s:
         old = s.exec(select(Turn)).one()
     assert old.text == "old answer" and old.superseded is False and old.live_json is None
+
+
+def test_new_database_file_is_owner_only(tmp_path):
+    import stat
+
+    path = tmp_path / "data" / "app.db"
+    engine = make_engine(f"sqlite:///{path}")
+    init_db(engine)
+    add_user(engine)
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+def test_world_readable_database_file_is_tightened(tmp_path, caplog):
+    import stat
+
+    path = tmp_path / "app.db"
+    path.touch()
+    path.chmod(0o644)
+    make_engine(f"sqlite:///{path}")
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert "readable by other users" in caplog.text
+    caplog.clear()
+    make_engine(f"sqlite:///{path}")  # already private: no second warning
+    assert "readable by other users" not in caplog.text
+
+
+def test_every_connection_uses_secure_delete(tmp_path):
+    from sqlalchemy import text
+
+    engine = make_engine(f"sqlite:///{tmp_path / 'app.db'}")
+    with engine.connect() as conn:
+        assert conn.execute(text("PRAGMA secure_delete")).scalar() == 1
+        assert conn.execute(text("PRAGMA foreign_keys")).scalar() == 1
+
+
+def test_connect_hook_turns_secure_delete_on():
+    # Some SQLite builds already default to secure_delete=1, so start from OFF to prove the hook sets it.
+    import sqlite3
+
+    from interview_app.db import _sqlite_pragmas
+
+    conn = sqlite3.connect(":memory:")
+    conn.execute("PRAGMA secure_delete=OFF")
+    _sqlite_pragmas(conn, None)
+    assert conn.execute("PRAGMA secure_delete").fetchone() == (1,)
+
+
+def test_deleted_text_does_not_linger_in_the_file(tmp_path):
+    path = tmp_path / "app.db"
+    engine = make_engine(f"sqlite:///{path}")
+    init_db(engine)
+    user_id = add_user(engine)
+    marker = "FICTIONAL-CV-MARKER-" * 50
+    with session_scope(engine) as s:
+        app = Application(user_id=user_id, company=marker, role="Engineer")
+        s.add(app)
+    with session_scope(engine) as s:
+        s.delete(s.exec(select(Application)).one())
+    engine.dispose()
+    assert b"FICTIONAL-CV-MARKER-" not in path.read_bytes()
