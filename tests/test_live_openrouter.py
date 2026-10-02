@@ -20,7 +20,9 @@ def client_and_records():
 
 def test_chat_reports_cost(client_and_records):
     client, records = client_and_records
-    result = client.chat("test", [{"role": "user", "content": "Reply with the word OK."}], model="openai/gpt-5-nano")
+    result = client.chat(
+        "test", [{"role": "user", "content": "Reply with the word OK."}], model="openai/gpt-5-nano"
+    )
     assert result.text.strip()
     assert records[0].cost_usd > 0  # OpenRouter's usage.cost reached the record
 
