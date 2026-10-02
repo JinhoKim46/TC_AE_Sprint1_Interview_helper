@@ -81,6 +81,7 @@ class Settings(BaseSettings):
     data_dir: Path = PROJECT_ROOT / "data"
     database_url: str = f"sqlite:///{PROJECT_ROOT / 'data' / 'app.db'}"
     rubric_path: Path = PROJECT_ROOT / "docs" / "rubric.json"
+    guideline_path: Path = PROJECT_ROOT / "docs" / "01-interviewer-guideline.md"
 
     request_timeout_s: float = 60.0
     max_retries: int = 3
