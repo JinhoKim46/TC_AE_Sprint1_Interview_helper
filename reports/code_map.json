@@ -436,7 +436,7 @@
     {
      "api": "decide",
      "gateway": "interview_app.llm.decide:DecisionClient.decide",
-     "line": 215,
+     "line": 221,
      "message_roles": [],
      "messages_builders": [],
      "model_default_in_gateway": true,
@@ -4666,11 +4666,11 @@
    "from": "interview_app.lab.judge:<module>",
    "kind": "construct",
    "lines": [
-    89,
-    98,
-    106,
-    115,
-    123
+    90,
+    99,
+    107,
+    116,
+    126
    ],
    "to": "interview_app.llm.decide:NoulQuestion"
   },
@@ -4678,9 +4678,9 @@
    "from": "interview_app.lab.judge:<module>",
    "kind": "construct",
    "lines": [
-    46,
-    60,
-    75
+    47,
+    61,
+    76
    ],
    "to": "interview_app.llm.decide:ScoreQuestion"
   },
@@ -4688,7 +4688,7 @@
    "from": "interview_app.lab.judge:code_metrics",
    "kind": "construct",
    "lines": [
-    246
+    252
    ],
    "to": "interview_app.lab.judge:CodeMetrics"
   },
@@ -4696,7 +4696,7 @@
    "from": "interview_app.lab.judge:judge_session",
    "kind": "construct",
    "lines": [
-    222
+    228
    ],
    "to": "interview_app.lab.judge:JudgeResult"
   },
@@ -4704,7 +4704,7 @@
    "from": "interview_app.lab.judge:judge_session",
    "kind": "call",
    "lines": [
-    215
+    221
    ],
    "to": "interview_app.lab.judge:judge_state"
   },
@@ -4712,7 +4712,7 @@
    "from": "interview_app.lab.judge:judge_session",
    "kind": "call",
    "lines": [
-    215
+    221
    ],
    "to": "interview_app.llm.decide:DecisionClient.decide"
   },
@@ -4720,7 +4720,7 @@
    "from": "interview_app.lab.judge:load_session",
    "kind": "call",
    "lines": [
-    176
+    179
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4728,7 +4728,7 @@
    "from": "interview_app.lab.judge:load_session",
    "kind": "construct",
    "lines": [
-    186
+    192
    ],
    "to": "interview_app.ingest:DocKind"
   },
@@ -4736,7 +4736,7 @@
    "from": "interview_app.lab.judge:load_session",
    "kind": "construct",
    "lines": [
-    180
+    186
    ],
    "to": "interview_app.lab.judge:SessionData"
   },
@@ -4744,8 +4744,8 @@
    "from": "interview_app.lab.judge:release_gate",
    "kind": "construct",
    "lines": [
-    277,
-    287
+    283,
+    293
    ],
    "to": "interview_app.lab.judge:GateResult"
   },
@@ -5921,7 +5921,7 @@
   {
    "api": "decide",
    "gateway": "interview_app.llm.decide:DecisionClient.decide",
-   "line": 215,
+   "line": 221,
    "message_roles": [],
    "messages_builders": [],
    "model_default_in_gateway": true,
@@ -7156,7 +7156,7 @@
   },
   "interview_app.lab.judge": {
    "doc": "Judge the *interviewer* (not the candidate) on a finished transcript: rubric §12, items I1-I10.",
-   "doc_more": "Two kinds of evidence, following \"the model judges, code computes\":\n\n- **Jev** (a decision model) answers the judgement items in ONE request: three 1-5 scores (I1 groundedness, I3 follow-up quality, I9 realism) and five yes/no probabilities (I2 fabrication, I5 leakage/coaching, I6 illegal question, I7 question stacking, I10 role break). Why Jev rather than a chat model as judge: it returns typed numbers (no JSON to parse or repair), it is fast (about a second) and cheap, and the same input gives the same answer, so differences between prompt variants are not judge noise. It is also a different model family from the interviewer (GPT-5) and the simulated candidate (Gemini), which avoids self-preference.\n- **Code** measures what can be counted: question and follow-up counts (from the turn metadata the engine stored), words per turn, a \"?\"-count check for stacking (to cross-check Jev's I7), cost and latency (from the call log), and whether the interview closed properly.\n\nI4 (requirement coverage) and I8 (time discipline) are not measurable here: only P4 has a plan with requirement ids, and text sessions have no duration. `main_question_ratio` (asked / target) stands in for I8.",
+   "doc_more": "Two kinds of evidence, following \"the model judges, code computes\":\n\n- **Jev** (a decision model) answers the judgement items in ONE request: three 1-5 scores (I1 groundedness, I3 follow-up quality, I9 realism) and five yes/no probabilities (I2 fabrication, I5 leakage/coaching, I6 illegal question, I7 question stacking, I10 role break). Why Jev rather than a chat model as judge: it returns typed numbers (no JSON to parse or repair), it is fast (about a second) and cheap, and it has no sampling temperature, so it adds little noise of its own (not measured; most of the noise comes from the transcripts themselves). It is also a different model family from the interviewer (GPT-5) and the simulated candidate (Gemini), which avoids self-preference.\n- **Code** measures what can be counted: question and follow-up counts (from the turn metadata the engine stored), words per turn, a \"?\"-count check for stacking (to cross-check Jev's I7), cost and latency (from the call log), and whether the interview closed properly.\n\nI4 (requirement coverage) and I8 (time discipline) are not measurable here: only P4 has a plan with requirement ids, and text sessions have no duration. `main_question_ratio` (asked / target) stands in for I8.",
    "external_imports": [
     "dataclasses",
     "json",
@@ -7175,7 +7175,7 @@
     "interview_app.llm.decide"
    ],
    "layer": "lab",
-   "lines": 288,
+   "lines": 294,
    "path": "src/interview_app/lab/judge.py",
    "symbols": [
     "interview_app.lab.judge:<module>",
@@ -10057,11 +10057,11 @@
    ]
   }
  },
- "source_sha256": "402e09ccfa91b0e8eac1077ac3afbcfcad448dc1d945ab63ec408ac366a79db0",
+ "source_sha256": "ebca9632f99f9733fb959e2b4db6a41cc1824b9aedac50fc7bf9ac66e70ab7fc",
  "stats": {
   "agents": 7,
   "call_sites": {
-   "builtin": 476,
+   "builtin": 475,
    "external": 703,
    "resolved": 700,
    "unresolved": 38
@@ -11184,6 +11184,7 @@
    "schema": true,
    "signature": "class Settings(BaseSettings)",
    "tested_by": [
+    "tests.conftest",
     "tests.test_config",
     "tests.test_decide",
     "tests.test_drill",
@@ -11504,6 +11505,7 @@
     "tests.test_engine",
     "tests.test_evaluation",
     "tests.test_history",
+    "tests.test_lab",
     "tests.test_preferences",
     "tests.test_usage"
    ]
@@ -14164,9 +14166,9 @@
     "dataclass"
    ],
    "doc": "",
-   "end_line": 158,
+   "end_line": 161,
    "kind": "class",
-   "line": 148,
+   "line": 151,
    "module": "interview_app.lab.judge",
    "name": "CodeMetrics",
    "qualname": "CodeMetrics",
@@ -14177,9 +14179,9 @@
     "dataclass"
    ],
    "doc": "",
-   "end_line": 270,
+   "end_line": 276,
    "kind": "class",
-   "line": 268,
+   "line": 274,
    "module": "interview_app.lab.judge",
    "name": "GateResult",
    "qualname": "GateResult",
@@ -14190,9 +14192,9 @@
     "dataclass"
    ],
    "doc": "",
-   "end_line": 144,
+   "end_line": 147,
    "kind": "class",
-   "line": 137,
+   "line": 140,
    "module": "interview_app.lab.judge",
    "name": "JudgeResult",
    "qualname": "JudgeResult",
@@ -14204,9 +14206,9 @@
   "interview_app.lab.judge:JudgeResult.is_yes": {
    "class": "interview_app.lab.judge:JudgeResult",
    "doc": "",
-   "end_line": 144,
+   "end_line": 147,
    "kind": "method",
-   "line": 143,
+   "line": 146,
    "module": "interview_app.lab.judge",
    "name": "is_yes",
    "qualname": "JudgeResult.is_yes",
@@ -14220,9 +14222,9 @@
     "dataclass"
    ],
    "doc": "A finished session as the judge and the metrics see it.",
-   "end_line": 172,
+   "end_line": 175,
    "kind": "class",
-   "line": 162,
+   "line": 165,
    "module": "interview_app.lab.judge",
    "name": "SessionData",
    "qualname": "SessionData",
@@ -14233,12 +14235,12 @@
   },
   "interview_app.lab.judge:code_metrics": {
    "doc": "",
-   "end_line": 257,
+   "end_line": 263,
    "externals": [
     "statistics.mean"
    ],
    "kind": "function",
-   "line": 230,
+   "line": 236,
    "module": "interview_app.lab.judge",
    "name": "code_metrics",
    "qualname": "code_metrics",
@@ -14249,9 +14251,9 @@
   },
   "interview_app.lab.judge:judge_session": {
    "doc": "All eight judgement items in one Jev request (cheaper and faster than eight requests).",
-   "end_line": 222,
+   "end_line": 228,
    "kind": "function",
-   "line": 213,
+   "line": 219,
    "model_roles": [
     "lab_judge"
    ],
@@ -14265,13 +14267,16 @@
   },
   "interview_app.lab.judge:judge_state": {
    "doc": "What Jev reads. Missing documents are left out (not sent as empty strings) so Jev doesn't treat 'no cover letter' as evidence of anything.",
-   "end_line": 210,
+   "end_line": 216,
    "kind": "function",
-   "line": 192,
+   "line": 198,
    "module": "interview_app.lab.judge",
    "name": "judge_state",
    "qualname": "judge_state",
-   "signature": "judge_state(data: SessionData) -> dict"
+   "signature": "judge_state(data: SessionData) -> dict",
+   "tested_by": [
+    "tests.test_lab"
+   ]
   },
   "interview_app.lab.judge:load_session": {
    "db": {
@@ -14286,7 +14291,7 @@
     ]
    },
    "doc": "",
-   "end_line": 189,
+   "end_line": 195,
    "externals": [
     "SessionConfig.model_validate_json",
     "db.exec",
@@ -14300,20 +14305,23 @@
     "sqlmodel.select().where().order_by"
    ],
    "kind": "function",
-   "line": 175,
+   "line": 178,
    "module": "interview_app.lab.judge",
    "name": "load_session",
    "qualname": "load_session",
-   "signature": "load_session(engine: Engine, session_id: int) -> SessionData"
+   "signature": "load_session(engine: Engine, session_id: int) -> SessionData",
+   "tested_by": [
+    "tests.test_lab"
+   ]
   },
   "interview_app.lab.judge:release_gate": {
    "doc": "§12 gate over all test sessions of one variant. I4 (coverage) is not measured in the lab, so the gate here is the part of §12 the transcripts allow; the doc says so too.",
-   "end_line": 287,
+   "end_line": 293,
    "externals": [
     "statistics.mean"
    ],
    "kind": "function",
-   "line": 273,
+   "line": 279,
    "module": "interview_app.lab.judge",
    "name": "release_gate",
    "qualname": "release_gate",
@@ -14326,7 +14334,7 @@
      "candidates": [
       "interview_app.lab.judge:JudgeResult.is_yes"
      ],
-     "line": 280,
+     "line": 286,
      "text": "r.is_yes"
     }
    ]

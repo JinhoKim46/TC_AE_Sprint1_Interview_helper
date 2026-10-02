@@ -13,8 +13,6 @@ pytestmark = pytest.mark.live
 @pytest.fixture
 def client_and_records():
     settings = Settings()
-    if not settings.openrouter_api_key.get_secret_value():
-        pytest.skip("OPENROUTER_API_KEY not set")
     records: list[CallRecord] = []
     return LLMClient(settings, recorder=records.append), records
 
@@ -45,8 +43,6 @@ def test_chat_json_with_open_weight_model(client_and_records):
 
 def test_price_catalog_has_interviewer_model(tmp_path):
     settings = Settings(data_dir=tmp_path)
-    if not settings.openrouter_api_key.get_secret_value():
-        pytest.skip("OPENROUTER_API_KEY not set")
     info = PriceCatalog(settings).get("openai/gpt-5-mini")
     assert info is not None
     assert info.prompt_price and info.prompt_price > 0

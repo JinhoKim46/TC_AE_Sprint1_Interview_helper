@@ -12,6 +12,11 @@ def _no_developer_env_file(request, monkeypatch):
     there would make tests pass on one machine and fail on another (or in CI, which has no `.env`).
     Live tests are the exception, they need the API key from it."""
     if request.node.get_closest_marker("live"):
+        # `pytest -m live` without a key must fail loudly: a run of silent skips looks like a green
+        # run. Autouse fixtures run before the tests' own fixtures, so this comes first. The key
+        # itself is never printed.
+        if not Settings().openrouter_api_key.get_secret_value():
+            pytest.fail("OPENROUTER_API_KEY is not set (in .env or the environment): live tests need it")
         yield
         return
     monkeypatch.setitem(Settings.model_config, "env_file", None)

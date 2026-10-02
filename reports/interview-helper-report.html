@@ -223,8 +223,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="stats">
       <div class="stat"><b>5 / 5</b><span>mandatory requirements met</span></div>
       <div class="stat"><b>13</b><span>optional tasks (bonus needs 2 medium + 1 hard)</span></div>
-      <div class="stat"><b>27</b><span>pull requests merged through CI</span></div>
-      <div class="stat"><b>310</b><span>automated tests, no network</span></div>
+      <div class="stat"><b>33</b><span>pull requests merged through CI</span></div>
+      <div class="stat"><b>403</b><span>automated tests, no network</span></div>
     </div>
   </header>
 
@@ -322,7 +322,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       <p class="note" id="chartNote"></p>
     </div>
     <div class="variants" id="variantCards"></div>
-    <p class="note">A re-run of P2 and P4 after a shared-prompt fix (same models and setup, 6 sessions, $0.14) made turns 20–28% shorter. It did not reproduce P4's apparently adaptive follow-ups (2 / 2 / 6 became 4 / 4 / 4), so P2, P4 and P5 are treated as tied. Full details: <code>docs/05-prompt-comparison.md</code>.</p>
+    <p class="note">A re-run of P2 and P4 after a shared-prompt fix (same models and setup, 6 sessions, $0.14) made turns 18–28% shorter (P2 −28%, P4 −18%). It did not reproduce P4's apparently adaptive follow-ups (2 / 2 / 6 became 4 / 4 / 4), so P2, P4 and P5 are treated as tied. Both runs used the prompts of PRs #16/#17; later prompt edits (PRs #28, #33) were not re-run, so the numbers are indicative. Full details: <code>docs/05-prompt-comparison.md</code>.</p>
   </section>
 
   <section id="runs">
@@ -402,7 +402,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "ingest", layer: "core", name: "Ingest", sub: "ingest.py", x: 90, y: 200,
       files: ["src/interview_app/ingest.py", "src/interview_app/applications.py"],
       job: "Extracts PDF text with size and page limits, cleans and validates it, and stores applications scoped by user. Each application owns its own copies of its documents.",
-      facts: ["Every query filters on user_id, so one user can never read another's rows"], grades: ["M6"] },
+      facts: ["Every owned row carries a user_id, and the application, interview and history queries filter on it"], grades: ["M6"] },
     { id: "security", layer: "core", name: "Guards", sub: "security/", x: 250, y: 200,
       files: ["security/limits.py", "security/injection.py", "security/spotlight.py"],
       job: "Length, turn and spend limits (OWASP LLM10). Prompt-injection detection: regex rules first, then a Jev yes/no check (LLM01). Spotlighting wraps every untrusted text in tags it cannot close.",
@@ -512,7 +512,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       text: "The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
     { title: "Answer a question", nodes: ["interview_page", "engine", "security", "decide", "prompts", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "security"], ["security", "decide"], ["engine", "prompts"], ["engine", "llm"], ["llm", "openrouter"], ["llm", "sqlite"], ["engine", "sqlite"]],
-      text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent. Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
+      text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent on to the interviewer or the judge (the guard itself sends the answer to Jev to check it). Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
     { title: "Get the feedback report", nodes: ["interview_page", "evaluation", "docs", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "evaluation"], ["evaluation", "docs"], ["evaluation", "llm"], ["llm", "openrouter"], ["evaluation", "sqlite"]],
       text: "Code splits the transcript into exchanges and computes word metrics. Three parallel judge runs (Claude Haiku 4.5, a different family from the interviewer) write rationale and evidence before each score. Code verifies the quotes, scores each run with the weights in rubric.json, and keeps the median run, showing all three scores. Stored, so reopening is free." },
@@ -569,11 +569,11 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   const STACK = [
     { t: "Python 3.12 + uv", s: "Language and tooling", why: "One language end to end; uv gives a locked, reproducible environment. ruff and pytest run in CI.", alt: "pip + requirements.txt (no lockfile)" },
     { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
-    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 310 tests run here.", alt: "Logic inside Streamlit pages" },
+    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 403 tests run here.", alt: "Logic inside Streamlit pages" },
     { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt.", alt: "Parsing dicts by hand" },
     { t: "SQLite + SQLModel", s: "Storage", why: "One user, local data, zero setup. Moving to Postgres is a connection-string change.", alt: "Supabase (cloud; sends CVs to a third party)" },
     { t: "OpenAI SDK → OpenRouter", s: "Model access", why: "One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of every call.", alt: "LiteLLM or LangChain (more layers between you and the API parameters)" },
-    { t: "Jev decision model", s: "Typed judgements", why: "Returns probabilities instead of text: about 0.4 s, stable and cheap. Used for the injection guard and the lab judge.", alt: "A second LLM classifier (slower, writes text that must be parsed)" },
+    { t: "Jev decision model", s: "Typed judgements", why: "Returns probabilities instead of text: about 0.4 s and cheap, with no sampling temperature. Used for the injection guard and the lab judge.", alt: "A second LLM classifier (slower, writes text that must be parsed)" },
     { t: "Jinja2 templates", s: "Prompts as files", why: "Prompts are readable documents, versioned and reviewed like code; a missing variable is an error, not empty text.", alt: "f-strings scattered through the code" },
     { t: "Docker + Makefile", s: "Local service", why: "make up builds and starts the app as a long-running service on http://localhost:8501, with data/ mounted so the database survives rebuilds; make lists every command.", alt: "Typing docker compose commands, or running streamlit by hand" },
     { t: "GitHub + worktrees + CI", s: "Delivery", why: "Every change on its own branch, tested by GitHub Actions, squash-merged when green.", alt: "Committing straight to main" },

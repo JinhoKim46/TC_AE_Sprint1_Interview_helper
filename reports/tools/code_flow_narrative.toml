@@ -49,7 +49,7 @@ assistant = "The simulator's own earlier answers."
 title = "Injection guard (Jev)"
 what = "Asks Jev one yes/no question: does this text try to instruct or manipulate the AI? Runs on every answer (only when no regex rule fired) and on every document when an application is saved."
 inputs = "state = {text} for an answer; {document_kind, chunk_0 … chunk_n} for a document, one question per chunk, all in one request."
-stored = "Nothing is stored. A blocked answer is never saved or sent; a flagged document is shown to the user, who edits it or saves anyway. The call itself is an LLMCall row (user only, no session id)."
+stored = "Nothing is stored. A blocked answer is never saved or sent on to the interviewer or the judge (only Jev sees it, to check it); a flagged document is shown to the user, who edits it or saves anyway. The call itself is an LLMCall row (user only, no session id)."
 settings_note = "Code compares the probability with the threshold below. If Jev is unreachable the guard fails open (rules only) and says so in GuardResult.method."
 config_refs = [["GuardSettings", "injection_threshold"], ["GuardSettings", "use_model_check"], ["GuardSettings", "document_chunk_chars"]]
 
@@ -102,7 +102,7 @@ payload = "GuardResult(allowed=True, method='rules')"
 title = "Injection rules, then Jev"
 lane = "guard"
 symbol = "interview_app.security.injection:InjectionGuard.check_answer"
-text = "Regex rules catch known attack shapes (ignore previous instructions, fake role markers, chat-template tokens, score manipulation, our own wrapper tags). Only if none fires does Jev get one yes/no question; code compares p with the threshold. A blocked answer is never stored or sent."
+text = "Regex rules catch known attack shapes (ignore previous instructions, fake role markers, chat-template tokens, score manipulation, our own wrapper tags). Only if none fires does Jev get one yes/no question; code compares p with the threshold. A blocked answer is never stored or sent on to the interviewer or the judge."
 payload = '''
 decide("guard", state={"text": "<the answer>"}, questions={"injection": NoulQuestion(…)})
 → {"injection": {"type": "noul", "noul": 0.02}}  → allowed (0.02 < 0.7)'''

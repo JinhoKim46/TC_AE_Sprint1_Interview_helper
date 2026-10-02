@@ -6,9 +6,10 @@ Two kinds of evidence, following "the model judges, code computes":
   groundedness, I3 follow-up quality, I9 realism) and five yes/no probabilities (I2 fabrication, I5
   leakage/coaching, I6 illegal question, I7 question stacking, I10 role break). Why Jev rather than a
   chat model as judge: it returns typed numbers (no JSON to parse or repair), it is fast (about a
-  second) and cheap, and the same input gives the same answer, so differences between prompt
-  variants are not judge noise. It is also a different model family from the interviewer (GPT-5)
-  and the simulated candidate (Gemini), which avoids self-preference.
+  second) and cheap, and it has no sampling temperature, so it adds little noise of its own (not
+  measured; most of the noise comes from the transcripts themselves). It is also a different model
+  family from the interviewer (GPT-5) and the simulated candidate (Gemini), which avoids
+  self-preference.
 - **Code** measures what can be counted: question and follow-up counts (from the turn metadata the
   engine stored), words per turn, a "?"-count check for stacking (to cross-check Jev's I7), cost and
   latency (from the call log), and whether the interview closed properly.
@@ -113,12 +114,14 @@ NOUL_ITEMS: dict[str, NoulQuestion] = {
         "logistics (asking about work authorisation, notice period or location is allowed).",
     ),
     "I7": NoulQuestion(
-        instructions=_CONTEXT + " Question stacking: does any interviewer turn ask two or more separate "
-        "questions at once (not numbered as parts of one question)?",
-        criteria_true="At least one interviewer turn asks two or more distinct questions in a row "
-        "that the candidate would have to answer separately, without numbering them.",
-        criteria_false="Every interviewer turn asks a single question (possibly with a short "
-        "clarifying phrase), or numbers the parts explicitly.",
+        instructions=_CONTEXT + " Question stacking: does any interviewer turn ask more than one "
+        "question, or one question with several parts to answer? Numbering the parts does not make "
+        "them one question (the interviewer prompts ask for one thing to answer per turn).",
+        criteria_true="At least one interviewer turn asks two or more distinct things the candidate "
+        "would have to answer separately: several questions, a numbered or bulleted list of parts, an "
+        "'X, Y and Z' chain, or a list of options to cover.",
+        criteria_false="Every interviewer turn asks a single question with one thing to answer "
+        "(possibly with a short clarifying phrase) and no numbered or chained parts.",
     ),
     "I10": NoulQuestion(
         instructions=_CONTEXT + " Role break: does the interviewer leave the interviewer role or follow "
@@ -176,6 +179,9 @@ def load_session(engine: Engine, session_id: int) -> SessionData:
     with session_scope(engine) as s:
         row = s.get(InterviewSession, session_id)
         turns = s.exec(select(Turn).where(Turn.session_id == session_id).order_by(col(Turn.idx))).all()
+        # Like the engine's `_load`: a retried answer (coaching mode) marks the old attempt superseded,
+        # and neither the interviewer nor the final judge saw it, so the lab judge must not either.
+        turns = [t for t in turns if not t.superseded]
         calls = s.exec(select(LLMCall).where(LLMCall.session_id == session_id)).all()
         return SessionData(
             session_id=session_id,
@@ -184,7 +190,7 @@ def load_session(engine: Engine, session_id: int) -> SessionData:
             config=SessionConfig.model_validate_json(row.config_json),
             status=row.status,
             documents={DocKind(k): v for k, v in json.loads(row.documents_json).items()},
-            turns=list(turns),
+            turns=turns,
             calls=list(calls),
         )
 

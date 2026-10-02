@@ -8,7 +8,7 @@ The project is feature-complete for grading one week ahead of the Friday 9 Octob
 
 - **What it is:** a local Streamlit app that rehearses an interview for **one specific job application**. The user uploads a job description and CV (cover letter optional); an LLM interviewer grounded in those documents runs a realistic multi-turn interview; an LLM judge then scores the transcript against a weighted rubric and writes evidence-backed feedback.
 - **Status against the grading scheme:** all five mandatory requirements (R1–R5) met; 13 optional tasks delivered (E3, E4, E7, E8, M1, M2, M3, M6, M7, M9, H1, H4, H5) against a bonus threshold of 2 medium and 1 hard.
-- **Delivery:** 18 pull requests merged through CI, 248 automated tests, no open branches except the deliberately parked MFA work.
+- **Delivery:** 33 pull requests merged through CI, 403 automated tests (no network), no open branches; the MFA work is parked in a closed PR (#4).
 - **Evidence:** live runs on real models show about 25 s to start an interview, about 3 s per interviewer turn, about $0.015 per interview and $0.03 per report. A 15-session prompt comparison cost $0.52.
 - **Honest caveats:** judge scores vary by several points between runs; the prompt comparison is small (one session per persona) and cannot separate the three best prompts; question stacking is reduced, not eliminated.
 
@@ -43,7 +43,7 @@ Scope was set in two passes: a broad design from the owner's brainstorm, then a 
 | Security guards (limits, injection detection, spotlighting) | Delivered | Mandatory R5; E3 |
 | Rubric-based feedback report with LLM-as-a-judge | Delivered | Core concept; M2, H5 |
 | Settings page: model picker, all model settings, cost, developer separation | Delivered | M1, M3, M7, M9, H4 |
-| Login with MFA (password + authenticator app) | Parked, specified as tests (draft PR #4) | Not graded; local single-user app |
+| Login with MFA (password + authenticator app) | Parked, specified as tests (PR #4, closed unmerged) | Not graded; local single-user app |
 | History, progress dashboard | Deferred | Not graded; valuable for long-term use |
 | Live per-answer scoring (Jev) and Coaching mode | Deferred | Not graded; Jev already used for the guard and the lab judge |
 | Interviewer avatars (image generation, M8) | Deferred | Bonus already exceeded |
@@ -60,7 +60,7 @@ The app has three layers: a thin Streamlit UI, a Python core that holds all logi
 
 **How a session flows.** The Applications page turns PDFs or pasted text into clean documents, flags anything that looks like an instruction to an AI, and stores one copy per application. Starting an interview snapshots those documents, makes a plan (for P4), and asks for the opening turn. Each answer passes the length and injection guards before the engine builds the messages; code counts questions and follow-ups and decides the phase, and the model writes the next turn as validated JSON. When the interview ends, code splits the transcript into exchanges and computes metrics, one judge call scores it with cited evidence, and code turns the scores into the report using the weights in `rubric.json`.
 
-**Why this shape.** The core can be tested without a browser, so most of the 248 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
+**Why this shape.** The core can be tested without a browser, so most of the 403 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
 
 ## Technology stack
 
@@ -74,7 +74,7 @@ The stack is deliberately small: one language, one UI library, one database file
 | Data models and validation | pydantic, pydantic-settings | Every model response and every setting is validated against a typed schema |
 | Storage | SQLite via SQLModel | Single user, local data; moving to Postgres later is a connection-string change |
 | Model access | OpenAI Python SDK pointed at OpenRouter | One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of each call |
-| Decision model | Jev (`typesafe/jev-1.13`) via the OpenRouter Decisions API | Returns probabilities instead of text: fast (~0.4 s), stable and cheap; used where a typed yes/no or score is enough |
+| Decision model | Jev (`typesafe/jev-1.13`) via the OpenRouter Decisions API | Returns probabilities instead of text: fast (~0.4 s) and cheap, with no sampling temperature; used where a typed yes/no or score is enough |
 | Prompt templates | Jinja2 files in `prompts/` | Prompts are readable documents, versioned and reviewed like code |
 | Document ingest | pypdf | Extracts PDF text; the user corrects it before saving |
 | Delivery | GitHub, git worktrees, pull requests, GitHub Actions CI | Every change reviewed and tested before it reaches `main` |
@@ -98,7 +98,7 @@ One principle runs through every decision below: **the model judges, code comput
 | Decision | Alternatives considered | Rationale | Consequence |
 | --- | --- | --- | --- |
 | Grading criteria and core flow first; extras after the review | Build everything before Friday | The extras are not graded; each one adds explanation burden at the review | Graded scope finished on day one; MFA, voice and dashboard deferred |
-| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 248 tests, most of them on pure functions |
+| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 403 tests, most of them on pure functions |
 | One OpenAI-compatible gateway for all chat models | LiteLLM; LangChain | Fewest moving parts; raw API parameters stay visible for the review | Switching provider = a base URL and a key; every call logged with tokens, cost and latency |
 | Each of the five prompts = the zero-shot baseline plus exactly one technique | Five independently written prompts | A comparison then isolates what each technique adds | Clean R4 story; only P4 receives the separately generated plan |
 | Structured JSON for every interviewer turn, no streaming | Stream plain text | The app needs stage, question id and end-of-interview metadata reliably | 2–5 s spinner per turn instead of streamed words |
@@ -108,7 +108,7 @@ One principle runs through every decision below: **the model judges, code comput
 | Injection guard = regex rules, then Jev; documents flagged, answers blocked | LLM classifier only | Rules are free and explainable; Jev catches paraphrases in ~0.4 s | Reworded attack blocked at p = 0.99 in a live test; benign "system prompt" answer passed at p = 0.02 |
 | One judge call per session, from a different model family | One call per exchange; same model as the interviewer | ~50 s instead of minutes; avoids self-preference bias | Score variance between runs remains (see Risks) |
 | Judge must quote the candidate; code verifies the quote | Trust cited turn ids | A real run credited CV facts never said in the interview | Requirement credit and strengths are now grounded in the transcript |
-| Local SQLite, single local user, MFA parked | Supabase; full login now | Data stays on the owner's machine; login is not graded | `user_id` kept on every table, so accounts can be added without migration |
+| Local SQLite, single local user, MFA parked | Supabase; full login now | Data stays on the owner's machine; login is not graded | `user_id` kept on every owned table (application, interview and history queries filter on it), so accounts can be added without migration |
 | Public repository with a privacy-first `.gitignore` | Private repository | Reviewer access without extra setup | Real applications and design screenshots never committed; a fictional sample application ships instead |
 
 ## Mapping to the grading scheme
@@ -164,7 +164,7 @@ Not attempted, by choice: E1, E2, E5, E6 (partly covered by the rubric), M4, M5 
 
 The project was run like a small engineering team: every change went through its own branch, a pull request and automated checks before it reached `main`.
 
-**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format and the unit tests; the PR is squash-merged only when that is green, then the branch and worktree are removed. 18 PRs were merged this way; one (MFA) is parked as a draft.
+**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format and the unit tests; the PR is squash-merged only when that is green, then the branch and worktree are removed. 33 PRs were merged this way; one (MFA, #4) was closed unmerged and is kept for reference.
 
 **Parallel work.** Independent modules were built by sub-agents in separate worktrees while the interview engine and evaluation, the parts the owner must explain, were built in the main line. Every sub-agent PR was reviewed, rebased and merged by the lead; two real bugs were caught in review (pricing retried the network on every lookup when offline; UI tests leaked a cached database between tests).
 
@@ -185,9 +185,9 @@ The app was measured on real models, not only unit-tested, and the measurements 
 
 ![Interviewer realism by prompt variant](img/prompt-realism.png)
 
-*Source: `lab/compare_prompts.py`, first run, 2026-10-02 · 5 prompts × 3 personas × 1 session.*
+*Source: `lab/compare_prompts.py`, first run, 2026-10-02 · 5 prompts × 3 personas × 1 session · prompts as of PR #16; later prompt edits (PRs #17, #28, #33) were not re-run, so the figures are indicative (see `docs/05-prompt-comparison.md`).*
 
-Zero-shot is clearly the least realistic; P2, P4 and P5 cannot be separated at this sample size. All five passed the safety gate: no fabrication, coaching, illegal questions or role breaks. P4 stays the default for its structure (guideline + requirement plan), P2 is the cheaper alternative. A second run did not reproduce P4's apparently adaptive follow-ups, so that early claim was withdrawn.
+Zero-shot scored lowest on realism (3.69 vs 3.96–4.07, one session per persona, so a lead rather than a proven gap); P2, P4 and P5 cannot be separated at this sample size. All five passed the safety gate: no fabrication, coaching, illegal questions or role breaks. P4 stays the default for its structure (guideline + requirement plan), P2 is the cheaper alternative. A second run did not reproduce P4's apparently adaptive follow-ups, so that early claim was withdrawn.
 
 **Live operating figures** (gpt-5-mini interviewer, sample application):
 
@@ -204,7 +204,7 @@ Zero-shot is clearly the least realistic; P2, P4 and P5 cannot be separated at t
 
 1. **Slow start.** The planning call took 36 s at medium reasoning effort; at low it took 21 s for the same plan structure at half the cost. Planner moved to low.
 2. **Judge credited the CV, not the interview.** On a real transcript the judge marked requirements as "convincingly demonstrated" that were never discussed. Fix: the judge must quote the candidate, and code checks the quote against the cited turns.
-3. **Question stacking.** Every prompt packed several sub-questions into a turn. A sharper shared rule made turns 20–28% shorter; stacking still occurs at least once per session.
+3. **Question stacking.** Every prompt packed several sub-questions into a turn. A sharper shared rule made turns 18–28% shorter (P2 −28%, P4 −18%); stacking still occurs at least once per session.
 4. **Reasoning effort (E8).** Medium instead of low doubled turn latency (2.9 s → 6.0 s) and cost about 50% more with no quality gain, so the interviewer runs at low.
 
 ## Risks, limitations and open issues
@@ -215,12 +215,12 @@ None of the open issues blocks the review; two (judge variance and the small eva
 | --- | --- | --- | --- |
 | Judge score variance: the same transcript scored 56.6 and 71.5 on two runs | High for trust in the score; low for the written feedback | Report states that scores vary; evidence and quotes are verified in code | Median of 3 judge runs (as `rubric.json` suggests), about 3× cost |
 | Small evaluation sample (1 session per persona, 1 application) | P2 / P4 / P5 cannot be ranked | Results doc states the limitation; conclusions limited to what the data supports | At least 3 sessions per persona, more applications, a few human-rated transcripts |
-| Question stacking still occurs | Less realistic interviews | Shared rule tightened; turns 20–28% shorter | Measure stacking per turn, not per session; consider a code-level check |
+| Question stacking still occurs | Less realistic interviews | Shared rule tightened; turns 18–28% shorter | Measure stacking per turn, not per session; consider a code-level check |
 | Partial rubric: red-flag checks (N-items) and logistics (S5) not judged | Overall score omits some penalties | Missing weight redistributed transparently | Add N-items as Jev yes/no checks |
-| Latency: about 25 s to start, about 50 s for a report | Waiting at two moments | Spinners state the expected wait | Stream the report; cache plans per application |
+| Latency: about 25 s to start, about a minute for a report | Waiting at two moments | Spinners state the expected wait | Stream the report; cache plans per application |
 | Old CV-derived examples remain in git history of the public repo | Minor privacy exposure | Removed from all current files | Owner decision: rewrite history (force-push) or accept |
 | `openai/gpt-5` blocked by the account guardrail | The brief's high-capability option unavailable | gpt-5-mini is the recommended default | Optional: allow it in OpenRouter settings |
-| Single local user, no login | Not suitable for sharing | Data stays on the owner's machine | Finish MFA (draft PR #4, behaviour already specified as tests) |
+| Single local user, no login | Not suitable for sharing | Data stays on the owner's machine | Finish MFA (PR #4, closed unmerged; behaviour already specified as tests) |
 
 ## Review preparation
 
@@ -272,5 +272,5 @@ The next step is not more features: it is for the owner to use the app end to en
 2. Live per-answer scoring with Jev and a Coaching mode (tip after each answer, retry)
 3. A larger evaluation set to calibrate the judge and separate P2, P4 and P5
 4. Voice: speech-to-text answers and spoken questions
-5. Login with MFA (draft PR #4) if the app is ever shared
+5. Login with MFA (from closed PR #4) if the app is ever shared
 6. Interviewer avatars and JD import from URL, if still wanted

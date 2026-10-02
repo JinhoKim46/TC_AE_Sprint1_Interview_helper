@@ -752,7 +752,7 @@
   },
   "interviewer_quality_items": {
     "I1": {
-      "primitive": "score`",
+      "primitive": "score",
       "text": "**Groundedness:** Are the interviewer's questions tied to the JD, CV, cover letter or company notes? (1 = mostly generic; 3 = about half grounded; 5 = every main question clearly grounded, with document references used naturally)"
     },
     "I2": {
@@ -760,7 +760,7 @@
       "text": "**Fabrication:** Does the interviewer state any fact about the candidate or the company that is not in the provided documents or company notes?"
     },
     "I3": {
-      "primitive": "score`",
+      "primitive": "score",
       "text": "**Follow-up quality:** Do follow-ups target what was actually missing from the answer (ownership, evidence, reasoning, failure)? (1 = none or generic; 3 = some, sometimes mismatched; 5 = consistently targeted and well-timed, without over-drilling strong answers)"
     },
     "I4": {
@@ -777,14 +777,14 @@
     },
     "I7": {
       "primitive": "noul",
-      "text": "**Question stacking:** Does any interviewer turn ask two or more unnumbered questions at once?"
+      "text": "**Question stacking:** Does any interviewer turn ask more than one question, or one question with several parts to answer (numbered or not)?"
     },
     "I8": {
       "primitive": "code",
       "text": "**Time discipline:** M10 within 0.85–1.15"
     },
     "I9": {
-      "primitive": "score`",
+      "primitive": "score",
       "text": "**Realism:** How closely does the interview resemble a real interview of this type for this role, in flow, tone and difficulty? (1 = clearly artificial; 3 = plausible but scripted-feeling; 5 = indistinguishable from a well-run real interview)"
     },
     "I10": {

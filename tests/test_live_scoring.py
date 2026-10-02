@@ -25,8 +25,6 @@ VAGUE = "I usually try to optimise things when they are slow. I'm good at making
 
 def test_strong_answer_scores_higher_than_vague_on_specificity():
     settings = Settings()
-    if not settings.openrouter_api_key.get_secret_value():
-        pytest.skip("OPENROUTER_API_KEY not set")
     records: list[CallRecord] = []
     decider = DecisionClient(settings, recorder=records.append)
     rubric = load_rubric(settings.rubric_path)

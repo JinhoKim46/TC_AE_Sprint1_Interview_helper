@@ -2,7 +2,9 @@
 
 Which of the five interviewer system prompts works best? This page is the evidence: how the five were compared, the results, the winner, and what the comparison can and cannot tell us.
 
-Run date: 2026-10-02. Code: `src/interview_app/lab/` (simulator, runner, judge) and `lab/compare_prompts.py` / `lab/sweep_setting.py` (CLIs). Raw per-session CSVs stay local in `lab/results/` (gitignored).
+Run date: 2026-10-02. Code: `src/interview_app/lab/` (simulator, runner, judge) and `lab/compare_prompts.py` / `lab/sweep_setting.py` (CLIs). Per-session CSVs go to `lab/results/` and are committed from now on (metrics only, no transcript text). The CSVs of the runs below were not kept (the folder was gitignored at the time, so they never reached the repo); the tables on this page are the record of those runs.
+
+> **Code version of these numbers.** §3–§7 were produced with the prompts as merged in PR #16 (commit `3fba3f4`); the re-run at the end used PR #17 (`ab4b666`). The prompts changed again afterwards and the lab was **not** re-run: PR #28 removed the last places that allowed numbered multi-part questions (P5's self-critique checklist and the guideline section P4 quotes), PR #33 wraps P4's plan as data, and PR #26 added the focused-practice block (off in these runs). PR #25 only unwrapped lines. Read the numbers as indicative of the current prompts, not as a measurement of them.
 
 ## 1. The five variants (what is compared)
 
@@ -42,7 +44,7 @@ Three personas, because a good interviewer should treat them differently: move o
 
 - *Typed answers*: a 1–5 score with probabilities, or a yes-probability. No JSON to parse or repair.
 - *Fast and cheap*: about 0.4 s and $0.0003 for all eight items of one transcript in a single request.
-- *Stable*: the same transcript gets the same answer, so differences between variants are not judge noise.
+- *Repeatable by design*: there is no sampling temperature, so Jev is meant to give the same answer for the same transcript. This was not measured here (no transcript was judged twice), and it would only remove judge noise: the bigger source of noise is that each variant produced different transcripts, and at one session per persona that session-to-session spread is not measured either (the re-run at the end gives a first idea of its size).
 - *A third model family* (neither GPT nor Gemini), which avoids self-preference bias.
 
 **What is measured** (`src/interview_app/lab/judge.py`):
@@ -101,26 +103,26 @@ Spend: the 15-session run cost **$0.386** in total (interviewer $0.184, simulato
 
 It is a base-prompt problem, not a variant problem: the "one question per turn" rule exists, but the model reads "one question mark" as compliance. Not a gate item, but it hurts realism and makes answers harder.
 
-**P1 (zero-shot) is the least realistic** (I9 3.69). With the weak candidate it asked for the same numbers three turns in a row, each time longer ("You keep referring to int8 quantisation but haven't given specifics…"); real interviewers move on sooner. The other techniques all lift realism by about 0.3–0.4.
+**P1 (zero-shot) had the lowest realism score** (I9 3.69 vs 3.96–4.07), mostly from its weak-persona session (3.38). With the weak candidate it asked for the same numbers three turns in a row, each time longer ("You keep referring to int8 quantisation but haven't given specifics…"); real interviewers move on sooner. The other techniques scored 0.3–0.4 higher, but that is one session per persona, so it is a lead worth re-testing, not an established gap.
 
-**P4 calibrates follow-ups to the answer.** It used 2 follow-ups with the strong and weak candidates and 6 with the evasive one; the other variants use 5–8 regardless of the candidate. Not over-drilling a strong answer is what the guideline asks for. The flip side: in the P4 / weak session the simulator gave fairly specific answers ("I was the lead engineer"), and P4 took them at face value and moved on, where P1–P3 kept probing. P4 also had the borderline fabrication case: asked about onboarding in the candidate-questions stage, it described "a codebase walkthrough… pair with an engineer on the inference stack… safety and ops onboarding", none of which is in the documents, before adding "I would need to check with People" (Jev I2 p = 0.43, just under the line).
+**~~P4 calibrates follow-ups to the answer.~~ Withdrawn.** In this run P4 used 2 follow-ups with the strong and weak candidates and 6 with the evasive one, while the other variants used 5–10. That looked like calibration, but the re-run at the end (after PR #17) gave 4 / 4 / 4, so at one session per persona it was not robust and is not a finding. What the run did show: in the P4 / weak session the simulator gave fairly specific answers ("I was the lead engineer"), and P4 took them at face value and moved on, where P1–P3 kept probing. P4 also had the borderline fabrication case: asked about onboarding in the candidate-questions stage, it described "a codebase walkthrough… pair with an engineer on the inference stack… safety and ops onboarding", none of which is in the documents, before adding "I would need to check with People" (Jev I2 p = 0.43, just under the line).
 
 **P5 (self-critique) has the best follow-up score but is the slowest** (5.2 s per turn, because it writes a draft and a critique first) and the most expensive per session.
 
-**P3 (CoT notes)** drilled the weak candidate hardest (10 follow-ups: the 2-per-topic cap on every topic) without a matching gain in I3 or I9, at 1.7× P1's cost.
+**P3 (CoT notes)** drilled the weak candidate hardest (10 turns marked as follow-ups) without a matching gain in I3 or I9, at 1.7× P1's cost. Ten is more than the follow-up cap should allow (standard difficulty: `max_followups` = 2 per topic, and at that code version the last main question got none). The cap was an instruction in the app's control message, not a hard limit in code, so this count also shows the model did not always obey it (or labelled turns as follow-ups outside a topic).
 
 ## 5. Winner and recommendation
 
 **Winner: P4 (role-rich persona + plan), narrowly**, and it stays the app default:
 
-- Highest realism (I9 4.07) and the most even realism across the three personas (4.02–4.13).
-- The only variant whose follow-up count depends on the answer quality (2 / 2 / 6), as the guideline asks.
+- Highest realism (I9 4.07, level with P2's 4.06) and the most even realism across the three personas (4.02–4.13).
 - Its plan carries requirement ids, which is what makes coverage (I4) measurable later; no other variant has that.
-- Cost $0.016 per 4-question session, plus an ~18 s planning call before the first question.
+- Cost $0.016 per 4-question session, plus a ~21 s planning call before the first question (see §7).
+- (The first version of this page also credited P4 with follow-ups calibrated to the answer; that was withdrawn after the re-run, see §4.)
 
-**Runner-up / budget option: P2 (few-shot).** Almost the same realism (4.06) at 60% of P4's cost and with no planning wait. If the planning delay or cost matters more than calibrated follow-ups, P2 is the choice.
+**Runner-up / budget option: P2 (few-shot).** Almost the same realism (4.06) at 60% of P4's cost and with no planning wait. If the planning delay or cost matters more than the plan's structure, P2 is the choice.
 
-The margins between P2, P4 and P5 (I9 4.02–4.07) are much smaller than the session-to-session spread, so this is "P4 is at least as good and has structural advantages", not a statistically proven win. The clear results are: P1 is worst on realism, and question stacking needs a fix in the shared base prompt.
+The margins between P2, P4 and P5 (I9 4.02–4.07) are much smaller than the session-to-session spread, so this is "P4 is at least as good and has structural advantages", not a statistically proven win. The clearest results are: question stacking needs a fix in the shared base prompt, and P1 scored lowest on realism in this run (one session per persona, so worth re-testing).
 
 **Follow-up work** that this comparison points to:
 
@@ -173,9 +175,9 @@ Every variant stacked questions (I7 = 100%), so the shared base prompt (`_base.m
 
 What this shows, honestly:
 
-- **Turns got 20–28% shorter**, which is closer to the guideline's 1–4 sentences. That is the clear, measurable gain.
+- **Turns got 18–28% shorter** (P2 54 → 39 words, −28%; P4 60 → 49, −18%), which is closer to the guideline's 1–4 sentences. That is the clear, measurable gain.
 - **I7 did not move.** It is a session-level item ("does *any* turn stack questions?"), so a single stacked turn in a 20-turn interview still makes it "yes". It can't show a partial improvement. The next step is to measure stacking per turn.
-- **Realism and follow-up quality moved by less than run-to-run noise.** P4's adaptive follow-ups (2 / 2 / 6 in the first run) became 4 / 4 / 4 here, so that earlier finding was not robust at n = 1 per persona.
+- **Realism and follow-up quality moved by 0.1–0.3**, which one session per persona cannot tell apart from noise. P4's adaptive follow-ups (2 / 2 / 6 in the first run) became 4 / 4 / 4 here, so that earlier finding was not robust at n = 1 per persona.
 - No fabrication, coaching, illegal question or role break in either run, and the safety release gate still passes.
 
-Decision: keep the change (shorter turns, no regressions). P4 remains the default for its persona and plan-based structure, with P2 as the cheaper alternative. A larger run (≥ 3 sessions per persona) is needed before claiming differences in realism between P2, P4 and P5.
+Decision: keep the change (shorter turns, no regressions on the gate items; I1, I3 and I9 dipped slightly, within the noise of n = 1 per persona). P4 remains the default for its persona and plan-based structure, with P2 as the cheaper alternative. A larger run (≥ 3 sessions per persona) is needed before claiming differences in realism between P2, P4 and P5.

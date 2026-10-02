@@ -112,10 +112,10 @@ Field order in the JSON schema is part of the technique: a model writes JSON top
 
 What the data supports:
 
-- **Zero-shot (P1) is clearly the least realistic.** Every added technique improved realism.
+- **Zero-shot (P1) scored lowest on realism** (3.69 vs 3.96–4.07), mostly from one session (weak persona, 3.38). With one session per persona this is a lead, not a proven gap.
 - **P2, P4 and P5 are within noise of each other** with one session per persona. P4's adaptive follow-ups (2 / 2 / 6) in the first run did **not** reproduce in a second run (4 / 4 / 4).
 - **All five passed the safety release gate:** no fabrication, coaching, illegal questions or role breaks.
-- **All five packed several sub-questions into a turn.** Spelling out "one question" in the shared base prompt made turns 20–28% shorter. Stacking still happens in at least one turn per session, so it's only partly fixed.
+- **All five packed several sub-questions into a turn.** Spelling out "one question" in the shared base prompt made turns 18–28% shorter (P2 −28%, P4 −18%). Stacking still happens in at least one turn per session, so it's only partly fixed.
 
 **P4 stays the default.** It follows the full interviewer guideline and a plan of the job's requirements, which makes coverage traceable. **P2** is the cheaper alternative, at about 60% of the cost and with no planning wait. Separating P2, P4 and P5 for certain needs a larger run (at least 3 sessions per persona).
 
@@ -140,18 +140,21 @@ E8 (one setting tuned): with P4, `reasoning_effort` medium vs low doubled the la
 
 Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before it reaches a model, mapped to the OWASP Top 10 for LLM applications:
 
-- **LLM01 Prompt injection:** (1) regex rules for known patterns ("ignore previous instructions", fake role markers, chat-template tokens, score manipulation, delimiter escapes); (2) a Jev yes/no check for paraphrased attacks, with a threshold set in code; (3) **spotlighting**: all user text is wrapped in `<document>` / `<candidate_answer>` tags that it cannot close early, and the prompts say this text is data. Blocked answers are never stored or sent. Suspicious documents are flagged for the user to confirm.
+- **LLM01 Prompt injection:** (1) regex rules for known patterns ("ignore previous instructions", fake role markers, chat-template tokens, score manipulation, delimiter escapes); (2) a Jev yes/no check for paraphrased attacks, with a threshold set in code; (3) **spotlighting**: all user text is wrapped in `<document>` / `<candidate_answer>` tags that it cannot close early, and the prompts say this text is data. Model-written text that came from those documents (the P4 plan, the judge's requirement list, the interviewer's turns in the judge transcript) is wrapped the same way, against second-order injection. Rules and wrapping run on a canonical form of the text (NFKC, zero-width and other format characters removed, HTML-entity forms of our tags caught), so Unicode look-alikes don't slip past them; Cyrillic homoglyphs are not covered. The checks run before the answer is stored: a blocked answer is never saved and never reaches the interviewer or the judge (the Jev check does send the answer text to Jev, via OpenRouter, to classify it). Suspicious documents are flagged for the user to confirm.
 - **LLM05 Improper output handling:** model replies, report text and the candidate's own answers are shown as plain text. The UI escapes markdown (`ui_common.safe_md`) and never enables raw HTML, so a reply can't run a script, load a tracking image (`![](https://…)`), add a link or render `$…$` as LaTeX.
-- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend per session. At a limit, code forces the interview to close. Document length is checked before the (paid) injection check runs.
-- **Grounding:** the judge must quote the candidate for requirement credit and strengths, and code verifies the quote against the transcript.
+- **LLM10 Unbounded consumption:** limits on upload size, PDF pages, document and answer length, turns and spend per session. At a limit, code forces the interview to close. Document length is checked before the (paid) injection check runs, and a document too long to check in one Jev request is flagged instead. PDF reading is bounded against decompression bombs (5 MB per stream, a text cap and a 20 s timeout).
+- **Grounding:** the judge must quote the candidate for requirement credit and strengths, and code verifies the quote against the cited turns (at least 3 words, matched in order). An unverified positive requirement rating scores 0.
+- **Local only:** Streamlit listens on `127.0.0.1`; the SQLite file is owner-only (mode 600) and deleted rows are zeroed (`secure_delete`).
 
 ## Known limitations
 
 - **Judge variance:** a single judge run can score the same transcript several points apart (observed 56.6 vs 71.5). Reports now use the median of 3 parallel runs and show all three scores. On a real interview the runs scored 54.7, 45.0 and 45.0, a median of 45.0. That takes about 60 s and $0.10 per report; set `JUDGE_RUNS=1` in `.env` for the cheaper single run.
 - **Partial rubric:** the red-flag checks (N-items) and the logistics item (S5) are not judged yet. Their weight is redistributed, and only the "no company motivation" penalty applies.
 - **Simulated evaluation:** the prompt comparison uses a simulated candidate and a single fictional application, so the numbers are indicative, not conclusive.
-- **Latency:** starting an interview takes about 25 s (planning call), and a report about a minute.
-- **Single user, local only:** MFA is designed and specified (draft PR #4) but not built.
+- **Latency:** starting an interview takes about 25 s (a ~21 s planning call, then the opening turn), and a report about a minute.
+- **Single user, local only:** MFA is designed and specified as tests (PR #4, closed without merging) but not built. Owned rows carry a `user_id` and the application, interview and history queries filter on it, but with one built-in user that separation is untested in real use.
+- **One interview at a time:** a second interview can't start while one is active; a start that hangs in "preparing" is marked failed after `limits.start_timeout_minutes` (5 min).
+- **Lab numbers predate later prompt edits:** the prompt comparison ran on the prompts of PRs #16/#17; later PRs changed them again without a re-run (see `docs/05`).
 
 ## Next improvements
 

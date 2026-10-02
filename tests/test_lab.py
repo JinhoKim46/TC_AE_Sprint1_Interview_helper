@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from interview_app.config import Limits, Settings
-from interview_app.db import LLMCall, Turn
+from interview_app.db import LLMCall, Turn, session_scope
 from interview_app.demo import load_sample_application
 from interview_app.ingest import DocKind
 from interview_app.interview import engine as eng
@@ -235,6 +235,27 @@ def test_judge_sends_one_request_with_all_items_and_parses_answers():
     assert result.scores == {"I1": 4.5, "I3": 4.5, "I9": 4.5}
     assert result.is_yes("I7") and not result.is_yes("I2")
     assert result.cost_usd == pytest.approx(0.0002)
+
+
+def test_load_session_leaves_out_superseded_attempts(lab):
+    lab.sdk.interviewer = [
+        turn_json("opening", "OPEN-01", "Hi, tell me about yourself."),
+        turn_json("candidate_questions", "CQ-01", "Any questions for me?"),
+        turn_json("close", "CLOSE-01", "Thanks, bye.", final=True),
+    ]
+    sid = run_session(lab.deps, lab.user_id, lab.app_id, P1, CandidatePersona.STRONG)
+    # A retried answer in coaching mode leaves the old attempt in the table, marked superseded.
+    with session_scope(lab.deps.engine) as s:
+        s.add(
+            Turn(
+                session_id=sid, user_id=lab.user_id, idx=99, speaker="candidate", text="OLD", superseded=True
+            )
+        )
+
+    data = jd.load_session(lab.deps.engine, sid)
+    assert "OLD" not in [t.text for t in data.turns]
+    assert all(entry["text"] != "OLD" for entry in jd.judge_state(data)["transcript"])
+    assert len(data.turns) == 5
 
 
 def test_code_metrics_on_a_hand_made_transcript():

@@ -13,8 +13,6 @@ pytestmark = pytest.mark.live
 @pytest.fixture
 def guard_and_records():
     settings = Settings()
-    if not settings.openrouter_api_key.get_secret_value():
-        pytest.skip("OPENROUTER_API_KEY not set")
     records: list[CallRecord] = []
     return InjectionGuard(settings, DecisionClient(settings, recorder=records.append)), records
 
