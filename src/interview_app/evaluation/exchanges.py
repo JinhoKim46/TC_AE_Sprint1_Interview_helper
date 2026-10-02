@@ -4,9 +4,15 @@ Scoring happens per exchange rather than per turn, because a follow-up ("How did
 only makes sense together with the answer it probes.
 """
 
-from dataclasses import dataclass, field
+from __future__ import annotations
 
-from interview_app.interview.engine import TurnView
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Only for type hints: the engine imports this module at runtime, so a runtime import back would be
+    # circular. Nothing here needs the class itself, only its fields.
+    from interview_app.interview.engine import TurnView
 
 KNOWN_PREFIXES = {"OPEN", "MOT", "EXP", "TECH", "CASE", "RES", "BEH", "LOG", "CQ", "CLOSE"}
 

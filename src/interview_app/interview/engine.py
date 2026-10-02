@@ -26,6 +26,7 @@ from sqlmodel import col, func, select
 from interview_app.applications import get_application
 from interview_app.config import Settings
 from interview_app.db import InterviewSession, LLMCall, Turn, session_scope, utcnow
+from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.live import LiveFeedback, live_score
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.ingest import DocKind
@@ -495,10 +496,6 @@ def _live_feedback(
     decider = _session_decider(deps, row.user_id, row.id)
     if decider is None or not deps.settings.features.live_scoring:
         return None
-    # Imported here, not at the top: exchanges.py imports this module (for TurnView), so a top-level
-    # import would be circular.
-    from interview_app.evaluation.exchanges import build_exchanges
-
     exchanges = build_exchanges([_turn_view(t) for t in turns])
     if not exchanges:
         return None
