@@ -11,11 +11,12 @@ Limits come from `config.Limits` so they can be changed in `.env` without touchi
 import io
 import logging
 import re
+import threading
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
-from pypdf import PdfReader
-from pypdf.errors import PdfReadError
+from pypdf import PdfReader, apply_configuration
+from pypdf.errors import LimitReachedError, PdfReadError
 
 from interview_app.config import Limits
 
@@ -63,10 +64,24 @@ MIN_CHARS_PER_PAGE = 20
 MIN_DOCUMENT_CHARS = 200
 
 
-def extract_pdf_text(data: bytes, limits: Limits) -> ExtractResult:
+# A PDF is a small file that can describe a huge amount of work: one 80 KB page with a compressed
+# 33 MB content stream took 26 s and 1.5 GB of memory to read (a "decompression bomb"). Three bounds:
+# 1. Decompressed streams are capped by pypdf itself. A real CV page's text stream is tens of KB, so
+#    5 MB is generous; a bigger stream raises LimitReachedError instead of being inflated.
+PDF_MAX_STREAM_BYTES = 5_000_000
+# 2. Reading stops once the text is clearly over the document limit; the rest can't be used anyway.
+#    The margin allows for the whitespace `clean_text` removes later.
+PDF_TEXT_MARGIN = 2
+# 3. The whole read runs in a worker thread and we stop waiting after this many seconds. Python
+#    can't kill a thread, so a stuck read finishes in the background; the bounds above keep that short.
+PDF_EXTRACT_TIMEOUT_S = 20.0
+
+
+def extract_pdf_text(data: bytes, limits: Limits, timeout_s: float = PDF_EXTRACT_TIMEOUT_S) -> ExtractResult:
     """Extract the text layer of a PDF, page by page.
 
-    Size is checked *before* parsing so a huge file never reaches the PDF parser.
+    Size is checked *before* parsing so a huge file never reaches the PDF parser. `timeout_s` is a
+    parameter so tests can use a tiny one.
     """
     max_bytes = int(limits.max_upload_mb * 1024 * 1024)
     if len(data) > max_bytes:
@@ -80,6 +95,49 @@ def extract_pdf_text(data: bytes, limits: Limits) -> ExtractResult:
     if not data.lstrip()[:5].startswith(b"%PDF-"):
         raise IngestError("This file is not a PDF. Upload a PDF or paste the text instead.")
 
+    outcome: dict[str, object] = {}
+
+    def work() -> None:
+        try:
+            outcome["result"] = _read_pdf(data, limits)
+        except BaseException as exc:  # handed to the caller's thread, which re-raises it
+            outcome["error"] = exc
+
+    # daemon=True: a read still running when the app exits must not keep the process alive.
+    worker = threading.Thread(target=work, name="pdf-extract", daemon=True)
+    worker.start()
+    worker.join(timeout_s)
+    if worker.is_alive():
+        log.warning("PDF extraction timed out after %.0f s", timeout_s)
+        raise IngestError(
+            "This PDF takes too long to read (it may be damaged or unusually complex). "
+            "Paste the text instead."
+        )
+    if "error" in outcome:
+        raise outcome["error"]  # type: ignore[misc]
+    return outcome["result"]  # type: ignore[return-value]
+
+
+def _read_pdf(data: bytes, limits: Limits) -> ExtractResult:
+    # pypdf keeps its limits in a ContextVar, and a new thread starts with the defaults, so they are
+    # applied here, inside the worker thread.
+    with apply_configuration(
+        zlib_maximum_output_length=PDF_MAX_STREAM_BYTES,
+        lzw_maximum_output_length=PDF_MAX_STREAM_BYTES,
+        run_length_maximum_output_length=PDF_MAX_STREAM_BYTES,
+        array_based_stream_maximum_output_length=PDF_MAX_STREAM_BYTES,
+        maximum_declared_stream_length=PDF_MAX_STREAM_BYTES,
+    ):
+        try:
+            return _extract_pages(data, limits)
+        except LimitReachedError as exc:
+            log.warning("PDF hit a size limit: %s", exc)
+            raise IngestError(
+                "This PDF contains a part that is too large to read safely. Paste the text instead."
+            ) from exc
+
+
+def _extract_pages(data: bytes, limits: Limits) -> ExtractResult:
     try:
         reader = PdfReader(io.BytesIO(data))
         if reader.is_encrypted:
@@ -100,17 +158,24 @@ def extract_pdf_text(data: bytes, limits: Limits) -> ExtractResult:
             "Upload only the relevant pages or paste the text instead."
         )
 
+    max_chars = limits.max_document_chars * PDF_TEXT_MARGIN
     texts: list[str] = []
     empty_pages: list[int] = []
+    total_chars = 0
     for number, page in enumerate(pages, start=1):
+        if total_chars > max_chars:
+            break
         try:
             page_text = page.extract_text() or ""
+        except LimitReachedError:
+            raise  # a bomb, not an odd page: refuse the whole file
         except Exception as exc:  # pypdf raises many types on odd pages; one bad page shouldn't sink the file
             log.warning("Text extraction failed on page %d: %s", number, exc)
             page_text = ""
         if len(page_text.strip()) < MIN_CHARS_PER_PAGE:
             empty_pages.append(number)
         texts.append(page_text)
+        total_chars += len(page_text)
 
     warnings: list[str] = []
     if empty_pages:
@@ -118,6 +183,11 @@ def extract_pdf_text(data: bytes, limits: Limits) -> ExtractResult:
         warnings.append(
             f"Little or no text found on page(s) {listed}. They may be scanned images; "
             "if text is missing, paste it instead."
+        )
+    if len(texts) < page_count:
+        warnings.append(
+            f"Only the first {len(texts)} of {page_count} pages were read: the text is already over the "
+            f"{limits.max_document_chars:,}-character limit."
         )
     # Pages are joined by a blank line so paragraphs from different pages don't run together.
     return ExtractResult(text="\n\n".join(texts), pages=page_count, warnings=warnings)

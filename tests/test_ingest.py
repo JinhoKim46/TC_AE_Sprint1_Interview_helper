@@ -1,8 +1,20 @@
+import io
+import time
+
 import pytest
 from fpdf import FPDF
+from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from interview_app.config import Limits
-from interview_app.ingest import DocKind, IngestError, clean_text, extract_pdf_text, validate_document
+from interview_app.ingest import (
+    PDF_MAX_STREAM_BYTES,
+    DocKind,
+    IngestError,
+    clean_text,
+    extract_pdf_text,
+    validate_document,
+)
 
 LIMITS = Limits()
 
@@ -17,6 +29,24 @@ def make_pdf(pages: list[str]) -> bytes:
         if text:
             pdf.multi_cell(0, 10, text)
     return bytes(pdf.output())
+
+
+def make_bomb_pdf(stream_bytes: int) -> bytes:
+    """A one-page PDF whose compressed content stream inflates to `stream_bytes` of text operators.
+    Repetitive text compresses ~400:1, so a tiny file describes a lot of work (a decompression bomb)."""
+    writer = PdfWriter()
+    page = writer.add_blank_page(612, 792)
+    font = {NameObject("/Type"): NameObject("/Font"), NameObject("/Subtype"): NameObject("/Type1")}
+    font[NameObject("/BaseFont")] = NameObject("/Helvetica")
+    fonts = DictionaryObject({NameObject("/F1"): DictionaryObject(font)})
+    page[NameObject("/Resources")] = DictionaryObject({NameObject("/Font"): fonts})
+    unit = b"BT /F1 12 Tf 10 10 Td (A) Tj ET\n"
+    stream = DecodedStreamObject()
+    stream.set_data(unit * (stream_bytes // len(unit)))
+    page.replace_contents(stream.flate_encode(level=1))
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
 
 
 # --- extract_pdf_text ---------------------------------------------------------------------------
@@ -131,3 +161,33 @@ def test_validate_warns_on_very_short_text():
 
 def test_validate_accepts_a_normal_document():
     assert validate_document(DocKind.JD, "A reasonable job description. " * 20, LIMITS) == []
+
+
+# --- PDF bombs (security audit) -------------------------------------------------------------------
+
+
+def test_decompression_bomb_is_refused_quickly():
+    # Before the fix an 80 KB PDF inflating to 33 MB took 26 s and 1.5 GB to read.
+    data = make_bomb_pdf(PDF_MAX_STREAM_BYTES + 1_000_000)
+    assert len(data) < 100_000
+    start = time.perf_counter()
+    with pytest.raises(IngestError, match="too large to read safely"):
+        extract_pdf_text(data, LIMITS)
+    assert time.perf_counter() - start < 2.0
+
+
+def test_slow_pdf_times_out_with_a_friendly_message():
+    data = make_bomb_pdf(1_500_000)  # under the stream cap, but takes ~1 s to read
+    start = time.perf_counter()
+    with pytest.raises(IngestError, match="takes too long to read"):
+        extract_pdf_text(data, LIMITS, timeout_s=0.05)
+    assert time.perf_counter() - start < 0.5
+
+
+def test_reading_stops_once_the_text_is_over_the_document_limit():
+    page = "Experienced engineer who built and shipped data pipelines. " * 6  # ~360 characters
+    limits = Limits(max_document_chars=300)  # stop after the page that passes 2 x 300 characters
+    result = extract_pdf_text(make_pdf([page] * 10), limits)
+    assert result.pages == 10
+    assert result.text.count("Experienced engineer") < 6 * 10
+    assert any("Only the first 2 of 10 pages" in w for w in result.warnings)
