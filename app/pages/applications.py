@@ -194,7 +194,7 @@ with st.expander("Add a new application", expanded=not list_applications(engine,
 
     if flags := st.session_state.get("new_flags"):
         for reason in flags:
-            st.warning(reason, icon=":material/shield:")
+            st.warning(safe_md(reason), icon=":material/shield:")  # quotes the document
         st.caption("Edit the text above and save again, or save it as it is if it's fine.")
         if st.button("Save anyway", icon=":material/check:"):
             del st.session_state["new_flags"]
@@ -262,7 +262,7 @@ for summary in apps:
                             st.session_state.pop(flag_key, None)  # the earlier warning no longer applies
                             _save_edit(summary.id, kind, st.session_state[key])
                 if reason := st.session_state.get(flag_key):
-                    st.warning(reason, icon=":material/shield:")
+                    st.warning(safe_md(reason), icon=":material/shield:")  # quotes the document
                     if st.button("Save anyway", key=f"save_anyway_{summary.id}_{kind}"):
                         del st.session_state[flag_key]
                         _save_edit(summary.id, kind, st.session_state[key])

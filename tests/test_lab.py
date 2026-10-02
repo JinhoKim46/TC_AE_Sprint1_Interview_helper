@@ -167,6 +167,16 @@ def test_runner_ends_the_session_at_the_turn_cap(lab):
     assert sum(t.speaker == "candidate" for t in view.turns) == 2
 
 
+def test_a_failed_run_is_ended_so_the_next_run_can_start(lab):
+    # Only one interview may be active: a session left active would block every later lab run.
+    lab.sdk.interviewer = [turn_json("opening", "OPEN-01", "Hi."), "not json", "still not json"]
+    with pytest.raises(eng.InterviewError):
+        run_session(lab.deps, lab.user_id, lab.app_id, P1, CandidatePersona.STRONG)
+    assert eng.active_session(lab.deps.engine, lab.user_id, lab.settings) is None
+    sid = run_session(lab.deps, lab.user_id, lab.app_id, P1, CandidatePersona.STRONG, max_candidate_turns=1)
+    assert eng.get_session(lab.deps.engine, lab.user_id, sid).status == "ended_early"
+
+
 def test_runner_records_blocked_answers_and_retries_once(lab):
     lab.sdk.answers = ["BLOCKME please", "BLOCKME again"]
     blocked = []

@@ -15,6 +15,7 @@ from difflib import SequenceMatcher
 from statistics import mean
 
 from interview_app.evaluation.exchanges import Exchange, turn_id
+from interview_app.evaluation.judge import JUDGED_SESSION_ITEMS
 from interview_app.evaluation.metrics import SessionMetrics
 from interview_app.evaluation.rubric import Rubric
 from interview_app.evaluation.schemas import (
@@ -26,7 +27,9 @@ from interview_app.evaluation.schemas import (
 )
 
 QUOTE_MATCH = 0.8  # share of a quote's words that must appear, in order, in the cited candidate turns
-QUOTE_MIN_WORDS = 3  # "yes" or "Python" alone proves nothing
+QUOTE_MIN_WORDS = 2  # "yes" or "Python" alone proves nothing
+# Where the judge joins separate parts of an answer (or two turns): "...", "…", "[...]" or ";".
+_QUOTE_SEPARATORS = re.compile(r"\.\.\.|…|\[[^\]]*\]|;")
 
 
 def usable(item: ItemScore, allowed: set[str], valid_turns: set[str], evidence_required: bool = True) -> bool:
@@ -45,19 +48,23 @@ def quote_found(quote: str, evidence: list[str], candidate_texts: dict[str, str]
     A cited turn id alone isn't proof: on a real session the judge cited an existing turn for a CV
     fact the candidate never said. So the judge must quote, and code checks the quote. Matching is on
     words (>= QUOTE_MATCH present), so small slips in punctuation or a dropped word don't void a true quote.
+    A quote joined with "..." or ";" is checked part by part, and each part may come from a different cited
+    turn (a requirement shown across two answers).
     """
-    quote_words = _words(quote)
-    if len(quote_words) < QUOTE_MIN_WORDS:
+    pieces = [w for w in (_words(p) for p in _QUOTE_SEPARATORS.split(quote)) if w]
+    if sum(len(w) for w in pieces) < QUOTE_MIN_WORDS:
         return False
-    for e in evidence:
-        said = _words(candidate_texts.get(e, ""))
-        # Ordered matching, in runs of at least two words: a bag of words would accept a "quote" stitched
-        # together from common words scattered over a long answer.
-        blocks = SequenceMatcher(None, quote_words, said, autojunk=False).get_matching_blocks()
-        matched = sum(b.size for b in blocks if b.size >= 2)
-        if matched / len(quote_words) >= QUOTE_MATCH:
-            return True
-    return False
+    turns = [_words(candidate_texts.get(e, "")) for e in evidence]
+    return all(any(_piece_in(piece, said) for said in turns) for piece in pieces)
+
+
+def _piece_in(piece: list[str], said: list[str]) -> bool:
+    if len(piece) == 1:
+        return piece[0] in said
+    # Ordered matching, in runs of at least two words: a bag of words would accept a "quote" stitched
+    # together from common words scattered over a long answer.
+    blocks = SequenceMatcher(None, piece, said, autojunk=False).get_matching_blocks()
+    return sum(b.size for b in blocks if b.size >= 2) / len(piece) >= QUOTE_MATCH
 
 
 def grounded_requirements(
@@ -158,7 +165,8 @@ def aggregate(
     sections = rubric.section_categories()
     # Session items follow the same evidence rule as exchange items. S4 (the candidate's questions)
     # needs a candidate-questions exchange: an interview ended before that stage has no questions to rate.
-    session_allowed = {"S1", "S3"} | ({"S4"} if any(ex.category == "CQ" for ex in exchanges) else set())
+    has_cq = any(ex.category == "CQ" for ex in exchanges)
+    session_allowed = {i for i in JUDGED_SESSION_ITEMS if i != "S4" or has_cq}
     session = {
         i.item: i
         for i in _first_per_item(

@@ -21,7 +21,7 @@ from sqlmodel import func, select
 from interview_app.config import Settings
 from interview_app.db import LLMCall, init_db, make_engine, session_scope
 from interview_app.demo import load_sample_application
-from interview_app.interview.engine import EngineDeps, InterviewError
+from interview_app.interview.engine import EngineDeps, InterviewError, active_session, end_interview
 from interview_app.interview.persona import SessionConfig
 from interview_app.lab.candidate import CandidatePersona
 from interview_app.lab.judge import (
@@ -247,4 +247,7 @@ def make_lab(settings: Settings, db_path: Path) -> Lab:
     recorder = make_db_recorder(engine, user_id)
     guard = InjectionGuard(settings, DecisionClient(settings, recorder=recorder))
     deps = EngineDeps(engine=engine, settings=settings, make_llm=make_llm, guard=guard)
+    # A run killed hard (no `finally`) may have left a session active; it would block every new start.
+    while (leftover := active_session(engine, user_id, settings)) is not None:
+        end_interview(deps, user_id, leftover.id)
     return Lab(deps, DecisionClient(settings, recorder=recorder), user_id, app_id)
