@@ -13,7 +13,7 @@ The setup is three files at the repo root: `Dockerfile` (the image), `compose.ya
 ## First run
 
 1. Create your settings file: `cp .env.example .env`, then set `OPENROUTER_API_KEY`. Any other setting from `src/interview_app/config.py` can go here too, e.g. `MODELS__INTERVIEWER=...`.
-2. Check your user id: `id -u` and `id -g`. If both print `1000` (the usual case on a single-user Linux machine) there is nothing to do. Otherwise add `APP_UID=<your uid>` and `APP_GID=<your gid>` to `.env` (see "Permission denied on data/" below for why).
+2. Check your user id: `id -u` and `id -g`. If both print `1000` (the usual case on a single-user Linux machine) there is nothing to do. Otherwise add `APP_UID=<your uid>` and `APP_GID=<your gid>` to `.env` (see "Permission denied on data/" below for why). On Docker Desktop (macOS, Windows) you can skip this: its file sharing presents bind-mounted files as owned by whichever user the container runs as ("fakeowner"), so the ids don't have to match.
 3. Start it: `make up` (it creates `data/` first; by hand that is `mkdir -p data && docker compose up -d --build`). The first build downloads the base image and the dependencies and takes a minute or two; later builds reuse the cached layers.
 4. Wait until it is healthy: `make status` shows `(healthy)` after about 10 to 20 seconds.
 5. Open http://localhost:8501.
@@ -30,14 +30,14 @@ Docker service:
 - `make url` (or `make open`): print http://localhost:8501.
 - `make restart`: restart the running container. It does not pick up code or `.env` changes (use `make up` for those). Same as `docker compose restart`.
 - `make down`: stop and remove the container. Your data in `data/` and the built image stay. Same as `docker compose down`.
-- `make rebuild`: rebuild the image from scratch without the build cache, then start. Use it when something looks stale or broken; for a normal update `make up` is enough.
+- `make rebuild`: rebuild the image from scratch without the build cache and with a fresh pull of the base image, then start. Use it when something looks stale or broken; for a normal update `make up` is enough.
 - `make shell`: open a shell inside the running container (as the unprivileged `app` user). Same as `docker compose exec app sh`.
-- `make backup`: copy `data/app.db` to `data/backups/app-<timestamp>.db`. Uses SQLite's backup API (via the host's `python3`), so the copy is consistent even while the app is running.
-- `make clean`: stop the app and remove its image. It never touches `data/`. Same as `docker compose down --rmi all`.
+- `make backup`: copy `data/app.db` to `data/backups/app-<timestamp>.db` (file mode 600, readable only by you). It uses SQLite's backup API, so the copy is consistent even while the app is running. When the container runs, the backup runs inside it (`docker compose exec -T app python -c ...`), so the app and the backup lock the database on the same kernel; SQLite's file locks are unreliable across the host/VM boundary of Docker Desktop and on NFS. Only when the container is stopped does it fall back to the host's `python3`.
+- `make clean`: stop the app and remove its image. It never touches `data/`. It asks for confirmation first; `make clean CONFIRM=1` skips the question (for scripts). Same as `docker compose down --rmi all`.
 
 Development without Docker:
 
-- `make run`: run the app directly with uv (`uv run streamlit run app/main.py`).
+- `make run`: run the app directly with uv (`uv run streamlit run app/main.py`). It listens on 127.0.0.1 only, set in `.streamlit/config.toml`.
 - `make test`: unit tests without network, as in CI (`uv run pytest -m "not live"`).
 - `make lint`: ruff lint and format check, as in CI.
 - `make fmt`: format the code and apply ruff's automatic fixes.
@@ -52,21 +52,23 @@ Changes to `.env` need the container to be recreated with the new environment: `
 
 ## Where the data lives
 
-Everything the app writes goes to `/app/data` inside the container, which is a bind mount of `./data` in the repo folder on the host: the SQLite database `data/app.db`, the model-price cache `data/cache/` and any uploads. Because it is on the host, it survives `restart`, `down`, `up --build` and deleting the image. The same folder is used when you run the app with `uv run`, so both ways see the same interviews.
+Everything the app writes goes to `/app/data` inside the container, which is a bind mount of `./data` in the repo folder on the host: the SQLite database `data/app.db` and the model-price cache `data/cache/`. Uploaded PDFs are not kept as files: their extracted text is stored in the database. Because it is on the host, it survives `restart`, `down`, `up --build` and deleting the image. The same folder is used when you run the app with `uv run`, so both ways see the same interviews.
 
-To back up the database, run `make backup`: it writes a consistent copy to `data/backups/app-<timestamp>.db`, even while the app is running. To back up the whole folder (database, cache, uploads), stop the app first and archive it: `make down && tar czf interview-helper-data-$(date +%F).tar.gz data/ && make up`.
+To back up the database, run `make backup`: it writes a consistent copy to `data/backups/app-<timestamp>.db`, even while the app is running. To back up the whole folder (database and cache), stop the app first and archive it: `make down && tar czf interview-helper-data-$(date +%F).tar.gz data/ && make up`.
 
 To restore, `make down`, copy the backup over `data/app.db` (or unpack the archive into `data/`) and `make up`. The backup holds your real CVs and interview answers, so keep it somewhere private.
 
+Keep `data/` on a local disk if you can. SQLite relies on file locks, and those are unreliable on network filesystems such as NFS or SMB: two writers (the app and a backup, or the container and a `make run` session) can then corrupt the database. If the repo itself must live on a network share, set `DATA_DIR` in `.env` to a local folder for `make run` (the database follows it), and for Docker change the left side of the volume in `compose.yaml` to that local folder.
+
 ## What is (and is not) in the image
 
-`.dockerignore` is an allow-list: only `pyproject.toml`, `uv.lock`, `app/`, `src/`, `samples/` and the two docs files the app reads (`docs/rubric.json`, `docs/01-interviewer-guideline.md`) are sent to the build. Your `.env`, `data/`, `docs/applications/`, `references/` and `.git` never reach the image, so the image is safe to keep or rebuild without leaking the API key or personal documents. The key reaches the app only at runtime, through `env_file: .env` in `compose.yaml`.
+`.dockerignore` is an allow-list: only `pyproject.toml`, `uv.lock`, `.python-version`, `README.md` (the package metadata points to it), `.streamlit/config.toml`, `app/`, `src/`, `samples/` and the two docs files the app reads (`docs/rubric.json`, `docs/01-interviewer-guideline.md`) are sent to the build. CI builds the image on every PR, so an allow-list that misses a file the build needs fails there first. Your `.env`, `data/`, `docs/applications/`, `references/` and `.git` never reach the image, so the image is safe to keep or rebuild without leaking the API key or personal documents. The key reaches the app only at runtime, through `env_file: .env` in `compose.yaml`.
 
-The app runs as an unprivileged user `app`, not root. The project is installed in editable mode from `/app/src`, so `PROJECT_ROOT` in `config.py` resolves to `/app` exactly as it does in a checkout.
+The app runs as an unprivileged user `app`, not root, with every Linux capability dropped (`cap_drop: [ALL]`) and `no-new-privileges` set in `compose.yaml`, so even a bug in the app can't regain root inside the container. The base image is pinned to an exact tag (`python:3.12.14-slim-bookworm`); bump it on purpose in both stages of the `Dockerfile`. The project is installed in editable mode from `/app/src`, so `PROJECT_ROOT` in `config.py` resolves to `/app` exactly as it does in a checkout.
 
 ## Why the port is bound to localhost
 
-`compose.yaml` publishes `127.0.0.1:8501:8501`, not `8501:8501`. The app has no login of its own and spends money on your OpenRouter key, so it must only be reachable from this machine. A bare `8501:8501` would listen on every network interface, and Docker's port rules bypass most host firewalls (ufw included), so anyone on the same Wi-Fi could use it. If you ever need it from another device, put it behind something with authentication (an SSH tunnel is the simplest: `ssh -L 8501:localhost:8501 <this machine>`) rather than widening the binding.
+`compose.yaml` publishes `127.0.0.1:8501:8501`, not `8501:8501`. (Inside the container Streamlit listens on 0.0.0.0, a command-line flag in the `Dockerfile` that overrides the `127.0.0.1` in `.streamlit/config.toml`; otherwise the published port could not reach it.) The app has no login of its own and spends money on your OpenRouter key, so it must only be reachable from this machine. A bare `8501:8501` would listen on every network interface, and Docker's port rules bypass most host firewalls (ufw included), so anyone on the same Wi-Fi could use it. If you ever need it from another device, put it behind something with authentication (an SSH tunnel is the simplest: `ssh -L 8501:localhost:8501 <this machine>`) rather than widening the binding.
 
 ## Troubleshooting
 
@@ -74,7 +76,7 @@ The app runs as an unprivileged user `app`, not root. The project is installed i
 
 **Port 8501 already in use (`bind: address already in use`).** Something else listens on 8501, often a `make run` / `uv run streamlit` session you left open. Stop it, or find it with `ss -ltnp | grep 8501`. To use another port, change the left side of the mapping in `compose.yaml`, e.g. `"127.0.0.1:8502:8501"`, and open http://localhost:8502.
 
-**Container is `unhealthy` or keeps restarting.** Check `make status`, then read the logs with `make logs`. The healthcheck asks Streamlit for `http://localhost:8501/_stcore/health` every 30 seconds and expects `ok`; you can run the same check by hand from the host with `curl -s localhost:8501/_stcore/health`. A missing `.env` stops `make up` with a message telling you to `cp .env.example .env` (plain Compose fails with `env file .env not found`).
+**Container is `unhealthy` or keeps restarting.** Check `make status`, then read the logs with `make logs`. The healthcheck (defined once, in the `Dockerfile`) asks Streamlit for `http://localhost:8501/_stcore/health` every 30 seconds and expects `ok`; you can run the same check by hand from the host with `curl -s localhost:8501/_stcore/health`. A missing `.env` stops `make up` with a message telling you to `cp .env.example .env` (plain Compose fails with `env file .env not found`).
 
 **The app shows an API error on the first interview.** The key in `.env` is missing or wrong, or the container was started before you set it. Fix `.env`, then `make up` to recreate the container with the new value.
 

@@ -22,7 +22,7 @@ Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the 
 |---|---|
 | UI | UI-independent Python core package + Streamlit (`st.navigation` multipage) |
 | Users / hosting | Single user for now, local machine only. Data model is multi-user ready: a `User` table, and `user_id` on every owned row (Application, Session, LLMCall...). Registration closes after the first account |
-| Auth + MFA | Local password (argon2-cffi) + TOTP (pyotp; QR enrolment via `qrcode`; 10 one-time recovery codes, stored hashed). Lockout after 5 failed attempts (15 min), idle session timeout (30 min), all pages behind an auth gate in `app/main.py`. The TOTP secret is encrypted at rest with a key from `.env` |
+| Auth + MFA | **Dropped** (see the 2026-10-02 decision above): the app runs as one built-in local user, listens on localhost only, and has no login. Original plan, kept for reference: local password (argon2-cffi) + TOTP (pyotp; QR enrolment via `qrcode`; 10 one-time recovery codes, stored hashed). Lockout after 5 failed attempts (15 min), idle session timeout (30 min), all pages behind an auth gate in `app/main.py`. The TOTP secret is encrypted at rest with a key from `.env` |
 | DB | SQLite via SQLModel (moving to Postgres later = changing the URL) |
 | Providers | One OpenAI-compatible client; provider profiles in config. OpenRouter only for now (no local model beats it on 16 GB VRAM); an Ollama profile can be added later |
 | Models (defaults, all changeable) | Interviewer `openai/gpt-5-mini` (R3); final judge from another family (Claude Haiku 4.5 / Gemini Flash); candidate simulator from a third family; live scoring + guard = **Jev**; avatar `google/gemini-2.5-flash-image`; open-weight options in the picker for H4 (Gemma 4 31B, DeepSeek V4, GLM 5.2, MiniMax M2.7) |
@@ -63,7 +63,7 @@ project_Interview_App/
   src/interview_app/
     config.py                  # pydantic-settings: provider profiles, role→model map, limits, feature flags
     models.py                  # pydantic: InterviewPlan, InterviewerTurn, LiveScore, Evaluation, GuardResult
-    auth.py                    # register (first user only), verify password, TOTP enrol/verify, recovery codes, lockout
+    auth.py                    # DROPPED (no login; one built-in local user). Was: register, password, TOTP, recovery codes, lockout
     db.py                      # SQLModel: User, Application, Document, Session, Turn, LLMCall, LiveScore, Evaluation, Avatar
     llm/client.py              # chat(), chat_json(schema): OpenAI SDK + base_url, retries, usage → LLMCall
     llm/decide.py              # Jev decisions API (pattern: sprint1/judge/judgebench/openrouter.py:decide)
@@ -83,7 +83,7 @@ project_Interview_App/
 Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and `judges.py` (`jev_request`, `jev_parse`, `LLMJudge`) as patterns for the client, Jev and the judge. `sprint1/streamlit_app.py` as a reference for the chat UI.
 
 ## Core flows
-- **Auth:** first run → register (password + TOTP enrolment by QR code + recovery codes shown once) → afterwards login = password → 6-digit code (or a recovery code) → session in `st.session_state`, expires when idle.
+- **Auth (dropped, not built):** first run → register (password + TOTP enrolment by QR code + recovery codes shown once) → afterwards login = password → 6-digit code (or a recovery code) → session in `st.session_state`, expires when idle.
 - **Import:** upload/paste/URL → validate → injection scan (warnings shown) → text preview/edit → save the Application.
 - **Interview turn:** answer (typed, or audio → STT) → limits + guard → **Jev live scores + follow-up signal (in parallel)** → engine builds messages (system = variant + persona + plan + spotlighted docs + routing hint; then history) → `chat_json` → validate → save Turn + LiveScore → show (TTS in voice mode; score chips + tip in Coaching mode) → repeat until `is_final` or a limit.
 - **Finish:** metrics (code) → LLM judge (full rubric) → aggregate (§7 weights, §6 caps, bands) → report → History/Dashboard (including Jev-vs-LLM agreement).
@@ -105,7 +105,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 |---|---|---|
 | 1 | chore/bootstrap | .gitignore (privacy rules first), pyproject, ruff, pytest, CI workflow, `.env.example`, docs + `docs/04-design-spec.md` |
 | 2 | feat/core | config, pydantic models, DB (User + user_id everywhere), LLM client + call log |
-| 3 | feat/auth-mfa | password + TOTP + recovery codes + lockout + login gate + app shell (`st.navigation`) |
+| 3 | feat/auth-mfa (dropped) | password + TOTP + recovery codes + lockout + login gate + app shell (`st.navigation`) |
 | 4–6 ∥ | feat/pricing, feat/jev-client, feat/ingest | pricing cache · Jev decisions client · PDF/paste ingest + Applications page + sample application |
 | 7 | feat/guards | limits + rules + Jev injection check |
 | 8 | feat/plan-and-prompts | prep step + P4 prompt + persona derivation |
@@ -122,7 +122,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 ## Build order (cut line = what must work for the review)
 | When | Work |
 |---|---|
-| Fri 10/2 – Sat 10/3 | Save the spec, scaffold, config, DB (with User), auth + MFA + login gate, LLM client + Jev client + pricing + call log, ingest (PDF/paste), Applications page, sample application, tests |
+| Fri 10/2 – Sat 10/3 | Save the spec, scaffold, config, DB (with User), auth + MFA + login gate (dropped), LLM client + Jev client + pricing + call log, ingest (PDF/paste), Applications page, sample application, tests |
 | Sun 10/4 | Plan step, P4 prompt, interview engine, guards (rules + Jev), Interview page (text) → **end-to-end MVP** |
 | Mon 10/5 | Jev live scoring + routing, Coaching mode, LLM judge + aggregation + report, History |
 | Tue 10/6 | Settings (Developer section, cost), P1/P2/P3/P5 variants, open-weight models (H4), JD from URL, avatar (M8) |
@@ -136,7 +136,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 2. Write a task-level implementation plan (writing-plans) into `docs/plans/`, then execute the PR sequence autonomously.
 
 ## Verification
-- Auth: register → enrol TOTP → log out → login needs password + a valid code; a wrong code 5× locks the account; a recovery code works once; pages can't be opened without logging in.
+- Auth (dropped, not built): register → enrol TOTP → log out → login needs password + a valid code; a wrong code 5× locks the account; a recovery code works once; pages can't be opened without logging in.
 - `uv run pytest` (auth, engine, guards, aggregation against hand-computed rubric examples, ingest, pricing; LLM/Jev mocked) and `uv run ruff check`.
 - Manual end-to-end with `samples/demo_application`: import → realistic interview → report → History/Dashboard show the session, its cost and judge agreement.
 - Coaching mode: live chips appear within about 1 s of submitting; a retry replaces the scored attempt.
