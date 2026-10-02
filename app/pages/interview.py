@@ -7,7 +7,7 @@ page re-reads it on each rerun, so refreshing the browser resumes the interview 
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import render_report
-from ui_common import current_user_id, engine_deps, get_engine, kept_widget, page_link, safe_md
+from ui_common import current_user_id, engine_deps, get_engine, kept_widget, page_link, safe_md, slider_start
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
@@ -21,12 +21,27 @@ from interview_app.interview.persona import (
     InterviewType,
     Mode,
 )
+from interview_app.interview.schemas import Stage
 from interview_app.preferences import judge_model, load_preferences, to_session_config
 
 engine = get_engine()
 user_id = current_user_id()
 
 st.title("Interview")
+
+# Plain-words names for the interviewer's stages, shown next to the progress bar.
+STAGE_LABELS = {
+    Stage.OPENING: "Introduction",
+    Stage.MOTIVATION: "Motivation",
+    Stage.EXPERIENCE: "Experience",
+    Stage.TECHNICAL: "Technical",
+    Stage.BEHAVIORAL: "Behavioral",
+    Stage.GAP: "The tough question",
+    Stage.LOGISTICS: "Logistics",
+    Stage.CANDIDATE_QUESTIONS: "Your questions for the interviewer",
+    Stage.CLOSE: "Wrap-up",
+}
+DIFFICULTY_HELP = "Friendly: supportive, one follow-up per topic. Tough: probes gaps and assumptions harder."
 
 MODE_LABELS = {Mode.REALISTIC.value: "Realistic", Mode.COACHING.value: "Coaching"}
 MODE_CAPTIONS = {
@@ -46,43 +61,63 @@ def start_form() -> None:
     # settings) is not shown here at all and flows into the session through to_session_config.
     prefs = load_preferences(engine, user_id)
 
+    st.caption("Set up a mock interview for one of your applications. Your saved defaults are pre-filled.")
     labels = {a.id: f"{a.company} — {a.role}" for a in apps}
-    app_id = st.selectbox("Application", options=list(labels), format_func=labels.get)
-    col1, col2 = st.columns(2)
-    # Options are plain strings (enum values) and labels come from a lookup: widgets compare
-    # options by value across reruns, which is simplest and most robust with plain strings.
-    interview_type = InterviewType(
-        col1.selectbox(
-            "Interview type",
-            options=[t.value for t in InterviewType],
-            format_func=lambda v: TYPE_LABELS[InterviewType(v)],
-            index=list(InterviewType).index(prefs.interview_type),
+    # "Practise this application" on the Applications page pre-selects it here (read once).
+    picked = st.session_state.pop("start_app_pick", None)
+    with st.container(border=True):
+        st.markdown("**1. Application**")
+        app_id = st.selectbox(
+            "Application",
+            options=list(labels),
+            format_func=labels.get,
+            index=list(labels).index(picked) if picked in labels else 0,
+            label_visibility="collapsed",
         )
-    )
-    difficulty = col2.segmented_control(
-        "Difficulty",
-        options=[d.value for d in Difficulty],
-        default=prefs.difficulty.value,
-        format_func=str.capitalize,
-    )
-    # One key per interview type: each type keeps the user's choice when they switch back and forth, and
-    # a type not touched yet starts at its saved or usual length (like the Settings page's slider).
-    main_questions = kept_widget(
-        st.slider,
-        f"start_main_questions_{interview_type.value}",
-        prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type],
-        "Main questions (follow-ups come on top)",
-        3,
-        12,
-    )
-    mode = st.radio(
-        "Mode",
-        options=list(MODE_LABELS),
-        format_func=MODE_LABELS.get,
-        captions=list(MODE_CAPTIONS.values()),
-        index=list(MODE_LABELS).index(prefs.mode.value),
-        horizontal=True,
-    )
+    limits = get_settings().limits
+    with st.container(border=True):
+        st.markdown("**2. The interview**")
+        col1, col2 = st.columns(2)
+        # Options are plain strings (enum values) and labels come from a lookup: widgets compare
+        # options by value across reruns, which is simplest and most robust with plain strings.
+        interview_type = InterviewType(
+            col1.selectbox(
+                "Interview type",
+                options=[t.value for t in InterviewType],
+                format_func=lambda v: TYPE_LABELS[InterviewType(v)],
+                index=list(InterviewType).index(prefs.interview_type),
+                help="Who you are talking to. Each type has its own interviewer, focus and usual length.",
+            )
+        )
+        difficulty = col2.segmented_control(
+            "Difficulty",
+            options=[d.value for d in Difficulty],
+            default=prefs.difficulty.value,
+            format_func=str.capitalize,
+            help=DIFFICULTY_HELP,
+        )
+        # One key per interview type: each type keeps the user's choice when they switch back and forth,
+        # and a type not touched yet starts at its saved or usual length (like the Settings page's slider).
+        main_questions = kept_widget(
+            st.slider,
+            f"start_main_questions_{interview_type.value}",
+            slider_start(prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type]),
+            "Main questions (follow-ups come on top)",
+            limits.min_main_questions,
+            limits.max_main_questions,
+            help="Each main question opens a topic; the interviewer may ask follow-ups before moving on.",
+        )
+    with st.container(border=True):
+        st.markdown("**3. Feedback style**")
+        mode = st.radio(
+            "Mode",
+            options=list(MODE_LABELS),
+            format_func=MODE_LABELS.get,
+            captions=list(MODE_CAPTIONS.values()),
+            index=list(MODE_LABELS).index(prefs.mode.value),
+            horizontal=True,
+            label_visibility="collapsed",
+        )
     # Developer options live on the Settings page (course task M9): a candidate doesn't need them here.
     page_link("pages/settings.py", label="Defaults, prompt and model settings", icon=":material/settings:")
 
@@ -94,23 +129,40 @@ def start_form() -> None:
             main_questions=main_questions,
             mode=Mode(mode),
         )
-        with st.spinner("Reading your documents and preparing the interview (about 30 seconds)…"):
+        # st.status rather than a bare spinner: the start is the slowest wait in the app, so it says
+        # what is happening and keeps a visible end state (done or failed).
+        with st.status("Preparing your interview…", expanded=True) as status:
+            st.write(
+                "The interviewer is reading your documents, planning the questions and writing the "
+                "opening one. This takes about 30 seconds."
+            )
             try:
                 eng.start_interview(engine_deps(), user_id, app_id, config)
             except eng.InterviewError as e:
+                status.update(label="The interview could not start", state="error")
                 st.error(str(e))
                 return
+            status.update(label="Interview ready", state="complete")
         st.rerun()
+    else:
+        st.caption("Preparing takes about 30 seconds. You can end the interview at any time.")
 
 
 def live_chips(live) -> None:
     """Coaching mode: the answer's live rubric scores as small coloured badges, then the tip."""
     chips = []
     for item in live.items:
-        # Colour by level so the weakest item stands out at a glance.
-        color = "red" if item.level <= 2 else "orange" if item.level == 3 else "green"
-        chips.append(f":{color}-badge[{item.name} {item.score:.1f}/5]")
-    st.markdown(" ".join(chips))
+        # Colour by level so the weakest item stands out at a glance, plus an icon so the signal doesn't
+        # rely on colour alone (colour-blind users, greyscale screenshots).
+        color, icon = (
+            ("red", ":material/priority_high:")
+            if item.level <= 2
+            else ("orange", ":material/remove:")
+            if item.level == 3
+            else ("green", ":material/check:")
+        )
+        chips.append(f":{color}-badge[{icon} {item.name} {item.score:.1f}/5]")
+    st.markdown("Live scores " + " ".join(chips))
     if live.tip:
         st.caption(f":material/lightbulb: {safe_md(live.tip)}")
 
@@ -190,17 +242,20 @@ def coaching_choice(view: eng.SessionView) -> None:
             st.session_state.pop("retrying", None)
             submit(eng.retry, view, text)
         return
-    st.caption(retries_left)
-    col1, col2 = st.columns(2)
-    if col1.button(
+    box = st.container(border=True)
+    box.markdown("**Your answer is scored.** Try it again with the tip in mind, or move on.")
+    box.caption(retries_left)
+    col1, col2 = box.columns(2)
+    if col2.button(
         "Retry this answer",
         icon=":material/replay:",
         disabled=left <= 0,
         help=retries_left + " The last attempt counts.",
+        width="stretch",
     ):
         st.session_state.retrying = view.id
         st.rerun()
-    if col2.button("Continue", type="primary", icon=":material/arrow_forward:"):
+    if col1.button("Continue", type="primary", icon=":material/arrow_forward:", width="stretch"):
         with st.spinner(f"{view.persona.name} is thinking…"):
             try:
                 eng.continue_interview(engine_deps(), user_id, view.id)
@@ -210,15 +265,29 @@ def coaching_choice(view: eng.SessionView) -> None:
         st.rerun()
 
 
+def progress_text(view: eng.SessionView, done: int) -> str:
+    """'Question 3 of 7 · Experience (follow-up)': where the interview is, in words."""
+    text = f"Question {done} of {view.config.main_questions}"
+    last = next((t for t in reversed(view.turns) if t.speaker == "interviewer"), None)
+    if last is not None and last.stage in STAGE_LABELS:
+        text += f" · {STAGE_LABELS[Stage(last.stage)]}" + (" (follow-up)" if last.is_followup else "")
+    return text
+
+
 def chat(view: eng.SessionView) -> None:
     persona = view.persona
     coaching = view.config.mode == Mode.COACHING
     # A retry started in another interview must not put this one into retry mode.
     if st.session_state.get("retrying") not in (None, view.id):
         st.session_state.pop("retrying", None)
+    st.markdown(
+        f"**{safe_md(view.company, inline=True)}** — {safe_md(view.role, inline=True)}  \n"
+        f":gray-badge[{TYPE_LABELS[view.config.interview_type]}] "
+        f":gray-badge[{view.config.difficulty.value.capitalize()}] "
+        f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode]"
+    )
     st.caption(
-        f"{safe_md(view.company, inline=True)} — {safe_md(view.role, inline=True)}"
-        f" · {TYPE_LABELS[view.config.interview_type]}" + (" · Coaching mode" if coaching else "")
+        f"Your interviewer: {safe_md(persona.name, inline=True)}, {safe_md(persona.title, inline=True)}"
     )
     if view.status == "preparing":
         # The opening turn never arrived (the app was closed or crashed while preparing). Without this the
@@ -241,15 +310,16 @@ def chat(view: eng.SessionView) -> None:
         )
     progress = view.progress
     done = min(progress.main_asked, view.config.main_questions)
-    st.progress(
-        done / view.config.main_questions, text=f"Main questions: {done} of {view.config.main_questions}"
-    )
+    st.progress(done / view.config.main_questions, text=progress_text(view, done))
 
     previous_idx = -1
     for t in view.turns:
         if t.speaker == "interviewer":
             with st.chat_message("assistant", avatar=":material/person:"):
-                st.markdown(f"**{persona.name}** · {persona.title}\n\n{safe_md(t.text)}")
+                st.markdown(
+                    f"**{safe_md(persona.name, inline=True)}** · {safe_md(persona.title, inline=True)}"
+                    f"\n\n{safe_md(t.text)}"
+                )
         else:
             with st.chat_message("user"):
                 st.markdown(safe_md(t.text))
@@ -275,7 +345,12 @@ def chat(view: eng.SessionView) -> None:
                         st.error(str(e))
                         return
                 st.rerun()
-        elif text := st.chat_input("Your answer"):
+        elif text := st.chat_input(
+            "Your answer (ask your own questions here too)"
+            if progress.in_candidate_questions
+            else "Your answer",
+            max_chars=get_settings().limits.max_answer_chars,
+        ):
             submit(eng.answer, view, text)
 
         if notice := st.session_state.pop("guard_notice", None):
@@ -284,14 +359,24 @@ def chat(view: eng.SessionView) -> None:
             st.error(error)
 
         with st.sidebar:
+            st.divider()
+            st.caption("This interview")
             st.metric("Cost so far", f"${view.cost_usd:.4f}")
-            if st.button("End interview", icon=":material/stop:"):
+            if st.button(
+                "End interview",
+                icon=":material/stop:",
+                help="Stop now. You can still get a feedback report on the answers given so far.",
+            ):
                 eng.end_interview(engine_deps(), user_id, view.id)
                 st.rerun()
     else:
-        st.success("Interview complete." if view.status == "finished" else "Interview ended.")
+        st.success(
+            "Interview complete." if view.status == "finished" else "Interview ended.",
+            icon=":material/flag:",
+        )
         feedback(view)
-        if st.button("Start a new interview", type="primary"):
+        st.divider()
+        if st.button("Start a new interview", type="primary", icon=":material/add:"):
             st.session_state.pop("viewing_session", None)
             st.rerun()
 
@@ -307,17 +392,28 @@ def feedback(view: eng.SessionView) -> None:
     # was wasted work.
     report = load_report(engine, user_id, view.id)
     if report is None:
+        st.markdown(
+            "A judge model scores every answer against the interview rubric and writes what went well, "
+            "what to improve and a stronger version of your weakest answer."
+        )
         if not st.button("Get my feedback report", type="primary", icon=":material/assessment:"):
             return
-        with st.spinner("The evaluator is reading your interview (about a minute)…"):
+        with st.status("Writing your feedback report…", expanded=True) as status:
+            st.write(
+                "The judge reads the whole transcript several times independently and the report uses the "
+                "median, so one unlucky run can't swing your score. This takes about a minute."
+            )
             try:
                 prefs = load_preferences(engine, user_id)
                 report = evaluate_session(
                     engine_deps(), user_id, view.id, judge_model=judge_model(prefs, get_settings())
                 )
             except EvaluationError as e:
+                status.update(label="The report could not be written", state="error")
                 st.error(str(e))
+                st.caption("Your interview is saved: press the button again to retry.")
                 return
+            status.update(label="Report ready", state="complete", expanded=False)
     render_report(report, get_settings().rubric_path)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
     drill_offer(view, report, key="drill-interview")

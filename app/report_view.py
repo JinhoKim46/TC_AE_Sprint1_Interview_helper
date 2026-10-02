@@ -26,6 +26,9 @@ COMPONENT_LABELS = {
     "communication": "Communication",
     "logistics": "Logistics",
 }
+# Badge colour per hiring signal; the badge always carries the label and icon too (BAND_LABELS).
+BAND_COLORS = {"strong_yes": "green", "yes": "green", "lean_no": "orange", "no": "red"}
+PRIORITY_LABELS = {"must": "Must have", "nice": "Nice to have"}
 LEVEL_LABELS = {
     "not_addressed": "Not discussed",
     "not_demonstrated": "Not demonstrated",
@@ -35,49 +38,66 @@ LEVEL_LABELS = {
 }
 
 
+def band_badge(band: str | None) -> str:
+    """The hiring signal as a coloured badge with an icon and words, so colour is never the only cue.
+    Static text only (labels from BAND_LABELS), so it is safe in markdown as it is."""
+    if band not in BAND_LABELS:
+        return ""
+    label, icon = BAND_LABELS[band]
+    return f":{BAND_COLORS[band]}-badge[{icon} {label}]"
+
+
 def render_report(report: Report, rubric_path) -> None:
     rubric = load_rubric(rubric_path)
     names = {k: v["name"] for k, v in {**rubric.exchange_items, **rubric.session_items}.items()}
 
-    label, icon = BAND_LABELS.get(report.band or "", ("No overall score", ":material/help:"))
-    col1, col2 = st.columns([1, 3])
-    col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
-    col2.markdown(f"### {label}")
-    col2.markdown(safe_md(report.summary))
-    runs = [r for r in report.runs if r is not None]
-    if len(runs) > 1:
-        scores = " · ".join(f"{r:.0f}" for r in report.runs if r is not None)
-        st.caption(f"Median of {len(runs)} independent judge runs ({scores}).")
-        if report.spread is not None and report.spread > UNSTABLE_SPREAD:
-            st.warning(
-                f"The judge's runs differ by {report.spread:.0f} points, so treat the overall score as "
-                "approximate and rely on the written feedback."
-            )
+    # --- Verdict first: score, hiring signal and the judge's summary in one card --------------------
+    with st.container(border=True):
+        col1, col2 = st.columns([1, 3], vertical_alignment="center")
+        col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
+        with col2:
+            st.markdown(band_badge(report.band) or ":gray-badge[:material/help: No overall score]")
+            st.markdown(safe_md(report.summary))
+        runs = [r for r in report.runs if r is not None]
+        if len(runs) > 1:
+            scores = " · ".join(f"{r:.0f}" for r in report.runs if r is not None)
+            st.caption(f"Median of {len(runs)} independent judge runs ({scores}).")
+    if len(runs) > 1 and report.spread is not None and report.spread > UNSTABLE_SPREAD:
+        st.warning(
+            f"The judge's runs differ by {report.spread:.0f} points, so treat the overall score as "
+            "approximate and rely on the written feedback.",
+            icon=":material/balance:",
+        )
     for p in report.penalties:
         st.warning(safe_md(p))
 
-    st.subheader("Score breakdown")
-    for key, value in report.components.items():
-        if value is not None:
-            st.progress(value / 100, text=f"{COMPONENT_LABELS.get(key, key)}: {value:.0f}")
+    # --- Where the score comes from ------------------------------------------------------------------
+    parts = [(key, value) for key, value in report.components.items() if value is not None]
+    if parts:
+        st.subheader("Score breakdown")
+        cols = st.columns(2)
+        for i, (key, value) in enumerate(parts):
+            cols[i % 2].progress(value / 100, text=f"{COMPONENT_LABELS.get(key, key)} · {value:.0f} / 100")
 
+    # --- Strengths and improvements side by side, evidence quoted -----------------------------------
     left, right = st.columns(2)
-    with left:
-        st.subheader("What went well")
+    with left.container(border=True):
+        st.markdown("#### :material/thumb_up: What went well")
         for s in report.strengths:
             # No unsafe_allow_html: the quote is the candidate's own text, and raw HTML from it would run
             # in the app's origin (stored XSS). Escaped markdown italics give the same look safely.
             evidence = safe_md(", ".join(s.evidence), inline=True)
-            st.markdown(
-                f"- {safe_md(s.point, inline=True)}  \n  *“{safe_md(s.quote, inline=True)}”* ({evidence})"
-            )
+            quote = f"  \n  *“{safe_md(s.quote, inline=True)}”*" if s.quote else ""
+            st.markdown(f"- {safe_md(s.point, inline=True)}{quote} ({evidence})")
         if not report.strengths:
             st.caption("No strengths with clear evidence in this interview.")
-    with right:
-        st.subheader("What to improve")
+    with right.container(border=True):
+        st.markdown("#### :material/trending_up: What to improve")
         for imp in report.improvements:
             ref = f" ({safe_md(imp.example_turn, inline=True)})" if imp.example_turn else ""
             st.markdown(f"- **{safe_md(imp.area, inline=True)}**{ref}: {safe_md(imp.advice, inline=True)}")
+        if not report.improvements:
+            st.caption("No specific improvements were suggested.")
 
     if report.better_answer:
         with st.expander(
@@ -87,22 +107,24 @@ def render_report(report: Report, rubric_path) -> None:
             st.caption(safe_md(report.better_answer.why))
             st.markdown(safe_md(report.better_answer.rewrite))
 
-    st.subheader("Job requirements")
-    st.dataframe(
-        [
-            {
-                "Requirement": r.requirement,
-                "Priority": r.priority,
-                "Shown in the interview": LEVEL_LABELS[r.level],
-                "Evidence": ", ".join(r.evidence),
-            }
-            for r in report.requirements
-        ],
-        hide_index=True,
-        width="stretch",
-    )
+    if report.requirements:
+        st.subheader("Job requirements")
+        st.dataframe(
+            [
+                {
+                    "Requirement": r.requirement,
+                    "Priority": PRIORITY_LABELS.get(r.priority, r.priority),
+                    "Shown in the interview": LEVEL_LABELS[r.level],
+                    "Evidence": ", ".join(r.evidence),
+                }
+                for r in report.requirements
+            ],
+            hide_index=True,
+            width="stretch",
+        )
 
     st.subheader("Answer by answer")
+    st.caption("Each answer's score (0-100) and the rubric items behind it. Open one to see why.")
     for ex in report.exchanges:
         score = f"{ex.score:.0f}" if ex.score is not None else "—"
         label = f"{ex.exchange_id} · {ex.category} · {score}  —  {short(ex.question)}"
