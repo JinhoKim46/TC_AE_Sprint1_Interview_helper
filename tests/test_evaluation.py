@@ -534,3 +534,18 @@ def test_case_length_limits_apply_per_turn():
     ]
     m = compute_metrics(build_exchanges(transcript), RUBRIC).exchanges[0]
     assert not m.long_answer and not m.short_answer  # each turn is within CASE's 400-word limit
+
+
+def test_judge_max_tokens_comes_from_settings():
+    from interview_app.evaluation.judge import run_judge
+
+    seen = {}
+
+    class FakeLLM:
+        def chat_json(self, role, messages, schema, **kw):
+            seen.update(kw)
+            raise RuntimeError("stop")
+
+    with pytest.raises(RuntimeError):
+        run_judge(FakeLLM(), Settings(_env_file=None, judge_max_tokens=12345), [])
+    assert seen["max_tokens"] == 12345
