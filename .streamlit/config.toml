@@ -26,7 +26,9 @@ toolbarMode = "minimal"
 # Theme. One calm accent (indigo) instead of Streamlit's default red, because red already means
 # "error" and "weak score" in this app: a red Start button and red score bars sent mixed signals.
 # Colours were picked for WCAG AA: body text is ~15:1 on its background in both modes, white button
-# text on the accent is 6.3:1 (light) and 4.5:1 (dark). Fonts stay the built-in ones on purpose: a
+# text on the accent is 6.3:1 (light) and 5.0:1 (dark), and the dark accent still stands out 3.7:1 from
+# the dark background (non-text contrast). No accent can be both a text colour on the dark background and
+# a background for white text, so the app never writes text in the accent colour, only icons. Fonts stay the built-in ones on purpose: a
 # web font would make every page load call Google's servers, and this app is meant to stay local.
 # The viewer's system setting picks light or dark; the app menu (top right) can switch it.
 [theme]
@@ -34,6 +36,9 @@ baseRadius = "0.6rem"
 buttonRadius = "0.6rem"
 showWidgetBorder = true
 headingFontWeights = [700, 650, 600, 600, 600, 600]
+# A deliberate type scale (h1 title, h2 header, h3 subheader, ...): Streamlit's default subheader is nearly
+# as large as a page title, which flattened the hierarchy. app/styles/app.css holds the spacing scale.
+headingFontSizes = ["2.25rem", "1.625rem", "1.25rem", "1.0625rem", "1rem", "0.875rem"]
 chartCategoricalColors = ["#4F46E5", "#0EA5A4", "#F59E0B", "#E11D48", "#64748B"]
 
 [theme.light]
@@ -48,7 +53,7 @@ linkColor = "#4338CA"
 backgroundColor = "#F7F7FB"
 
 [theme.dark]
-primaryColor = "#6366F1"
+primaryColor = "#5D5AEF"
 backgroundColor = "#0F1117"
 secondaryBackgroundColor = "#1A1D29"
 textColor = "#E6E8F0"
