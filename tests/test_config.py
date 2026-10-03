@@ -149,17 +149,17 @@ def test_main_question_slider_bounds():
 
 def test_length_presets_defaults_and_env(monkeypatch):
     p = Settings(_env_file=None).length_presets
-    assert (p.quick, p.standard, p.full, p.quick_max_followups) == (3, 5, 7, 1)
+    assert (p.quick, p.standard, p.quick_max_followups) == (3, 5, 1)
     monkeypatch.setenv("LENGTH_PRESETS__QUICK", "4")
     assert Settings(_env_file=None).length_presets.quick == 4
 
 
-@pytest.mark.parametrize("values", [{"quick": 1}, {"full": 16}, {"quick_max_followups": -1}])
+@pytest.mark.parametrize("values", [{"quick": 1}, {"standard": 16}, {"quick_max_followups": -1}, {"full": 7}])
 def test_length_presets_bounds(values):
     with pytest.raises(ValidationError):
         LengthPresets(**values)
 
 
-def test_length_presets_must_grow_from_quick_to_full():
-    with pytest.raises(ValidationError, match="quick <= standard <= full"):
+def test_length_presets_must_grow_from_quick_to_standard():
+    with pytest.raises(ValidationError, match="quick <= standard"):
         LengthPresets(quick=6, standard=5)

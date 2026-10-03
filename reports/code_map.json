@@ -515,22 +515,15 @@
     {
      "comment": "a short practice on the core questions",
      "default": "Field(default=3, ge=2, le=15)",
-     "line": 121,
+     "line": 122,
      "name": "quick",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=5, ge=2, le=15)",
-     "line": 122,
-     "name": "standard",
-     "type": "int"
-    },
-    {
-     "comment": "the real interview",
-     "default": "Field(default=7, ge=2, le=15)",
      "line": 123,
-     "name": "full",
+     "name": "standard",
      "type": "int"
     },
     {
@@ -5495,7 +5488,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "call",
    "lines": [
-    110
+    114
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -5503,7 +5496,8 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    114
+    115,
+    120
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -5511,7 +5505,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    110
+    113
    ],
    "to": "interview_app.interview.persona:Length"
   },
@@ -5519,7 +5513,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    115
+    121
    ],
    "to": "interview_app.interview.persona:SessionConfig"
   },
@@ -5527,7 +5521,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "call",
    "lines": [
-    110
+    112
    ],
    "to": "interview_app.preferences:preset_main_questions"
   },
@@ -7856,7 +7850,7 @@
     "interview_app.interview.persona"
    ],
    "layer": "core",
-   "lines": 121,
+   "lines": 127,
    "path": "src/interview_app/preferences.py",
    "symbols": [
     "interview_app.preferences:Preferences",
@@ -8307,12 +8301,6 @@
      "default": "5",
      "description": null,
      "name": "standard",
-     "type": "int"
-    },
-    {
-     "default": "7",
-     "description": null,
-     "name": "full",
      "type": "int"
     },
     {
@@ -10602,13 +10590,13 @@
    ]
   }
  },
- "source_sha256": "941d0dbdc1e30755600e43afd78d26bfbfdab45be844908d69a1ccafcb3421f4",
+ "source_sha256": "27c66d5b2453b27a0203b67d902fe15007fec18a5eaf08a788a48faa8c9fa7e6",
  "stats": {
   "agents": 7,
   "call_sites": {
    "builtin": 512,
    "external": 771,
-   "resolved": 764,
+   "resolved": 765,
    "unresolved": 42
   },
   "classes": 106,
@@ -15893,9 +15881,9 @@
   },
   "interview_app.preferences:judge_model": {
    "doc": "The model the final LLM judge should use for this user.",
-   "end_line": 120,
+   "end_line": 126,
    "kind": "function",
-   "line": 118,
+   "line": 124,
    "module": "interview_app.preferences",
    "name": "judge_model",
    "qualname": "judge_model",
@@ -15932,14 +15920,14 @@
    ]
   },
   "interview_app.preferences:preset_main_questions": {
-   "doc": "The configured question count of a preset Length; None for Custom (the slider decides).",
-   "end_line": 88,
+   "doc": "The question count of a preset Length; None for Custom (the slider decides).",
+   "end_line": 90,
    "kind": "function",
    "line": 82,
    "module": "interview_app.preferences",
    "name": "preset_main_questions",
    "qualname": "preset_main_questions",
-   "signature": "preset_main_questions(length: Length, presets: LengthPresets) -> int | None",
+   "signature": "preset_main_questions(length: Length, presets: LengthPresets, interview_type: InterviewType) -> int | None",
    "tested_by": [
     "tests.test_preferences"
    ]
@@ -15974,12 +15962,12 @@
   },
   "interview_app.preferences:to_session_config": {
    "doc": "Build a SessionConfig from saved preferences; `overrides` are what the start form changed.",
-   "end_line": 115,
+   "end_line": 121,
    "externals": [
     "Preferences.interviewer.model_copy"
    ],
    "kind": "function",
-   "line": 91,
+   "line": 93,
    "module": "interview_app.preferences",
    "name": "to_session_config",
    "qualname": "to_session_config",

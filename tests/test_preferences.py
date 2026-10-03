@@ -145,9 +145,10 @@ def test_sessions_stored_before_length_existed_load_as_full_text():
     assert config.main_questions == 6  # the stored count stays the truth for an old session
 
 
-@pytest.mark.parametrize(("length", "expected"), [(Length.QUICK, 3), (Length.STANDARD, 5), (Length.FULL, 7)])
+@pytest.mark.parametrize(("length", "expected"), [(Length.QUICK, 3), (Length.STANDARD, 5), (Length.FULL, 4)])
 def test_preset_lengths_take_their_question_count_from_config(length, expected):
-    # The saved custom count and the type's usual length are both ignored for a preset length.
+    # The saved custom count is ignored for a preset length; Full keeps the type's realistic count
+    # (4 for an ML case), so it is exactly today's interview.
     prefs = Preferences(length=length, main_questions=11)
     config = to_session_config(prefs, presets=LengthPresets(), interview_type=InterviewType.ML_CASE)
     assert config.length == length and config.main_questions == expected
@@ -161,10 +162,11 @@ def test_an_override_count_is_ignored_unless_length_is_custom():
 
 
 def test_presets_come_from_the_given_config_group():
-    presets = LengthPresets(quick=2, standard=6, full=9)
-    assert to_session_config(Preferences(length=Length.FULL), presets=presets).main_questions == 9
-    assert preset_main_questions(Length.QUICK, presets) == 2
-    assert preset_main_questions(Length.CUSTOM, presets) is None
+    presets = LengthPresets(quick=2, standard=6)
+    assert to_session_config(Preferences(length=Length.STANDARD), presets=presets).main_questions == 6
+    assert preset_main_questions(Length.QUICK, presets, InterviewType.HIRING_MANAGER) == 2
+    assert preset_main_questions(Length.FULL, presets, InterviewType.FINAL_ROUND) == 8
+    assert preset_main_questions(Length.CUSTOM, presets, InterviewType.HIRING_MANAGER) is None
 
 
 def test_channel_comes_from_prefs_unless_the_form_changes_it():

@@ -121,7 +121,7 @@ if length == Length.CUSTOM:
         key="pref_main_questions",
     )
 else:
-    count = preset_main_questions(length, cfg.length_presets)
+    count = preset_main_questions(length, cfg.length_presets, interview_type)
     st.caption(f"{LENGTH_LABELS[length]}: {count} main questions, follow-ups come on top.")
 
 # --- Developer settings (hidden by default, course task M9) -------------------------------------

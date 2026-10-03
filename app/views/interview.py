@@ -156,7 +156,7 @@ def start_form() -> None:
                 help="Each main question opens a topic; the interviewer may ask follow-ups before moving on.",
             )
         else:
-            count = preset_main_questions(length, get_settings().length_presets)
+            count = preset_main_questions(length, get_settings().length_presets, interview_type)
             st.caption(f"{LENGTH_LABELS[length]}: {count} main questions, follow-ups come on top.")
     with st.container(border=True):
         st.markdown("**3. Feedback style**")

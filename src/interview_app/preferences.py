@@ -79,13 +79,15 @@ def save_preferences(engine: Engine, user_id: int, prefs: Preferences) -> None:
         s.add(row)
 
 
-def preset_main_questions(length: Length, presets: LengthPresets) -> int | None:
-    """The configured question count of a preset Length; None for Custom (the slider decides)."""
-    return {
-        Length.QUICK: presets.quick,
-        Length.STANDARD: presets.standard,
-        Length.FULL: presets.full,
-    }.get(length)
+def preset_main_questions(
+    length: Length, presets: LengthPresets, interview_type: InterviewType
+) -> int | None:
+    """The question count of a preset Length; None for Custom (the slider decides).
+
+    Full keeps the interview type's realistic count, so it is exactly today's interview."""
+    if length == Length.FULL:
+        return DEFAULT_MAIN_QUESTIONS[interview_type]
+    return {Length.QUICK: presets.quick, Length.STANDARD: presets.standard}.get(length)
 
 
 def to_session_config(prefs: Preferences, presets: LengthPresets | None = None, **overrides) -> SessionConfig:
@@ -107,7 +109,11 @@ def to_session_config(prefs: Preferences, presets: LengthPresets | None = None, 
         "llm": prefs.interviewer.model_copy(),
         **overrides,
     }
-    preset = preset_main_questions(Length(values["length"]), presets or get_settings().length_presets)
+    preset = preset_main_questions(
+        Length(values["length"]),
+        presets or get_settings().length_presets,
+        InterviewType(values["interview_type"]),
+    )
     if preset is not None:
         values["main_questions"] = preset
     elif values["main_questions"] is None:
