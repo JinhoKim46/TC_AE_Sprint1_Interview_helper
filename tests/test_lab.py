@@ -16,7 +16,7 @@ from interview_app.db import LLMCall, Turn, session_scope
 from interview_app.demo import load_sample_application
 from interview_app.ingest import DocKind
 from interview_app.interview import engine as eng
-from interview_app.interview.persona import PromptVariant, SessionConfig
+from interview_app.interview.persona import Length, PromptVariant, SessionConfig
 from interview_app.lab import judge as jd
 from interview_app.lab.candidate import (
     PERSONA_INSTRUCTIONS,
@@ -157,6 +157,14 @@ def test_runner_stops_when_the_interviewer_closes(lab):
     sim_requests = [r for r in lab.sdk.requests if r["model"] == lab.settings.models.candidate_sim]
     assert len(sim_requests) == 2
     assert "STAR" in sim_requests[0]["messages"][0]["content"]  # the persona reached the simulator
+
+
+@pytest.mark.parametrize("length", [Length.QUICK, Length.STANDARD, Length.CUSTOM])
+def test_the_lab_runs_full_sessions_only(lab, length):
+    # R4 compares the prompt variants like-for-like, so a Quick session's shorter flow can't sneak in.
+    with pytest.raises(ValueError, match="Full"):
+        run_session(lab.deps, lab.user_id, lab.app_id, P1.model_copy(update={"length": length}), None)
+    assert lab.sdk.requests == []
 
 
 def test_runner_ends_the_session_at_the_turn_cap(lab):

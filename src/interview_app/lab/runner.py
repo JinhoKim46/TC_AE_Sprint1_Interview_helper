@@ -9,7 +9,7 @@ import logging
 from interview_app.applications import get_application
 from interview_app.interview import engine as eng
 from interview_app.interview.engine import EngineDeps
-from interview_app.interview.persona import SessionConfig
+from interview_app.interview.persona import Length, SessionConfig
 from interview_app.lab.candidate import CandidatePersona, simulate_answer
 
 log = logging.getLogger(__name__)
@@ -33,6 +33,10 @@ def run_session(
     writes ordinary answers), the guard's reason is appended to `blocked` and the answer is
     re-simulated once; a second block ends the session.
     """
+    if config.length != Length.FULL:
+        # R4 compares the prompt variants like-for-like on the real interview: Quick changes the flow
+        # (no warm-up, capped follow-ups), so mixing lengths would compare more than the prompt.
+        raise ValueError(f"The prompt lab runs Full sessions only, not {config.length.value}.")
     application = get_application(deps.engine, user_id, app_id)
     if application is None:
         raise ValueError(f"application {app_id} not found")
