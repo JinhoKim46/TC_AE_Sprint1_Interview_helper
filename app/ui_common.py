@@ -5,9 +5,13 @@ created once with st.cache_resource and reused across reruns.
 """
 
 import re
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Final, Literal
 
 import streamlit as st
 from sqlalchemy.engine import Engine
+from streamlit.delta_generator import DeltaGenerator
 from streamlit.errors import StreamlitAPIException
 
 from interview_app.config import get_settings
@@ -130,6 +134,108 @@ def kept_widget(widget, key: str, default, *args, **kwargs):
     value = widget(*args, key=key, **kwargs)
     st.session_state[shadow] = value
     return value
+
+
+# --- Design system: one stylesheet and layout helpers ---------------------------------------------
+#
+# The helpers give their containers keys with fixed prefixes (ih-cards-, ih-card-, ih-foot-, ih-panel-,
+# ih-form-, ih-buttons-). Streamlit turns a container key into the CSS class "st-key-<key>", and
+# app/styles/app.css styles those classes only. A `key` passed to a helper must be unique on the page and
+# should be a short slug (letters, digits, dashes), because it becomes part of a CSS class name.
+
+STYLESHEET: Final = Path(__file__).parent / "styles" / "app.css"
+
+
+def load_styles() -> None:
+    """Inject the app stylesheet (app/styles/app.css). Call it once per run, before drawing (main.py does).
+
+    It takes no arguments on purpose: the stylesheet is a static file, and st.html gets its Path, so no user,
+    document or model text can ever reach the CSS (an injected `</style><img src=...>` would be an XSS and
+    exfiltration hole). Streamlit wraps a .css file in <style> tags and, because the result is only a style
+    tag, puts it where it takes no space on the page.
+    """
+    st.html(STYLESHEET)
+
+
+def sentence_case(label: str) -> str:
+    """Upper-case only the first letter: "job description" -> "Job description", "CV" stays "CV"
+    (str.capitalize would turn it into "Cv")."""
+    return label[:1].upper() + label[1:]
+
+
+def card_row(
+    count: int, *, key: str, per_row: int = 3, highlight: int | None = None, gap: str = "medium"
+) -> list[DeltaGenerator]:
+    """Bordered cards laid out in rows; the cards in each row share one height.
+
+    Returns `count` containers to fill with `with card:`. Cards are placed `per_row` to a row (a short last
+    row keeps the same card width instead of stretching), and on a narrow screen Streamlit stacks the
+    columns. Put the part that should line up across cards (a status, a score, a button) in
+    `card_footer()` as the card's last element: it is pushed to the bottom of the card.
+
+    `highlight` is the index of one card to mark with an accent bar (e.g. the current step). The bar is
+    decoration only: also say the state in words inside the card.
+
+    Use for: the journey steps and application cards on Home, application/session summaries (History).
+    """
+    cards: list[DeltaGenerator] = []
+    for start in range(0, count, per_row):
+        with st.container(key=f"ih-cards-{key}-{start // per_row}"):
+            columns = st.columns(per_row, gap=gap)
+        for offset, column in enumerate(columns[: count - start]):
+            i = start + offset
+            kind = "hl" if i == highlight else "c"
+            cards.append(column.container(border=True, height="stretch", key=f"ih-card-{kind}-{key}-{i}"))
+    return cards
+
+
+def panel(*, key: str) -> DeltaGenerator:
+    """A bordered section with the same inner padding as the cards, for one block that stands on its own
+    (a call to action, a form, a summary). Use as `with panel(key="next-step"):`.
+
+    Use for: Home's next step, the interview start form, the report's headline.
+    """
+    return st.container(border=True, key=f"ih-panel-{key}")
+
+
+def card_footer(*, key: str) -> DeltaGenerator:
+    """The bottom section of a card from card_row(): pushed to the card's bottom edge, so the footers in
+    one row line up whatever the text above them. Keep it short (one line) so the footers stay level.
+    Call it inside `with card:`, after the card's main content. `key` must be unique on the page
+    (e.g. f"app-{app.id}")."""
+    return st.container(key=f"ih-foot-{key}")
+
+
+def form_row(
+    spec: int | Sequence[float],
+    *,
+    key: str,
+    align: Literal["top", "center", "bottom"] = "bottom",
+) -> list[DeltaGenerator]:
+    """Columns for one row of a form grid, with the design system's column gap.
+
+    `spec` is what st.columns takes (a count or relative widths). `align="bottom"` (default) keeps the
+    input boxes level when labels differ in length; use "top" for blocks that start with a heading (a
+    document's label, upload box and text box), and "center" for a caption next to a button. Rows of the
+    same `spec` stack into a grid whose columns line up. On a narrow screen the columns stack.
+
+    Use for: the Company/Role row and the document grid on Applications, the start form's settings.
+    """
+    with st.container(key=f"ih-form-{key}"):
+        return st.columns(spec, gap="medium", vertical_alignment=align)
+
+
+def button_row(*, key: str, align: Literal["start", "end"] = "start") -> DeltaGenerator:
+    """A row of buttons that all get the same width (the widest label's) and height.
+
+    Use as `with button_row(key="next"):` and draw st.button / go_button calls inside, primary action
+    first. `align="end"` pushes the row to the right edge, e.g. a row's action next to its description.
+    On a narrow screen the buttons stack and fill the width (easy to tap). Only buttons belong in it.
+
+    Use for: Home's next-step actions, Save/Save anyway, the Delete row, report and History actions.
+    """
+    prefix = "ih-buttons-end" if align == "end" else "ih-buttons"
+    return st.container(horizontal=True, key=f"{prefix}-{key}")
 
 
 # --- Model clients ---------------------------------------------------------------------------------

@@ -1,0 +1,179 @@
+/*
+ * Interview Helper design system: one static stylesheet, injected on every run by ui_common.load_styles().
+ *
+ * Security: this file is constant. It is never built from data, and nothing from a user, a document or a model
+ * is ever written into it (tests/test_design_system.py checks there are no template placeholders).
+ *
+ * How it hooks into Streamlit: a container created with key="x" gets the CSS class "st-key-x". The helpers in
+ * ui_common give their containers keys with a fixed prefix (ih-cards-, ih-card-, ih-foot-, ih-panel-,
+ * ih-form-, ih-buttons-), and the rules below target those prefixes only, so plain Streamlit elements elsewhere keep
+ * their default look. Colours come from the theme in .streamlit/config.toml; this file avoids hard-coded
+ * colours so the light and dark themes both work. The one exception is the accent bar (--ih-accent), an indigo
+ * that has at least 3:1 contrast on both the light and the dark background (WCAG non-text contrast).
+ */
+
+:root {
+  /* Spacing scale (4px base). Use these steps, not one-off values. */
+  --ih-space-1: 0.25rem;
+  --ih-space-2: 0.5rem;
+  --ih-space-3: 0.75rem;
+  --ih-space-4: 1rem;
+  --ih-space-5: 1.5rem;
+  --ih-space-6: 2rem;
+  /* Minimum touch target height (WCAG 2.5.8 asks 24px; 44px is the comfortable size on a phone). */
+  --ih-control-height: 2.75rem;
+  --ih-accent: #6366f1;
+}
+
+/* --- Focus: always visible for keyboard users, never for mouse clicks (focus-visible) --------------- */
+
+[data-testid="stApp"] button:focus-visible,
+[data-testid="stApp"] a:focus-visible,
+[data-testid="stApp"] summary:focus-visible,
+[data-testid="stApp"] [role="tab"]:focus-visible,
+[data-testid="stApp"] [role="radio"]:focus-visible,
+[data-testid="stApp"] [role="checkbox"]:focus-visible {
+  outline: 2px solid var(--ih-accent);
+  outline-offset: 2px;
+}
+
+/* --- Contrast fixes for Streamlit's built-in faded text (WCAG AA, 4.5:1 for small text) -------------
+ * Streamlit fades captions with opacity 0.6, which gives about 4.3:1 on white and less on the grey
+ * secondary background. 0.75 keeps them visibly secondary but above 6:1 in both themes. Placeholders and the
+ * uploader's "5MB per file" hint get the same treatment, derived from the text colour so dark mode works.
+ */
+
+[data-testid="stApp"] [data-testid="stCaptionContainer"] {
+  opacity: 0.75;
+}
+
+[data-testid="stApp"] [data-testid="stFileUploaderDropzoneInstructions"] span {
+  color: inherit;
+  opacity: 0.75;
+}
+
+[data-testid="stApp"] textarea::placeholder,
+[data-testid="stApp"] input::placeholder {
+  color: currentColor;
+  opacity: 0.7;
+}
+
+/* The selected tab writes its label in the accent colour, which is only 3.7:1 on the dark background. The
+   label keeps the normal text colour; the accent underline still marks the selected tab. */
+[data-testid="stApp"] [data-testid="stTab"][aria-selected="true"] {
+  color: inherit;
+}
+
+/* --- Readable prose: long paragraphs stop at a comfortable line length on a wide screen ------------- */
+
+[data-testid="stMainBlockContainer"] [data-testid="stMarkdownContainer"] > p {
+  max-width: 75ch;
+}
+
+/* --- Card rows: card_row() ---------------------------------------------------------------------------
+ * Every column in a card row stretches to the tallest card, and the card fills its column, so the cards in
+ * a row share one height. Inside a card, a card_footer() is pushed to the bottom, so footers line up too.
+ */
+
+[class*="st-key-ih-cards-"] [data-testid="stHorizontalBlock"] {
+  align-items: stretch;
+  /* When the columns stack on a phone, cards sit one spacing step apart, like the rest of the page. */
+  row-gap: var(--ih-space-4);
+}
+
+[class*="st-key-ih-cards-"] [data-testid="stColumn"] > [data-testid="stVerticalBlock"] {
+  height: 100%;
+}
+
+[class*="st-key-ih-cards-"] [data-testid="stColumn"] > [data-testid="stVerticalBlock"] > [data-testid="stLayoutWrapper"] {
+  flex: 1 1 auto;
+  height: 100%;
+}
+
+[class*="st-key-ih-card-"] {
+  height: 100%;
+  padding: var(--ih-space-4) var(--ih-space-5);
+  gap: var(--ih-space-2);
+}
+
+/* panel(): a single bordered block with the cards' padding, so every bordered box on a page lines up. */
+[class*="st-key-ih-panel-"] {
+  padding: var(--ih-space-4) var(--ih-space-5);
+}
+
+/* The highlighted card (the current step, say): a bar along the top edge, plus a word in the card itself,
+   so the state never depends on colour alone. */
+[class*="st-key-ih-card-hl-"] {
+  box-shadow: inset 0 3px 0 var(--ih-accent);
+}
+
+[class*="st-key-ih-card-"] > [data-testid="stLayoutWrapper"]:has(> [class*="st-key-ih-foot-"]),
+[class*="st-key-ih-card-"] > [class*="st-key-ih-foot-"] {
+  margin-top: auto;
+}
+
+[class*="st-key-ih-foot-"] {
+  padding-top: var(--ih-space-2);
+  gap: var(--ih-space-1);
+}
+
+/* --- Form rows: form_row() -------------------------------------------------------------------------- */
+
+[class*="st-key-ih-form-"] [data-testid="stHorizontalBlock"] {
+  column-gap: var(--ih-space-5);
+  /* Stacked on a phone, the fields of one row sit as close as fields in a column do. */
+  row-gap: var(--ih-space-4);
+}
+
+/* --- Button rows: button_row() -----------------------------------------------------------------------
+ * A grid whose columns are all as wide as the widest button, so every button in the row has the same width
+ * and height. On a narrow screen the buttons stack and fill the width, which also makes them easy to tap.
+ */
+
+[class*="st-key-ih-buttons-"] {
+  display: grid !important;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: fit-content !important;
+  max-width: 100%;
+  gap: var(--ih-space-3);
+  align-items: stretch;
+}
+
+[class*="st-key-ih-buttons-end-"] {
+  margin-left: auto;
+}
+
+[class*="st-key-ih-buttons-"] > * {
+  width: auto !important;
+  min-width: 0;
+}
+
+[class*="st-key-ih-buttons-"] [data-testid="stButton"],
+[class*="st-key-ih-buttons-"] [data-testid="stButton"] button {
+  width: 100%;
+}
+
+[class*="st-key-ih-buttons-"] [data-testid="stButton"] button {
+  min-height: var(--ih-control-height);
+  justify-content: center;
+}
+
+@media (max-width: 640px) {
+  [class*="st-key-ih-buttons-"] {
+    grid-auto-flow: row;
+    width: 100% !important;
+  }
+}
+
+/* --- Motion: respect the system setting ----------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="stApp"] *,
+  [data-testid="stApp"] *::before,
+  [data-testid="stApp"] *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

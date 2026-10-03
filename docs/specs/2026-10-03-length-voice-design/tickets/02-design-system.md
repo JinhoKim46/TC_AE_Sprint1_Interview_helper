@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Static stylesheet + loader helper; a test proves the stylesheet contains no template placeholders and is loaded without user text
-- [ ] Card rows on Home and Applications have equal heights and aligned contents; button rows match in size; form fields on Applications align in a grid
-- [ ] Layout stacks cleanly at 420 px with no horizontal scroll; light and dark both pass AA contrast
-- [ ] Before/after screenshots (1440 px and 420 px, light and dark) reviewed with `design-review`; findings fixed or listed
-- [ ] AppTest suite and ruff green; the app exercised once
+- [x] Static stylesheet + loader helper; a test proves the stylesheet contains no template placeholders and is loaded without user text
+- [x] Card rows on Home and Applications have equal heights and aligned contents; button rows match in size; form fields on Applications align in a grid
+- [x] Layout stacks cleanly at 420 px with no horizontal scroll; light and dark both pass AA contrast
+- [x] Before/after screenshots (1440 px and 420 px, light and dark) reviewed with `design-review`; findings fixed or listed
+- [x] AppTest suite and ruff green; the app exercised once

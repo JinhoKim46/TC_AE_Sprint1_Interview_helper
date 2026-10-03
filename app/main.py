@@ -11,10 +11,13 @@ restart) then showed the raw file list instead of these sections.
 import logging
 
 import streamlit as st
+from ui_common import load_styles
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 st.set_page_config(page_title="Interview Helper", page_icon=":material/record_voice_over:", layout="wide")
+# The design system's stylesheet (a static file), drawn on every run so every page gets it.
+load_styles()
 
 # Pages in the order of the user's journey (documents -> interview -> results), grouped so the sidebar
 # reads as a path rather than a flat list. Settings sit apart: they are rarely needed.

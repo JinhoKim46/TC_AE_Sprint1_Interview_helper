@@ -1007,6 +1007,14 @@
    "to": "interview_app.interview.engine:start_interview"
   },
   {
+   "from": "app.main:<module>",
+   "kind": "call",
+   "lines": [
+    20
+   ],
+   "to": "app.ui_common:load_styles"
+  },
+  {
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
@@ -1073,7 +1081,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "call",
    "lines": [
-    174
+    280
    ],
    "to": "app.ui_common:_user_decider"
   },
@@ -1081,7 +1089,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "call",
    "lines": [
-    174
+    280
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1089,7 +1097,7 @@
    "from": "app.ui_common:_document_guard_for",
    "kind": "construct",
    "lines": [
-    174
+    280
    ],
    "to": "interview_app.security.injection:InjectionGuard"
   },
@@ -1097,7 +1105,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    142
+    248
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1105,7 +1113,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    142
+    248
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1113,7 +1121,7 @@
    "from": "app.ui_common:_user_decider",
    "kind": "call",
    "lines": [
-    142
+    248
    ],
    "to": "interview_app.llm.calllog:make_db_recorder"
   },
@@ -1121,212 +1129,12 @@
    "from": "app.ui_common:_user_decider",
    "kind": "construct",
    "lines": [
-    142
+    248
    ],
    "to": "interview_app.llm.decide:DecisionClient"
   },
   {
    "from": "app.ui_common:current_user_id",
-   "kind": "call",
-   "lines": [
-    34
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.ui_common:current_user_id",
-   "kind": "call",
-   "lines": [
-    34
-   ],
-   "to": "interview_app.users:ensure_local_user"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "call",
-   "lines": [
-    179
-   ],
-   "to": "app.ui_common:_document_guard_for"
-  },
-  {
-   "from": "app.ui_common:document_guard",
-   "kind": "call",
-   "lines": [
-    179
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "call",
-   "lines": [
-    159
-   ],
-   "to": "app.ui_common:_user_decider"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "ref",
-   "lines": [
-    166
-   ],
-   "to": "app.ui_common:engine_deps.make_decider"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "ref",
-   "lines": [
-    163
-   ],
-   "to": "app.ui_common:engine_deps.make_llm"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "app.ui_common:get_engine"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "call",
-   "lines": [
-    150
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "construct",
-   "lines": [
-    160
-   ],
-   "to": "interview_app.interview.engine:EngineDeps"
-  },
-  {
-   "from": "app.ui_common:engine_deps",
-   "kind": "construct",
-   "lines": [
-    164
-   ],
-   "to": "interview_app.security.injection:InjectionGuard"
-  },
-  {
-   "from": "app.ui_common:engine_deps.make_decider",
-   "kind": "call",
-   "lines": [
-    157
-   ],
-   "to": "interview_app.llm.calllog:make_db_recorder"
-  },
-  {
-   "from": "app.ui_common:engine_deps.make_decider",
-   "kind": "construct",
-   "lines": [
-    157
-   ],
-   "to": "interview_app.llm.decide:DecisionClient"
-  },
-  {
-   "from": "app.ui_common:engine_deps.make_llm",
-   "kind": "call",
-   "lines": [
-    153
-   ],
-   "to": "app.ui_common:get_price_catalog"
-  },
-  {
-   "from": "app.ui_common:engine_deps.make_llm",
-   "kind": "call",
-   "lines": [
-    153
-   ],
-   "to": "interview_app.llm.calllog:make_db_recorder"
-  },
-  {
-   "from": "app.ui_common:engine_deps.make_llm",
-   "kind": "construct",
-   "lines": [
-    153
-   ],
-   "to": "interview_app.llm.client:LLMClient"
-  },
-  {
-   "from": "app.ui_common:get_engine",
-   "kind": "call",
-   "lines": [
-    26
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.ui_common:get_engine",
-   "kind": "call",
-   "lines": [
-    27
-   ],
-   "to": "interview_app.db:init_db"
-  },
-  {
-   "from": "app.ui_common:get_engine",
-   "kind": "call",
-   "lines": [
-    26
-   ],
-   "to": "interview_app.db:make_engine"
-  },
-  {
-   "from": "app.ui_common:get_price_catalog",
-   "kind": "call",
-   "lines": [
-    40
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.ui_common:get_price_catalog",
-   "kind": "construct",
-   "lines": [
-    40
-   ],
-   "to": "interview_app.llm.pricing:PriceCatalog"
-  },
-  {
-   "from": "app.ui_common:slider_start",
-   "kind": "call",
-   "lines": [
-    114
-   ],
-   "to": "interview_app.config:get_settings"
-  },
-  {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
-   "lines": [
-    39
-   ],
-   "to": "app.ui_common:current_user_id"
-  },
-  {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
-   "lines": [
-    278
-   ],
-   "to": "app.ui_common:document_guard"
-  },
-  {
-   "from": "app.views.applications:<module>",
    "kind": "call",
    "lines": [
     38
@@ -1334,118 +1142,178 @@
    "to": "app.ui_common:get_engine"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:current_user_id",
    "kind": "call",
    "lines": [
-    247
+    38
    ],
-   "to": "app.ui_common:go_button"
+   "to": "interview_app.users:ensure_local_user"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    216,
-    234,
-    235,
     285
    ],
-   "to": "app.ui_common:safe_md"
+   "to": "app.ui_common:_document_guard_for"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:document_guard",
    "kind": "call",
    "lines": [
-    234,
-    235
+    285
    ],
-   "to": "app.ui_common:short"
+   "to": "app.ui_common:current_user_id"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    274
+    265
    ],
-   "to": "app.views.applications:_check_length"
+   "to": "app.ui_common:_user_decider"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    199,
-    220
+    256
    ],
-   "to": "app.views.applications:_collect_documents"
+   "to": "app.ui_common:current_user_id"
   },
   {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
+   "from": "app.ui_common:engine_deps",
+   "kind": "ref",
    "lines": [
-    192,
-    193,
-    195,
-    196
+    272
    ],
-   "to": "app.views.applications:_document_input"
+   "to": "app.ui_common:engine_deps.make_decider"
   },
   {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
+   "from": "app.ui_common:engine_deps",
+   "kind": "ref",
    "lines": [
-    203
+    269
    ],
-   "to": "app.views.applications:_flag_documents"
+   "to": "app.ui_common:engine_deps.make_llm"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    212,
-    220
+    256
    ],
-   "to": "app.views.applications:_save"
+   "to": "app.ui_common:get_engine"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps",
    "kind": "call",
    "lines": [
-    283,
-    288
+    256
    ],
-   "to": "app.views.applications:_save_edit"
+   "to": "interview_app.config:get_settings"
   },
   {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
+   "from": "app.ui_common:engine_deps",
+   "kind": "construct",
    "lines": [
-    301
+    266
    ],
-   "to": "interview_app.applications:delete_application"
+   "to": "interview_app.interview.engine:EngineDeps"
   },
   {
-   "from": "app.views.applications:<module>",
-   "kind": "call",
+   "from": "app.ui_common:engine_deps",
+   "kind": "construct",
    "lines": [
-    236
+    270
    ],
-   "to": "interview_app.applications:get_application"
+   "to": "interview_app.security.injection:InjectionGuard"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps.make_decider",
    "kind": "call",
    "lines": [
-    166,
-    176,
-    224
+    263
    ],
-   "to": "interview_app.applications:list_applications"
+   "to": "interview_app.llm.calllog:make_db_recorder"
   },
   {
-   "from": "app.views.applications:<module>",
+   "from": "app.ui_common:engine_deps.make_decider",
+   "kind": "construct",
+   "lines": [
+    263
+   ],
+   "to": "interview_app.llm.decide:DecisionClient"
+  },
+  {
+   "from": "app.ui_common:engine_deps.make_llm",
    "kind": "call",
    "lines": [
-    40
+    259
+   ],
+   "to": "app.ui_common:get_price_catalog"
+  },
+  {
+   "from": "app.ui_common:engine_deps.make_llm",
+   "kind": "call",
+   "lines": [
+    259
+   ],
+   "to": "interview_app.llm.calllog:make_db_recorder"
+  },
+  {
+   "from": "app.ui_common:engine_deps.make_llm",
+   "kind": "construct",
+   "lines": [
+    259
+   ],
+   "to": "interview_app.llm.client:LLMClient"
+  },
+  {
+   "from": "app.ui_common:get_engine",
+   "kind": "call",
+   "lines": [
+    30
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.ui_common:get_engine",
+   "kind": "call",
+   "lines": [
+    31
+   ],
+   "to": "interview_app.db:init_db"
+  },
+  {
+   "from": "app.ui_common:get_engine",
+   "kind": "call",
+   "lines": [
+    30
+   ],
+   "to": "interview_app.db:make_engine"
+  },
+  {
+   "from": "app.ui_common:get_price_catalog",
+   "kind": "call",
+   "lines": [
+    44
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.ui_common:get_price_catalog",
+   "kind": "construct",
+   "lines": [
+    44
+   ],
+   "to": "interview_app.llm.pricing:PriceCatalog"
+  },
+  {
+   "from": "app.ui_common:slider_start",
+   "kind": "call",
+   "lines": [
+    118
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1453,7 +1321,177 @@
    "from": "app.views.applications:<module>",
    "kind": "call",
    "lines": [
-    180
+    211,
+    233,
+    263,
+    287,
+    305,
+    319
+   ],
+   "to": "app.ui_common:button_row"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    49
+   ],
+   "to": "app.ui_common:current_user_id"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    297
+   ],
+   "to": "app.ui_common:document_guard"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    179,
+    195,
+    205,
+    258
+   ],
+   "to": "app.ui_common:form_row"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    48
+   ],
+   "to": "app.ui_common:get_engine"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    264
+   ],
+   "to": "app.ui_common:go_button"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    231,
+    251,
+    252,
+    304
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    273
+   ],
+   "to": "app.ui_common:sentence_case"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    251,
+    252
+   ],
+   "to": "app.ui_common:short"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    293
+   ],
+   "to": "app.views.applications:_check_length"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    214,
+    237
+   ],
+   "to": "app.views.applications:_collect_documents"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    207,
+    209
+   ],
+   "to": "app.views.applications:_document_input"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    218
+   ],
+   "to": "app.views.applications:_flag_documents"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    227,
+    237
+   ],
+   "to": "app.views.applications:_save"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    302,
+    309
+   ],
+   "to": "app.views.applications:_save_edit"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    324
+   ],
+   "to": "interview_app.applications:delete_application"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    253
+   ],
+   "to": "interview_app.applications:get_application"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    176,
+    186,
+    241
+   ],
+   "to": "interview_app.applications:list_applications"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    50
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.applications:<module>",
+   "kind": "call",
+   "lines": [
+    190
    ],
    "to": "interview_app.demo:load_sample_application"
   },
@@ -1461,7 +1499,7 @@
    "from": "app.views.applications:<module>",
    "kind": "call",
    "lines": [
-    231
+    248
    ],
    "to": "interview_app.history:list_sessions"
   },
@@ -1469,7 +1507,7 @@
    "from": "app.views.applications:<module>",
    "kind": "call",
    "lines": [
-    229
+    246
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1477,7 +1515,7 @@
    "from": "app.views.applications:<module>",
    "kind": "call",
    "lines": [
-    278
+    297
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_document"
   },
@@ -1485,7 +1523,7 @@
    "from": "app.views.applications:_check_length",
    "kind": "call",
    "lines": [
-    110
+    120
    ],
    "to": "interview_app.ingest:clean_text"
   },
@@ -1493,7 +1531,7 @@
    "from": "app.views.applications:_check_length",
    "kind": "call",
    "lines": [
-    110
+    120
    ],
    "to": "interview_app.ingest:validate_document"
   },
@@ -1501,8 +1539,8 @@
    "from": "app.views.applications:_collect_documents",
    "kind": "call",
    "lines": [
-    99,
-    103
+    109,
+    113
    ],
    "to": "app.views.applications:_text_key"
   },
@@ -1510,7 +1548,7 @@
    "from": "app.views.applications:_collect_documents",
    "kind": "construct",
    "lines": [
-    96
+    106
    ],
    "to": "interview_app.applications:DocumentIn"
   },
@@ -1518,7 +1556,15 @@
    "from": "app.views.applications:_document_input",
    "kind": "call",
    "lines": [
-    74
+    64
+   ],
+   "to": "app.ui_common:sentence_case"
+  },
+  {
+   "from": "app.views.applications:_document_input",
+   "kind": "call",
+   "lines": [
+    84
    ],
    "to": "app.views.applications:_check_length"
   },
@@ -1526,8 +1572,8 @@
    "from": "app.views.applications:_document_input",
    "kind": "call",
    "lines": [
-    75,
-    86
+    85,
+    96
    ],
    "to": "app.views.applications:_text_key"
   },
@@ -1535,7 +1581,7 @@
    "from": "app.views.applications:_document_input",
    "kind": "call",
    "lines": [
-    71
+    81
    ],
    "to": "interview_app.ingest:extract_pdf_text"
   },
@@ -1543,7 +1589,7 @@
    "from": "app.views.applications:_flag_documents",
    "kind": "call",
    "lines": [
-    117
+    127
    ],
    "to": "app.ui_common:document_guard"
   },
@@ -1551,7 +1597,7 @@
    "from": "app.views.applications:_flag_documents",
    "kind": "call",
    "lines": [
-    116
+    126
    ],
    "to": "app.views.applications:_check_length"
   },
@@ -1559,7 +1605,7 @@
    "from": "app.views.applications:_flag_documents",
    "kind": "call",
    "lines": [
-    118
+    128
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_document"
   },
@@ -1567,7 +1613,7 @@
    "from": "app.views.applications:_save",
    "kind": "call",
    "lines": [
-    143
+    153
    ],
    "to": "app.views.applications:_clear_new_form"
   },
@@ -1575,7 +1621,7 @@
    "from": "app.views.applications:_save",
    "kind": "call",
    "lines": [
-    132
+    142
    ],
    "to": "app.views.applications:_fingerprint"
   },
@@ -1583,7 +1629,7 @@
    "from": "app.views.applications:_save",
    "kind": "call",
    "lines": [
-    138
+    148
    ],
    "to": "interview_app.applications:create_application"
   },
@@ -1591,7 +1637,7 @@
    "from": "app.views.applications:_save_edit",
    "kind": "call",
    "lines": [
-    150
+    160
    ],
    "to": "interview_app.applications:update_document"
   },
@@ -1860,7 +1906,7 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    109
+    128
    ],
    "to": "app.report_view:band_badge"
   },
@@ -1868,7 +1914,37 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    14
+    71,
+    75,
+    79,
+    84,
+    103
+   ],
+   "to": "app.ui_common:button_row"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    55,
+    124
+   ],
+   "to": "app.ui_common:card_footer"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    50,
+    116
+   ],
+   "to": "app.ui_common:card_row"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    24
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1876,7 +1952,7 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    13
+    23
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1884,13 +1960,13 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    56,
-    59,
-    62,
-    68,
-    75,
-    87,
-    88
+    72,
+    76,
+    80,
+    85,
+    92,
+    104,
+    105
    ],
    "to": "app.ui_common:go_button"
   },
@@ -1898,8 +1974,16 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    103,
-    104
+    66
+   ],
+   "to": "app.ui_common:panel"
+  },
+  {
+   "from": "app.views.home:<module>",
+   "kind": "call",
+   "lines": [
+    121,
+    122
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1907,8 +1991,8 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    103,
-    104
+    121,
+    122
    ],
    "to": "app.ui_common:short"
   },
@@ -1916,7 +2000,7 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    22
+    32
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1924,7 +2008,7 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    23
+    33
    ],
    "to": "interview_app.history:list_sessions"
   },
@@ -1932,7 +2016,7 @@
    "from": "app.views.home:<module>",
    "kind": "call",
    "lines": [
-    24
+    34
    ],
    "to": "interview_app.journey:next_step"
   },
@@ -3881,7 +3965,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_decider",
    "kind": "binds",
    "lines": [
-    160
+    266
    ],
    "to": "app.ui_common:engine_deps.make_decider"
   },
@@ -3889,7 +3973,7 @@
    "from": "interview_app.interview.engine:EngineDeps.make_llm",
    "kind": "binds",
    "lines": [
-    160
+    266
    ],
    "to": "app.ui_common:engine_deps.make_llm"
   },
@@ -6940,11 +7024,15 @@
     "streamlit"
    ],
    "imported_by": [],
-   "imports": [],
+   "imports": [
+    "app.ui_common"
+   ],
    "layer": "ui",
-   "lines": 31,
+   "lines": 34,
    "path": "app/main.py",
-   "symbols": []
+   "symbols": [
+    "app.main:<module>"
+   ]
   },
   "app.report_view": {
    "doc": "Render a feedback report (shared by the Interview and History pages).",
@@ -6976,12 +7064,16 @@
    "doc": "Shared UI plumbing: cached resources and small helpers used by every page.",
    "doc_more": "Streamlit reruns the whole script on every click, so expensive objects (the DB engine, API clients) are created once with st.cache_resource and reused across reruns.",
    "external_imports": [
+    "collections",
+    "pathlib",
     "re",
     "sqlalchemy",
-    "streamlit"
+    "streamlit",
+    "typing"
    ],
    "imported_by": [
     "app.drill_ui",
+    "app.main",
     "app.report_view",
     "app.views.applications",
     "app.views.history",
@@ -7001,22 +7093,29 @@
     "interview_app.users"
    ],
    "layer": "ui",
-   "lines": 180,
+   "lines": 286,
    "path": "app/ui_common.py",
    "symbols": [
     "app.ui_common:_document_guard_for",
     "app.ui_common:_user_decider",
+    "app.ui_common:button_row",
+    "app.ui_common:card_footer",
+    "app.ui_common:card_row",
     "app.ui_common:current_user_id",
     "app.ui_common:document_guard",
     "app.ui_common:engine_deps",
     "app.ui_common:engine_deps.make_decider",
     "app.ui_common:engine_deps.make_llm",
+    "app.ui_common:form_row",
     "app.ui_common:get_engine",
     "app.ui_common:get_price_catalog",
     "app.ui_common:go_button",
     "app.ui_common:kept_widget",
+    "app.ui_common:load_styles",
     "app.ui_common:page_link",
+    "app.ui_common:panel",
     "app.ui_common:safe_md",
+    "app.ui_common:sentence_case",
     "app.ui_common:short",
     "app.ui_common:slider_start"
    ]
@@ -7041,7 +7140,7 @@
     "interview_app.interview.engine"
    ],
    "layer": "ui",
-   "lines": 303,
+   "lines": 326,
    "path": "app/views/applications.py",
    "symbols": [
     "app.views.applications:<module>",
@@ -7105,7 +7204,7 @@
     "interview_app.journey"
    ],
    "layer": "ui",
-   "lines": 112,
+   "lines": 131,
    "path": "app/views/home.py",
    "symbols": [
     "app.views.home:<module>"
@@ -11295,28 +11394,28 @@
    ]
   }
  },
- "source_sha256": "fa2b559d12e56f0cea984b9e25cd3187e22e90402dbab58ea0fbe738416858dd",
+ "source_sha256": "26f40c219690fcd4333664ce61bf00feb53e94c5f5bfb77575a1822b2ce3b7ad",
  "stats": {
   "agents": 8,
   "call_sites": {
-   "builtin": 548,
-   "external": 846,
-   "resolved": 824,
-   "unresolved": 47
+   "builtin": 550,
+   "external": 844,
+   "resolved": 845,
+   "unresolved": 51
   },
   "classes": 112,
   "edges": {
    "binds": 3,
-   "call": 505,
+   "call": 514,
    "construct": 146,
    "ref": 26
   },
-  "functions": 279,
+  "functions": 286,
   "model_call_sites": 10,
   "modules": 54,
   "tables": 9,
   "templates": 12,
-  "unresolved_listed": 47
+  "unresolved_listed": 51
  },
  "symbols": {
   "app.drill_ui:_joined": {
@@ -11351,6 +11450,23 @@
    "name": "drill_offer",
    "qualname": "drill_offer",
    "signature": "drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview: bool=False) -> None"
+  },
+  "app.main:<module>": {
+   "doc": "",
+   "end_line": 1,
+   "externals": [
+    "logging.basicConfig",
+    "streamlit.Page",
+    "streamlit.navigation",
+    "streamlit.navigation().run",
+    "streamlit.set_page_config"
+   ],
+   "kind": "module",
+   "line": 1,
+   "module": "app.main",
+   "name": "<module>",
+   "qualname": "<module>",
+   "signature": "module-level code"
   },
   "app.report_view:band_badge": {
    "doc": "The hiring signal as a coloured badge with an icon and words, so colour is never the only cue. Static text only (labels from BAND_LABELS), so it is safe in markdown as it is.",
@@ -11407,9 +11523,9 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 174,
+   "end_line": 280,
    "kind": "function",
-   "line": 171,
+   "line": 277,
    "module": "app.ui_common",
    "name": "_document_guard_for",
    "qualname": "_document_guard_for",
@@ -11423,19 +11539,66 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 142,
+   "end_line": 248,
    "kind": "function",
-   "line": 139,
+   "line": 245,
    "module": "app.ui_common",
    "name": "_user_decider",
    "qualname": "_user_decider",
    "signature": "_user_decider(user_id: int) -> DecisionClient"
   },
+  "app.ui_common:button_row": {
+   "doc": "A row of buttons that all get the same width (the widest label's) and height.",
+   "end_line": 238,
+   "externals": [
+    "streamlit.container"
+   ],
+   "kind": "function",
+   "line": 228,
+   "module": "app.ui_common",
+   "name": "button_row",
+   "qualname": "button_row",
+   "signature": "button_row(*, key: str, align: Literal['start', 'end']='start') -> DeltaGenerator"
+  },
+  "app.ui_common:card_footer": {
+   "doc": "The bottom section of a card from card_row(): pushed to the card's bottom edge, so the footers in one row line up whatever the text above them. Keep it short (one line) so the footers stay level. Call it inside `with card:`, after the card's main content. `key` must be unique on the page (e.g. f\"app-{app.id}\").",
+   "end_line": 206,
+   "externals": [
+    "streamlit.container"
+   ],
+   "kind": "function",
+   "line": 201,
+   "module": "app.ui_common",
+   "name": "card_footer",
+   "qualname": "card_footer",
+   "signature": "card_footer(*, key: str) -> DeltaGenerator"
+  },
+  "app.ui_common:card_row": {
+   "doc": "Bordered cards laid out in rows; the cards in each row share one height.",
+   "end_line": 189,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.container"
+   ],
+   "kind": "function",
+   "line": 166,
+   "module": "app.ui_common",
+   "name": "card_row",
+   "qualname": "card_row",
+   "signature": "card_row(count: int, *, key: str, per_row: int=3, highlight: int | None=None, gap: str='medium') -> list[DeltaGenerator]",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 188,
+     "text": "column.container"
+    }
+   ]
+  },
   "app.ui_common:current_user_id": {
    "doc": "Single local user for now (see interview_app/users.py).",
-   "end_line": 35,
+   "end_line": 39,
    "kind": "function",
-   "line": 31,
+   "line": 35,
    "module": "app.ui_common",
    "name": "current_user_id",
    "qualname": "current_user_id",
@@ -11443,9 +11606,9 @@
   },
   "app.ui_common:document_guard": {
    "doc": "Injection guard for uploaded documents (rules first, then Jev).",
-   "end_line": 179,
+   "end_line": 285,
    "kind": "function",
-   "line": 177,
+   "line": 283,
    "module": "app.ui_common",
    "name": "document_guard",
    "qualname": "document_guard",
@@ -11453,9 +11616,9 @@
   },
   "app.ui_common:engine_deps": {
    "doc": "Wire the interview engine to real models, the call log, pricing and the injection guard.",
-   "end_line": 167,
+   "end_line": 273,
    "kind": "function",
-   "line": 145,
+   "line": 251,
    "module": "app.ui_common",
    "name": "engine_deps",
    "qualname": "engine_deps",
@@ -11463,9 +11626,9 @@
   },
   "app.ui_common:engine_deps.make_decider": {
    "doc": "",
-   "end_line": 157,
+   "end_line": 263,
    "kind": "nested",
-   "line": 155,
+   "line": 261,
    "module": "app.ui_common",
    "name": "make_decider",
    "parent": "app.ui_common:engine_deps",
@@ -11474,23 +11637,37 @@
   },
   "app.ui_common:engine_deps.make_llm": {
    "doc": "",
-   "end_line": 153,
+   "end_line": 259,
    "kind": "nested",
-   "line": 152,
+   "line": 258,
    "module": "app.ui_common",
    "name": "make_llm",
    "parent": "app.ui_common:engine_deps",
    "qualname": "engine_deps.make_llm",
    "signature": "make_llm(uid: int, session_id: int | None) -> LLMClient"
   },
+  "app.ui_common:form_row": {
+   "doc": "Columns for one row of a form grid, with the design system's column gap.",
+   "end_line": 225,
+   "externals": [
+    "streamlit.columns",
+    "streamlit.container"
+   ],
+   "kind": "function",
+   "line": 209,
+   "module": "app.ui_common",
+   "name": "form_row",
+   "qualname": "form_row",
+   "signature": "form_row(spec: int | Sequence[float], *, key: str, align: Literal['top', 'center', 'bottom']='bottom') -> list[DeltaGenerator]"
+  },
   "app.ui_common:get_engine": {
    "decorators": [
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 28,
+   "end_line": 32,
    "kind": "function",
-   "line": 25,
+   "line": 29,
    "module": "app.ui_common",
    "name": "get_engine",
    "qualname": "get_engine",
@@ -11504,9 +11681,9 @@
     "st.cache_resource"
    ],
    "doc": "",
-   "end_line": 40,
+   "end_line": 44,
    "kind": "function",
-   "line": 39,
+   "line": 43,
    "module": "app.ui_common",
    "name": "get_price_catalog",
    "qualname": "get_price_catalog",
@@ -11514,14 +11691,14 @@
   },
   "app.ui_common:go_button": {
    "doc": "A button that opens another page, for a call to action that must stand out (a page link looks like plain navigation). `state` is written to session_state first, e.g. which interview to open.",
-   "end_line": 108,
+   "end_line": 112,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.switch_page"
    ],
    "kind": "function",
-   "line": 92,
+   "line": 96,
    "module": "app.ui_common",
    "name": "go_button",
    "qualname": "go_button",
@@ -11529,12 +11706,12 @@
   },
   "app.ui_common:kept_widget": {
    "doc": "Draw a widget whose value survives runs in which it isn't drawn (a hidden section, a slider that only shows for one interview type).",
-   "end_line": 132,
+   "end_line": 136,
    "externals": [
     "streamlit.session_state.get"
    ],
    "kind": "function",
-   "line": 118,
+   "line": 122,
    "module": "app.ui_common",
    "name": "kept_widget",
    "qualname": "kept_widget",
@@ -11542,35 +11719,61 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 130,
+     "line": 134,
      "text": "widget"
     }
    ]
   },
+  "app.ui_common:load_styles": {
+   "doc": "Inject the app stylesheet (app/styles/app.css). Call it once per run, before drawing (main.py does).",
+   "end_line": 157,
+   "externals": [
+    "streamlit.html"
+   ],
+   "kind": "function",
+   "line": 149,
+   "module": "app.ui_common",
+   "name": "load_styles",
+   "qualname": "load_styles",
+   "signature": "load_styles() -> None"
+  },
   "app.ui_common:page_link": {
    "doc": "st.page_link, falling back to plain text when the page runs on its own (tests run one page file without main.py's st.navigation, and then Streamlit can't resolve the page path).",
-   "end_line": 89,
+   "end_line": 93,
    "externals": [
     "streamlit.caption",
     "streamlit.page_link"
    ],
    "kind": "function",
-   "line": 83,
+   "line": 87,
    "module": "app.ui_common",
    "name": "page_link",
    "qualname": "page_link",
    "signature": "page_link(page: str, label: str, icon: str | None=None) -> None"
   },
+  "app.ui_common:panel": {
+   "doc": "A bordered section with the same inner padding as the cards, for one block that stands on its own (a call to action, a form, a summary). Use as `with panel(key=\"next-step\"):`.",
+   "end_line": 198,
+   "externals": [
+    "streamlit.container"
+   ],
+   "kind": "function",
+   "line": 192,
+   "module": "app.ui_common",
+   "name": "panel",
+   "qualname": "panel",
+   "signature": "panel(*, key: str) -> DeltaGenerator"
+  },
   "app.ui_common:safe_md": {
    "doc": "Make model or user text safe to pass to st.markdown, chat messages, labels and alerts.",
-   "end_line": 65,
+   "end_line": 69,
    "externals": [
     "re.compile().sub",
     "re.compile().sub().replace",
     "re.compile().sub().split"
    ],
    "kind": "function",
-   "line": 52,
+   "line": 56,
    "module": "app.ui_common",
    "name": "safe_md",
    "qualname": "safe_md",
@@ -11579,11 +11782,21 @@
     "tests.test_app_ui"
    ]
   },
+  "app.ui_common:sentence_case": {
+   "doc": "Upper-case only the first letter: \"job description\" -> \"Job description\", \"CV\" stays \"CV\" (str.capitalize would turn it into \"Cv\").",
+   "end_line": 163,
+   "kind": "function",
+   "line": 160,
+   "module": "app.ui_common",
+   "name": "sentence_case",
+   "qualname": "sentence_case",
+   "signature": "sentence_case(label: str) -> str"
+  },
   "app.ui_common:short": {
    "doc": "Shorten text for a label, cutting at a word boundary so no word is chopped in half.",
-   "end_line": 74,
+   "end_line": 78,
    "kind": "function",
-   "line": 68,
+   "line": 72,
    "module": "app.ui_common",
    "name": "short",
    "qualname": "short",
@@ -11594,9 +11807,9 @@
   },
   "app.ui_common:slider_start": {
    "doc": "A saved or usual question count clamped into the slider's range (Limits), so a value saved before the range was changed in .env can't make st.slider raise.",
-   "end_line": 115,
+   "end_line": 119,
    "kind": "function",
-   "line": 111,
+   "line": 115,
    "module": "app.ui_common",
    "name": "slider_start",
    "qualname": "slider_start",
@@ -11611,11 +11824,6 @@
     "streamlit.button",
     "streamlit.caption",
     "streamlit.checkbox",
-    "streamlit.columns",
-    "streamlit.columns()[0].caption",
-    "streamlit.columns()[0].text_input",
-    "streamlit.columns()[1].button",
-    "streamlit.columns()[1].text_input",
     "streamlit.divider",
     "streamlit.error",
     "streamlit.expander",
@@ -11636,13 +11844,40 @@
    "module": "app.views.applications",
    "name": "<module>",
    "qualname": "<module>",
-   "signature": "module-level code"
+   "signature": "module-level code",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 180,
+     "text": "hint.caption"
+    },
+    {
+     "candidates": [],
+     "line": 183,
+     "text": "action.button"
+    },
+    {
+     "candidates": [],
+     "line": 196,
+     "text": "col1.text_input"
+    },
+    {
+     "candidates": [],
+     "line": 197,
+     "text": "col2.text_input"
+    },
+    {
+     "candidates": [],
+     "line": 259,
+     "text": "info.caption"
+    }
+   ]
   },
   "app.views.applications:_check_length": {
    "doc": "The same limits the save applies (raises IngestError). Run before the guard, so an oversize document is refused for free instead of being sent to Jev first.",
-   "end_line": 110,
+   "end_line": 120,
    "kind": "function",
-   "line": 107,
+   "line": 117,
    "module": "app.views.applications",
    "name": "_check_length",
    "qualname": "_check_length",
@@ -11650,9 +11885,9 @@
   },
   "app.views.applications:_clear_new_form": {
    "doc": "",
-   "end_line": 161,
+   "end_line": 171,
    "kind": "function",
-   "line": 158,
+   "line": 168,
    "module": "app.views.applications",
    "name": "_clear_new_form",
    "qualname": "_clear_new_form",
@@ -11660,13 +11895,13 @@
   },
   "app.views.applications:_collect_documents": {
    "doc": "",
-   "end_line": 104,
+   "end_line": 114,
    "externals": [
     "streamlit.session_state.get",
     "streamlit.session_state.get().strip"
    ],
    "kind": "function",
-   "line": 94,
+   "line": 104,
    "module": "app.views.applications",
    "name": "_collect_documents",
    "qualname": "_collect_documents",
@@ -11674,7 +11909,7 @@
   },
   "app.views.applications:_document_input": {
    "doc": "Upload-or-paste widget for one document. The text always ends up in st.session_state[_text_key].",
-   "end_line": 91,
+   "end_line": 101,
    "externals": [
     "streamlit.error",
     "streamlit.file_uploader",
@@ -11685,7 +11920,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 52,
+   "line": 62,
    "module": "app.views.applications",
    "name": "_document_input",
    "qualname": "_document_input",
@@ -11693,13 +11928,13 @@
   },
   "app.views.applications:_fingerprint": {
    "doc": "",
-   "end_line": 124,
+   "end_line": 134,
    "externals": [
     "hashlib.sha256",
     "hashlib.sha256().hexdigest"
    ],
    "kind": "function",
-   "line": 122,
+   "line": 132,
    "module": "app.views.applications",
    "name": "_fingerprint",
    "qualname": "_fingerprint",
@@ -11707,9 +11942,9 @@
   },
   "app.views.applications:_flag_documents": {
    "doc": "Injection-check the documents. Raises IngestError first if one is unusable (e.g. too long).",
-   "end_line": 119,
+   "end_line": 129,
    "kind": "function",
-   "line": 113,
+   "line": 123,
    "module": "app.views.applications",
    "name": "_flag_documents",
    "qualname": "_flag_documents",
@@ -11717,7 +11952,7 @@
   },
   "app.views.applications:_save": {
    "doc": "",
-   "end_line": 145,
+   "end_line": 155,
    "externals": [
     "streamlit.error",
     "streamlit.rerun",
@@ -11726,7 +11961,7 @@
     "streamlit.toast"
    ],
    "kind": "function",
-   "line": 127,
+   "line": 137,
    "module": "app.views.applications",
    "name": "_save",
    "qualname": "_save",
@@ -11734,7 +11969,7 @@
   },
   "app.views.applications:_save_edit": {
    "doc": "",
-   "end_line": 155,
+   "end_line": 165,
    "externals": [
     "streamlit.error",
     "streamlit.session_state.pop",
@@ -11742,7 +11977,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 148,
+   "line": 158,
    "module": "app.views.applications",
    "name": "_save_edit",
    "qualname": "_save_edit",
@@ -11750,9 +11985,9 @@
   },
   "app.views.applications:_text_key": {
    "doc": "",
-   "end_line": 49,
+   "end_line": 59,
    "kind": "function",
-   "line": 48,
+   "line": 58,
    "module": "app.views.applications",
    "name": "_text_key",
    "qualname": "_text_key",
@@ -11912,8 +12147,6 @@
     "collections.defaultdict",
     "collections.defaultdict().get",
     "streamlit.caption",
-    "streamlit.columns",
-    "streamlit.container",
     "streamlit.info",
     "streamlit.markdown",
     "streamlit.subheader",
@@ -11925,19 +12158,7 @@
    "module": "app.views.home",
    "name": "<module>",
    "qualname": "<module>",
-   "signature": "module-level code",
-   "unresolved": [
-    {
-     "candidates": [],
-     "line": 38,
-     "text": "col.container"
-    },
-    {
-     "candidates": [],
-     "line": 101,
-     "text": "cols[i % len(cols)].container"
-    }
-   ]
+   "signature": "module-level code"
   },
   "app.views.interview:<module>": {
    "doc": "",
