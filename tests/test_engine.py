@@ -6,11 +6,11 @@ from types import SimpleNamespace
 import pytest
 
 from interview_app.applications import update_document
-from interview_app.config import Limits, Settings
+from interview_app.config import LengthPresets, Limits, Settings
 from interview_app.demo import load_sample_application
 from interview_app.ingest import DocKind
 from interview_app.interview import engine as eng
-from interview_app.interview.persona import PromptVariant, SessionConfig
+from interview_app.interview.persona import Difficulty, Length, PromptVariant, SessionConfig
 from interview_app.interview.schemas import InterviewPlan
 from interview_app.llm.calllog import make_db_recorder
 from interview_app.llm.client import LLMClient
@@ -605,3 +605,123 @@ def test_ending_a_preparing_session_is_not_undone_by_the_start(setup, monkeypatc
         start(setup)
     view = eng.get_session(setup.deps.engine, setup.user_id, 1)  # the only session in this test DB
     assert view.status == "ended_early"
+
+
+# --- Length: Quick behaviour is computed in code; Standard and Full keep today's flow ---------------
+
+QUICK_PROGRESS = [
+    eng.Progress(0, 0, 0, False, None),  # opening
+    eng.Progress(1, 0, 1, False, "candidate"),  # mid-interview, follow-ups left
+    eng.Progress(1, 1, 2, False, "candidate"),  # one follow-up used
+    eng.Progress(3, 0, 3, False, "candidate"),  # all main questions asked
+    eng.Progress(3, 1, 4, False, "candidate"),  # ... and the follow-up used
+    eng.Progress(3, 0, 5, True, "candidate"),  # candidate-questions stage
+]
+
+
+@pytest.mark.parametrize(
+    ("length", "difficulty", "quick_cap", "expected"),
+    [
+        (Length.QUICK, Difficulty.TOUGH, 1, 1),  # Quick caps a tough interview's 3
+        (Length.QUICK, Difficulty.FRIENDLY, 1, 1),
+        (Length.QUICK, Difficulty.STANDARD, 0, 0),  # min(), so a stricter Quick cap wins
+        (Length.FULL, Difficulty.TOUGH, 1, 3),
+        (Length.STANDARD, Difficulty.TOUGH, 1, 3),
+        (Length.CUSTOM, Difficulty.STANDARD, 1, 2),
+    ],
+)
+def test_followup_cap_is_min_of_difficulty_and_quick_cap(length, difficulty, quick_cap, expected):
+    config = SessionConfig(length=length, difficulty=difficulty)
+    assert eng.followup_cap(config, LengthPresets(quick_max_followups=quick_cap)) == expected
+
+
+def test_quick_opening_has_no_warm_up_and_names_the_core_questions():
+    config = SessionConfig(length=Length.QUICK, main_questions=3)
+    opening = eng.next_directive(eng.Progress(0, 0, 0, False, None), config, force_close=False)
+    assert "one sentence" in opening and "no warm-up" in opening
+    assert "motivation" in opening and "top must-have requirement" in opening
+    assert "typical of this interview type" in opening
+    full = eng.next_directive(eng.Progress(0, 0, 0, False, None), SessionConfig(), force_close=False)
+    assert "warm-up question" in full and "no warm-up" not in full
+
+
+def test_quick_stops_followups_after_the_quick_cap():
+    config = SessionConfig(length=Length.QUICK, difficulty=Difficulty.TOUGH, main_questions=3)
+    directive = eng.next_directive(eng.Progress(1, 1, 2, False, "candidate"), config, force_close=False)
+    assert "No more follow-ups" in directive and "top must-have requirement" in directive
+    tough_full = SessionConfig(length=Length.FULL, difficulty=Difficulty.TOUGH, main_questions=3)
+    assert "No more follow-ups" not in eng.next_directive(
+        eng.Progress(1, 1, 2, False, "candidate"), tough_full, force_close=False
+    )
+
+
+def test_quick_closes_with_a_one_line_skippable_question_offer():
+    config = SessionConfig(length=Length.QUICK, main_questions=3)
+    done = eng.next_directive(eng.Progress(3, 1, 4, False, "candidate"), config, force_close=False)
+    assert "one short line" in done and "skip" in done and "candidate_questions" in done
+    in_cq = eng.next_directive(eng.Progress(3, 0, 5, True, "candidate"), config, force_close=False)
+    assert "candidate-questions stage" in in_cq and "is_final true" in in_cq
+
+
+@pytest.mark.parametrize("progress", QUICK_PROGRESS)
+def test_standard_keeps_the_full_flow(progress):
+    full = SessionConfig(length=Length.FULL, main_questions=3)
+    standard = SessionConfig(length=Length.STANDARD, main_questions=3)
+    assert eng.next_directive(progress, standard, False) == eng.next_directive(progress, full, False)
+
+
+def quick_config(**kw):
+    return p1_config(length=Length.QUICK, main_questions=3, difficulty=Difficulty.TOUGH, **kw)
+
+
+def test_quick_session_runs_short_and_closes_after_the_offer(setup):
+    sid = start(setup, quick_config(), turn("motivation", "MOT-01", message="I'm Daniel. Why this role?"))
+    first = setup.sdk.requests[0]["messages"]
+    assert "no warm-up" in first[-1]["content"]
+    assert "Follow-ups on the current question: 0 of 1." in first[-1]["content"]  # Quick cap, not 3
+
+    setup.sdk.replies.append(turn(message="What was your part?", followup=True, qid="EXP-OWN-01"))
+    eng.answer(setup.deps, setup.user_id, sid, "The robotics problems.")
+    setup.sdk.replies.append(turn("experience", "EXP-DEEP-01", message="Tell me about C++."))
+    eng.answer(setup.deps, setup.user_id, sid, "I led the pipeline.")
+    assert "No more follow-ups" in setup.sdk.requests[-1]["messages"][-1]["content"]
+
+    setup.sdk.replies.append(turn("technical", "TECH-01", message="How would you profile it?"))
+    eng.answer(setup.deps, setup.user_id, sid, "Three years of C++ on Jetson.")
+    setup.sdk.replies.append(turn("candidate_questions", "CQ-01", message="Any quick question for me?"))
+    eng.answer(setup.deps, setup.user_id, sid, "With perf and Nsight.")
+    assert "one short line" in setup.sdk.requests[-1]["messages"][-1]["content"]
+
+    setup.sdk.replies.append(turn("close", "CLOSE-01", message="Thanks, that's it.", final=True))
+    outcome = eng.answer(setup.deps, setup.user_id, sid, "No, thanks.")
+    assert outcome.finished  # the one-line offer was the candidate-questions stage: no forced retry
+    view = eng.get_session(setup.deps.engine, setup.user_id, sid)
+    assert view.progress.main_asked == 3 and view.status == "finished"
+
+
+def test_quick_early_close_is_corrected_with_the_one_line_offer(setup):
+    sid = start(setup, quick_config())
+    setup.sdk.replies += [
+        turn("close", "CLOSE-01", message="Bye.", final=True),
+        turn("candidate_questions", "CQ-01", message="Any quick question for me?"),
+    ]
+    outcome = eng.answer(setup.deps, setup.user_id, sid, "That's my motivation.")
+    assert not outcome.finished and outcome.interviewer.stage == "candidate_questions"
+    correction = setup.sdk.requests[-1]["messages"][-1]["content"]
+    assert "Do not close yet" in correction and "one short line" in correction
+
+
+def test_quick_p4_system_prompt_and_plan_use_the_quick_rules(setup):
+    setup.sdk.replies.append(PLAN.model_dump_json())
+    config = SessionConfig(length=Length.QUICK, main_questions=3, difficulty=Difficulty.TOUGH)
+    start(setup, config)
+    plan_prompt = setup.sdk.requests[0]["messages"][-1]["content"]
+    assert "quick practice" in plan_prompt and "top must-have requirement" in plan_prompt
+    system = setup.sdk.requests[1]["messages"][0]["content"]
+    assert "at most 1 follow-ups per main question" in system  # the Quick cap reaches the persona
+
+
+def test_full_p4_plan_has_no_quick_note(setup):
+    setup.sdk.replies.append(PLAN.model_dump_json())
+    start(setup, SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH))
+    assert "quick practice" not in setup.sdk.requests[0]["messages"][-1]["content"]

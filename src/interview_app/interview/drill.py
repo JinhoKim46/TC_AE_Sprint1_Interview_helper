@@ -10,7 +10,7 @@ from statistics import mean
 
 from interview_app.evaluation.rubric import Rubric
 from interview_app.evaluation.schemas import Report
-from interview_app.interview.persona import Focus, SessionConfig
+from interview_app.interview.persona import Focus, Length, SessionConfig
 
 # Requirement levels that still need practice ("claimed" = said, but without evidence).
 WEAK_LEVELS = ("not_addressed", "not_demonstrated", "claimed")
@@ -42,6 +42,13 @@ def focus_from_report(report: Report, rubric: Rubric, source_session_id: int | N
 
 def drill_config(base: SessionConfig, focus: Focus) -> SessionConfig:
     """Same interview type, difficulty, mode and models as the original; one main question per target
-    plus the warm-up, kept inside the allowed range."""
+    plus the warm-up, kept inside the allowed range.
+
+    The Length becomes Custom: the drill sizes itself from its targets, so labelling it with the
+    original's Quick / Standard / Full would be wrong, and it must not inherit Quick's short flow.
+    Like Quick, a Custom session is practice and is left out of History's latest / best scores.
+    """
     targets = len(focus.requirements) + len(focus.skills)
-    return base.model_copy(update={"focus": focus, "main_questions": max(3, min(8, targets + 1))})
+    return base.model_copy(
+        update={"focus": focus, "main_questions": max(3, min(8, targets + 1)), "length": Length.CUSTOM}
+    )

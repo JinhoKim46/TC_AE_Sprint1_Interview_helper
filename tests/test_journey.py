@@ -3,12 +3,15 @@
 from datetime import UTC, datetime, timedelta
 
 from interview_app.history import SessionSummary
+from interview_app.interview.persona import Length
 from interview_app.journey import Step, next_step, score_summary
 
 T0 = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
 
 
-def summary(n: int, status: str = "finished", overall: float | None = None) -> SessionSummary:
+def summary(
+    n: int, status: str = "finished", overall: float | None = None, length: Length = Length.FULL
+) -> SessionSummary:
     """Session n starts n days after T0 (a higher n is newer)."""
     return SessionSummary(
         session_id=n,
@@ -22,6 +25,7 @@ def summary(n: int, status: str = "finished", overall: float | None = None) -> S
         difficulty="standard",
         mode="realistic",
         prompt_variant="p4_role_rich",
+        length=length,
         main_questions_asked=3,
         cost_usd=0.01,
         overall=overall,
@@ -68,3 +72,21 @@ def test_score_summary_with_one_or_no_scores():
     assert (one.scored, one.latest, one.best, one.change) == (1, 60, 60, None)
     none = score_summary([summary(1)])
     assert (none.scored, none.latest, none.best, none.change) == (0, None, None, None)
+
+
+def test_latest_and_best_count_only_standard_and_full():
+    s = score_summary(
+        [
+            summary(4, overall=95, length=Length.QUICK),  # newest, but a short practice
+            summary(3, overall=90, length=Length.CUSTOM),  # e.g. a weak-spot drill
+            summary(2, overall=70, length=Length.STANDARD),
+            summary(1, overall=60, length=Length.FULL),
+        ]
+    )
+    assert (s.latest, s.best, s.change) == (70, 70, 10)
+    assert s.scored == 4 and s.practice == 2  # practice sessions are still counted as scored
+
+
+def test_only_practice_scores_give_no_latest_or_best():
+    s = score_summary([summary(1, overall=80, length=Length.QUICK)])
+    assert (s.scored, s.practice, s.latest, s.best, s.change) == (1, 1, None, None, None)

@@ -18,7 +18,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from interview_app.ingest import KIND_LABELS, DocKind
-from interview_app.interview.persona import TYPE_LABELS, Persona, PromptVariant, SessionConfig
+from interview_app.interview.persona import TYPE_LABELS, Length, Persona, PromptVariant, SessionConfig
 from interview_app.interview.schemas import CotTurn, CritiqueTurn, InterviewerTurn, InterviewPlan
 from interview_app.security import ANSWER_DATA_NOTE, UNTRUSTED_DATA_NOTE, wrap_untrusted
 
@@ -108,6 +108,8 @@ class PromptContext:
     persona: Persona
     guideline: str = ""
     plan: InterviewPlan | None = None
+    # The session's follow-up cap (engine.followup_cap: Quick lowers it). None = the difficulty's cap.
+    max_followups: int | None = None
 
 
 def interviewer_system_prompt(ctx: PromptContext) -> str:
@@ -120,7 +122,7 @@ def interviewer_system_prompt(ctx: PromptContext) -> str:
         persona=ctx.persona,
         type_label=TYPE_LABELS[ctx.config.interview_type],
         difficulty=ctx.config.difficulty.value,
-        max_followups=ctx.config.max_followups,
+        max_followups=ctx.config.max_followups if ctx.max_followups is None else ctx.max_followups,
         data_note=UNTRUSTED_DATA_NOTE,
         answer_note=ANSWER_DATA_NOTE,
         documents=blocks,
@@ -155,6 +157,14 @@ def control_message(
     return {"role": "system", "content": content}
 
 
+# Quick's planning note: the probes are the core topics only. Kept here, in code, like the directives.
+QUICK_PLAN_NOTE = (
+    "This is a quick practice session, so the probes are only the core topics: the candidate's motivation "
+    "for this role, the job description's top must-have requirement, and one question typical of this "
+    "interview type. Skip the warm-up and the broader coverage rules above."
+)
+
+
 def plan_messages(
     company: str, role: str, documents: dict[DocKind, str], config: SessionConfig
 ) -> list[dict]:
@@ -168,6 +178,7 @@ def plan_messages(
         missing=missing,
         focus=config.focus,
         focus_block=focus_block(config.focus),
+        length_note=QUICK_PLAN_NOTE if config.length == Length.QUICK else "",
     )
     return [
         {"role": "system", "content": "You are an experienced interviewer preparing for an interview."},

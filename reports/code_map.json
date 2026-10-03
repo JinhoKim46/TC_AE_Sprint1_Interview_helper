@@ -50,7 +50,7 @@
     {
      "api": "chat_json",
      "gateway": "interview_app.llm.client:LLMClient.chat_json",
-     "line": 437,
+     "line": 503,
      "message_roles": [
       "assistant",
       "system",
@@ -82,7 +82,7 @@
     {
      "api": "chat_json",
      "gateway": "interview_app.llm.client:LLMClient.chat_json",
-     "line": 446,
+     "line": 510,
      "message_roles": [
       "assistant",
       "system",
@@ -1599,7 +1599,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    28
+    41
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1607,7 +1607,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    27
+    40
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1615,7 +1615,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    213
+    280
    ],
    "to": "app.ui_common:page_link"
   },
@@ -1623,7 +1623,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    233
+    300
    ],
    "to": "app.views.history:progress_block"
   },
@@ -1631,7 +1631,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    230
+    297
    ],
    "to": "app.views.history:score_metrics"
   },
@@ -1639,7 +1639,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    254
+    321
    ],
    "to": "app.views.history:session_detail"
   },
@@ -1647,7 +1647,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    249
+    316
    ],
    "to": "app.views.history:session_label"
   },
@@ -1655,7 +1655,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    241
+    308
    ],
    "to": "app.views.history:sessions_table"
   },
@@ -1663,7 +1663,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    216
+    283
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1671,8 +1671,8 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    210,
-    227
+    277,
+    294
    ],
    "to": "interview_app.history:list_sessions"
   },
@@ -1680,7 +1680,7 @@
    "from": "app.views.history:_length_channel",
    "kind": "construct",
    "lines": [
-    44
+    57
    ],
    "to": "interview_app.interview.persona:SessionConfig"
   },
@@ -1688,7 +1688,7 @@
    "from": "app.views.history:_length_channel",
    "kind": "call",
    "lines": [
-    44
+    57
    ],
    "to": "interview_app.interview.persona:length_channel_label"
   },
@@ -1696,7 +1696,7 @@
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    130
+    141
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1704,7 +1704,15 @@
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    84
+    101
+   ],
+   "to": "app.views.history:trend_chart"
+  },
+  {
+   "from": "app.views.history:progress_block",
+   "kind": "call",
+   "lines": [
+    97
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1712,7 +1720,7 @@
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    84
+    97
    ],
    "to": "interview_app.history:progress"
   },
@@ -1720,7 +1728,7 @@
    "from": "app.views.history:score_metrics",
    "kind": "call",
    "lines": [
-    135
+    197
    ],
    "to": "interview_app.journey:score_summary"
   },
@@ -1728,7 +1736,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    182
+    249
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -1736,7 +1744,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    181
+    248
    ],
    "to": "app.report_view:render_report"
   },
@@ -1744,7 +1752,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    156
+    223
    ],
    "to": "app.report_view:session_badge"
   },
@@ -1752,8 +1760,8 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    185,
-    190
+    252,
+    257
    ],
    "to": "app.ui_common:go_button"
   },
@@ -1761,10 +1769,10 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    155,
-    170,
-    171,
-    175
+    222,
+    237,
+    238,
+    242
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1772,7 +1780,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    181
+    248
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1780,7 +1788,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    203
+    270
    ],
    "to": "interview_app.history:delete_session"
   },
@@ -1788,7 +1796,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    179
+    246
    ],
    "to": "interview_app.history:load_report"
   },
@@ -1796,7 +1804,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    149
+    216
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -1804,7 +1812,7 @@
    "from": "app.views.history:session_detail",
    "kind": "construct",
    "lines": [
-    153
+    220
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1812,7 +1820,7 @@
    "from": "app.views.history:session_label",
    "kind": "call",
    "lines": [
-    39
+    52
    ],
    "to": "app.views.history:_length_channel"
   },
@@ -1820,7 +1828,7 @@
    "from": "app.views.history:session_label",
    "kind": "construct",
    "lines": [
-    38
+    51
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1828,7 +1836,7 @@
    "from": "app.views.history:sessions_table",
    "kind": "call",
    "lines": [
-    60
+    73
    ],
    "to": "app.views.history:_length_channel"
   },
@@ -1836,7 +1844,7 @@
    "from": "app.views.history:sessions_table",
    "kind": "ref",
    "lines": [
-    77
+    90
    ],
    "to": "app.views.history:sessions_table.open_selected"
   },
@@ -1844,7 +1852,7 @@
    "from": "app.views.history:sessions_table",
    "kind": "construct",
    "lines": [
-    59
+    72
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -3000,8 +3008,8 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    141,
-    172
+    147,
+    178
    ],
    "to": "interview_app.evaluation.aggregate:_first_per_item"
   },
@@ -3009,8 +3017,8 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    188,
-    189
+    197,
+    198
    ],
    "to": "interview_app.evaluation.aggregate:aggregate.section"
   },
@@ -3018,7 +3026,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    153
+    159
    ],
    "to": "interview_app.evaluation.aggregate:exchange_score"
   },
@@ -3026,7 +3034,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    179
+    188
    ],
    "to": "interview_app.evaluation.aggregate:grounded_requirements"
   },
@@ -3034,7 +3042,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    212
+    221
    ],
    "to": "interview_app.evaluation.aggregate:grounded_strengths"
   },
@@ -3042,8 +3050,8 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    144,
-    175
+    150,
+    181
    ],
    "to": "interview_app.evaluation.aggregate:usable"
   },
@@ -3051,7 +3059,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    198
+    207
    ],
    "to": "interview_app.evaluation.aggregate:weighted_overall"
   },
@@ -3059,9 +3067,9 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "ref",
    "lines": [
-    132,
-    140,
-    153
+    138,
+    146,
+    159
    ],
    "to": "interview_app.evaluation.exchanges:Exchange.candidate_turns"
   },
@@ -3069,8 +3077,8 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    132,
-    140
+    138,
+    146
    ],
    "to": "interview_app.evaluation.exchanges:turn_id"
   },
@@ -3078,7 +3086,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    198
+    207
    ],
    "to": "interview_app.evaluation.rubric:Rubric.aggregation_weights"
   },
@@ -3086,7 +3094,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    206
+    215
    ],
    "to": "interview_app.evaluation.rubric:Rubric.band"
   },
@@ -3094,8 +3102,8 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "ref",
    "lines": [
-    144,
-    175
+    150,
+    181
    ],
    "to": "interview_app.evaluation.rubric:Rubric.evidence_required"
   },
@@ -3103,10 +3111,10 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    185,
-    190,
-    191,
-    192
+    194,
+    199,
+    200,
+    201
    ],
    "to": "interview_app.evaluation.rubric:Rubric.norm"
   },
@@ -3114,7 +3122,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    201
+    210
    ],
    "to": "interview_app.evaluation.rubric:Rubric.penalty"
   },
@@ -3122,7 +3130,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    180
+    189
    ],
    "to": "interview_app.evaluation.rubric:Rubric.requirement_points"
   },
@@ -3130,7 +3138,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    181
+    190
    ],
    "to": "interview_app.evaluation.rubric:Rubric.requirement_weights"
   },
@@ -3138,7 +3146,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    165
+    171
    ],
    "to": "interview_app.evaluation.rubric:Rubric.section_categories"
   },
@@ -3146,7 +3154,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "call",
    "lines": [
-    137
+    143
    ],
    "to": "interview_app.evaluation.rubric:Rubric.weights_for"
   },
@@ -3154,7 +3162,7 @@
    "from": "interview_app.evaluation.aggregate:aggregate",
    "kind": "construct",
    "lines": [
-    149
+    155
    ],
    "to": "interview_app.evaluation.schemas:ExchangeReport"
   },
@@ -3447,7 +3455,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "construct",
    "lines": [
-    132
+    145
    ],
    "to": "interview_app.db:Evaluation"
   },
@@ -3455,8 +3463,8 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    70,
-    126
+    71,
+    139
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3464,7 +3472,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    109
+    112
    ],
    "to": "interview_app.evaluation.aggregate:aggregate"
   },
@@ -3472,7 +3480,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    66
+    67
    ],
    "to": "interview_app.evaluation.exchanges:build_exchanges"
   },
@@ -3480,7 +3488,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    77
+    78
    ],
    "to": "interview_app.evaluation.judge:judge_messages"
   },
@@ -3488,7 +3496,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    75
+    76
    ],
    "to": "interview_app.evaluation.metrics:compute_metrics"
   },
@@ -3496,7 +3504,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "ref",
    "lines": [
-    78
+    79
    ],
    "to": "interview_app.evaluation.rubric:Rubric.judge_runs"
   },
@@ -3504,7 +3512,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    74
+    75
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -3512,7 +3520,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "construct",
    "lines": [
-    114
+    127
    ],
    "to": "interview_app.evaluation.schemas:Report"
   },
@@ -3520,10 +3528,10 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "construct",
    "lines": [
-    63,
-    65,
-    68,
-    106
+    64,
+    66,
+    69,
+    107
    ],
    "to": "interview_app.evaluation.service:EvaluationError"
   },
@@ -3531,7 +3539,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "ref",
    "lines": [
-    99
+    100
    ],
    "to": "interview_app.evaluation.service:evaluate_session.one_run"
   },
@@ -3539,7 +3547,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    111
+    124
    ],
    "to": "interview_app.evaluation.service:median_run"
   },
@@ -3547,7 +3555,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    58
+    59
    ],
    "to": "interview_app.evaluation.service:stored_report"
   },
@@ -3555,7 +3563,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    102
+    103
    ],
    "to": "interview_app.interview.engine:EngineDeps.make_llm"
   },
@@ -3563,7 +3571,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    61
+    62
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -3571,7 +3579,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    79
+    80
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -3579,7 +3587,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    72
+    73
    ],
    "to": "interview_app.interview.engine:session_documents"
   },
@@ -3587,7 +3595,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    72
+    73
    ],
    "to": "interview_app.interview.engine:session_plan"
   },
@@ -3595,7 +3603,7 @@
    "from": "interview_app.evaluation.service:evaluate_session",
    "kind": "call",
    "lines": [
-    79
+    80
    ],
    "to": "interview_app.security.limits:check_budget"
   },
@@ -3603,7 +3611,7 @@
    "from": "interview_app.evaluation.service:evaluate_session.one_run",
    "kind": "call",
    "lines": [
-    92
+    93
    ],
    "to": "interview_app.evaluation.judge:run_judge"
   },
@@ -3611,7 +3619,7 @@
    "from": "interview_app.evaluation.service:evaluate_session.one_run",
    "kind": "ref",
    "lines": [
-    92
+    93
    ],
    "to": "interview_app.evaluation.rubric:Rubric.judge_temperature"
   },
@@ -3619,7 +3627,7 @@
    "from": "interview_app.evaluation.service:evaluate_session.one_run",
    "kind": "call",
    "lines": [
-    89
+    90
    ],
    "to": "interview_app.interview.engine:EngineDeps.make_llm"
   },
@@ -3627,7 +3635,7 @@
    "from": "interview_app.evaluation.service:stored_report",
    "kind": "call",
    "lines": [
-    52
+    53
    ],
    "to": "interview_app.history:load_report"
   },
@@ -3635,7 +3643,7 @@
    "from": "interview_app.history:_reports_oldest_first",
    "kind": "call",
    "lines": [
-    166
+    185
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3643,7 +3651,7 @@
    "from": "interview_app.history:delete_session",
    "kind": "call",
    "lines": [
-    265
+    293
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -3651,7 +3659,7 @@
    "from": "interview_app.history:delete_session",
    "kind": "call",
    "lines": [
-    256
+    284
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3659,7 +3667,7 @@
    "from": "interview_app.history:delete_session",
    "kind": "call",
    "lines": [
-    265
+    293
    ],
    "to": "interview_app.voice:delete_session_audio"
   },
@@ -3667,7 +3675,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    95
+    112
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3675,7 +3683,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    131
+    148
    ],
    "to": "interview_app.history:SessionSummary"
   },
@@ -3683,7 +3691,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    97
+    114
    ],
    "to": "interview_app.history:_visible_sessions"
   },
@@ -3691,7 +3699,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    116
+    133
    ],
    "to": "interview_app.interview.engine:TurnView"
   },
@@ -3699,7 +3707,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    146
+    163
    ],
    "to": "interview_app.interview.engine:compute_progress"
   },
@@ -3707,7 +3715,7 @@
    "from": "interview_app.history:load_report",
    "kind": "call",
    "lines": [
-    158
+    175
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3715,7 +3723,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    183
+    205
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -3723,7 +3731,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    183
+    205
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -3731,7 +3739,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    199
+    227
    ],
    "to": "interview_app.history:ItemMean"
   },
@@ -3739,7 +3747,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    241
+    269
    ],
    "to": "interview_app.history:Progress"
   },
@@ -3747,7 +3755,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    236
+    264
    ],
    "to": "interview_app.history:RecurringImprovement"
   },
@@ -3755,17 +3763,33 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    219
+    247
    ],
    "to": "interview_app.history:RequirementHistory"
   },
   {
    "from": "interview_app.history:progress",
+   "kind": "construct",
+   "lines": [
+    209
+   ],
+   "to": "interview_app.history:TrendPoint"
+  },
+  {
+   "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    184
+    206
    ],
    "to": "interview_app.history:_reports_oldest_first"
+  },
+  {
+   "from": "interview_app.history:progress",
+   "kind": "call",
+   "lines": [
+    210
+   ],
+   "to": "interview_app.history:counts_towards_scores"
   },
   {
    "from": "interview_app.ingest:_extract_pages",
@@ -3849,7 +3873,7 @@
    "from": "interview_app.interview.engine:<module>",
    "kind": "ref",
    "lines": [
-    637
+    701
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -3881,7 +3905,7 @@
    "from": "interview_app.interview.engine:_add_turn",
    "kind": "construct",
    "lines": [
-    347
+    412
    ],
    "to": "interview_app.db:Turn"
   },
@@ -3889,7 +3913,7 @@
    "from": "interview_app.interview.engine:_add_turn",
    "kind": "call",
    "lines": [
-    346
+    411
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3897,7 +3921,7 @@
    "from": "interview_app.interview.engine:_add_turn",
    "kind": "call",
    "lines": [
-    357
+    422
    ],
    "to": "interview_app.interview.engine:_turn_view"
   },
@@ -3905,7 +3929,7 @@
    "from": "interview_app.interview.engine:_add_turn",
    "kind": "call",
    "lines": [
-    353
+    418
    ],
    "to": "interview_app.interview.schemas:private_fields"
   },
@@ -3913,7 +3937,7 @@
    "from": "interview_app.interview.engine:_check_answer",
    "kind": "call",
    "lines": [
-    515
+    579
    ],
    "to": "interview_app.interview.engine:_session_guard"
   },
@@ -3921,7 +3945,7 @@
    "from": "interview_app.interview.engine:_check_answer",
    "kind": "call",
    "lines": [
-    517
+    581
    ],
    "to": "interview_app.security.injection:InjectionGuard.check_answer"
   },
@@ -3929,7 +3953,7 @@
    "from": "interview_app.interview.engine:_check_answer",
    "kind": "call",
    "lines": [
-    512
+    576
    ],
    "to": "interview_app.security.limits:check_answer_length"
   },
@@ -3937,7 +3961,7 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    425
+    491
    ],
    "to": "interview_app.interview.engine:EngineDeps.make_llm"
   },
@@ -3945,7 +3969,7 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "construct",
    "lines": [
-    452
+    516
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -3953,7 +3977,7 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    424
+    490
    ],
    "to": "interview_app.interview.engine:_config"
   },
@@ -3961,8 +3985,8 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    438,
-    447
+    504,
+    511
    ],
    "to": "interview_app.interview.engine:_messages"
   },
@@ -3970,7 +3994,7 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    434
+    500
    ],
    "to": "interview_app.interview.engine:_turn_view"
   },
@@ -3978,7 +4002,15 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    434
+    509
+   ],
+   "to": "interview_app.interview.engine:close_correction"
+  },
+  {
+   "from": "interview_app.interview.engine:_interviewer_turn",
+   "kind": "call",
+   "lines": [
+    500
    ],
    "to": "interview_app.interview.engine:compute_progress"
   },
@@ -3986,7 +4018,7 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    435
+    501
    ],
    "to": "interview_app.interview.engine:next_directive"
   },
@@ -3994,8 +4026,8 @@
    "from": "interview_app.interview.engine:_interviewer_turn",
    "kind": "call",
    "lines": [
-    437,
-    446
+    503,
+    510
    ],
    "to": "interview_app.llm.client:LLMClient.chat_json"
   },
@@ -4003,7 +4035,7 @@
    "from": "interview_app.interview.engine:_is_stale_start",
    "kind": "call",
    "lines": [
-    321
+    386
    ],
    "to": "interview_app.db:utcnow"
   },
@@ -4011,7 +4043,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    532
+    596
    ],
    "to": "interview_app.evaluation.exchanges:build_exchanges"
   },
@@ -4019,7 +4051,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    539
+    603
    ],
    "to": "interview_app.evaluation.live:live_score"
   },
@@ -4027,7 +4059,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    541
+    605
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -4035,7 +4067,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    529
+    593
    ],
    "to": "interview_app.interview.engine:_session_decider"
   },
@@ -4043,7 +4075,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    532
+    596
    ],
    "to": "interview_app.interview.engine:_turn_view"
   },
@@ -4051,7 +4083,7 @@
    "from": "interview_app.interview.engine:_live_feedback",
    "kind": "call",
    "lines": [
-    538
+    602
    ],
    "to": "interview_app.interview.engine:session_documents"
   },
@@ -4059,7 +4091,7 @@
    "from": "interview_app.interview.engine:_load",
    "kind": "call",
    "lines": [
-    258
+    323
    ],
    "to": "interview_app.interview.engine:_kept"
   },
@@ -4067,7 +4099,7 @@
    "from": "interview_app.interview.engine:_load",
    "kind": "call",
    "lines": [
-    254
+    319
    ],
    "to": "interview_app.interview.engine:_load_all"
   },
@@ -4075,7 +4107,7 @@
    "from": "interview_app.interview.engine:_load_active",
    "kind": "construct",
    "lines": [
-    265
+    330
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -4083,7 +4115,7 @@
    "from": "interview_app.interview.engine:_load_active",
    "kind": "call",
    "lines": [
-    263
+    328
    ],
    "to": "interview_app.interview.engine:_load_all"
   },
@@ -4091,7 +4123,7 @@
    "from": "interview_app.interview.engine:_load_all",
    "kind": "call",
    "lines": [
-    235
+    300
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4099,7 +4131,16 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    384
+    454,
+    479
+   ],
+   "to": "interview_app.interview.engine:followup_cap"
+  },
+  {
+   "from": "interview_app.interview.engine:_messages",
+   "kind": "call",
+   "lines": [
+    449
    ],
    "to": "interview_app.interview.engine:session_documents"
   },
@@ -4107,23 +4148,15 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    388
+    453
    ],
    "to": "interview_app.interview.engine:session_plan"
   },
   {
    "from": "interview_app.interview.engine:_messages",
-   "kind": "ref",
-   "lines": [
-    413
-   ],
-   "to": "interview_app.interview.persona:SessionConfig.max_followups"
-  },
-  {
-   "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    386
+    451
    ],
    "to": "interview_app.interview.persona:derive_persona"
   },
@@ -4131,7 +4164,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "construct",
    "lines": [
-    381
+    446
    ],
    "to": "interview_app.interview.prompting:PromptContext"
   },
@@ -4139,7 +4172,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    405
+    471
    ],
    "to": "interview_app.interview.prompting:assistant_turn_content"
   },
@@ -4147,7 +4180,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    409
+    475
    ],
    "to": "interview_app.interview.prompting:control_message"
   },
@@ -4155,7 +4188,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    387
+    452
    ],
    "to": "interview_app.interview.prompting:guideline_excerpt"
   },
@@ -4163,7 +4196,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    390
+    456
    ],
    "to": "interview_app.interview.prompting:interviewer_system_prompt"
   },
@@ -4171,7 +4204,7 @@
    "from": "interview_app.interview.engine:_messages",
    "kind": "call",
    "lines": [
-    407
+    473
    ],
    "to": "interview_app.security.spotlight:wrap_answer"
   },
@@ -4179,7 +4212,7 @@
    "from": "interview_app.interview.engine:_next_idx",
    "kind": "call",
    "lines": [
-    271
+    336
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4211,7 +4244,7 @@
    "from": "interview_app.interview.engine:_set_status",
    "kind": "call",
    "lines": [
-    361
+    426
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4219,7 +4252,7 @@
    "from": "interview_app.interview.engine:_set_status",
    "kind": "call",
    "lines": [
-    365
+    430
    ],
    "to": "interview_app.db:utcnow"
   },
@@ -4227,7 +4260,7 @@
    "from": "interview_app.interview.engine:_store_scored_answer",
    "kind": "construct",
    "lines": [
-    567
+    631
    ],
    "to": "interview_app.db:Turn"
   },
@@ -4235,7 +4268,7 @@
    "from": "interview_app.interview.engine:_store_scored_answer",
    "kind": "call",
    "lines": [
-    561
+    625
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4243,7 +4276,7 @@
    "from": "interview_app.interview.engine:_store_scored_answer",
    "kind": "construct",
    "lines": [
-    576
+    640
    ],
    "to": "interview_app.interview.engine:AnswerOutcome"
   },
@@ -4251,7 +4284,7 @@
    "from": "interview_app.interview.engine:_store_scored_answer",
    "kind": "call",
    "lines": [
-    559
+    623
    ],
    "to": "interview_app.interview.engine:_live_feedback"
   },
@@ -4259,7 +4292,7 @@
    "from": "interview_app.interview.engine:_store_scored_answer",
    "kind": "call",
    "lines": [
-    560
+    624
    ],
    "to": "interview_app.interview.engine:_next_idx"
   },
@@ -4267,7 +4300,7 @@
    "from": "interview_app.interview.engine:_turn_view",
    "kind": "construct",
    "lines": [
-    212
+    277
    ],
    "to": "interview_app.interview.engine:TurnView"
   },
@@ -4275,7 +4308,7 @@
    "from": "interview_app.interview.engine:active_session",
    "kind": "call",
    "lines": [
-    329
+    394
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -4283,7 +4316,7 @@
    "from": "interview_app.interview.engine:active_session",
    "kind": "call",
    "lines": [
-    330
+    395
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4291,7 +4324,7 @@
    "from": "interview_app.interview.engine:active_session",
    "kind": "call",
    "lines": [
-    336
+    401
    ],
    "to": "interview_app.interview.engine:_is_stale_start"
   },
@@ -4299,7 +4332,7 @@
    "from": "interview_app.interview.engine:active_session",
    "kind": "call",
    "lines": [
-    339
+    404
    ],
    "to": "interview_app.interview.engine:_set_status"
   },
@@ -4307,7 +4340,7 @@
    "from": "interview_app.interview.engine:active_session",
    "kind": "call",
    "lines": [
-    340
+    405
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -4315,7 +4348,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "construct",
    "lines": [
-    592
+    656
    ],
    "to": "interview_app.interview.engine:AnswerOutcome"
   },
@@ -4323,7 +4356,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "construct",
    "lines": [
-    589
+    653
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -4331,7 +4364,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    596
+    660
    ],
    "to": "interview_app.interview.engine:_add_turn"
   },
@@ -4339,7 +4372,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    591
+    655
    ],
    "to": "interview_app.interview.engine:_check_answer"
   },
@@ -4347,7 +4380,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    594
+    658
    ],
    "to": "interview_app.interview.engine:_config"
   },
@@ -4355,7 +4388,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    585
+    649
    ],
    "to": "interview_app.interview.engine:_kept"
   },
@@ -4363,7 +4396,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    584
+    648
    ],
    "to": "interview_app.interview.engine:_load_active"
   },
@@ -4371,7 +4404,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    596
+    660
    ],
    "to": "interview_app.interview.engine:_next_idx"
   },
@@ -4379,7 +4412,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    595
+    659
    ],
    "to": "interview_app.interview.engine:_store_scored_answer"
   },
@@ -4387,7 +4420,7 @@
    "from": "interview_app.interview.engine:answer",
    "kind": "call",
    "lines": [
-    597
+    661
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -4403,7 +4436,7 @@
    "from": "interview_app.interview.engine:end_interview",
    "kind": "call",
    "lines": [
-    642
+    706
    ],
    "to": "interview_app.interview.engine:_load"
   },
@@ -4411,15 +4444,24 @@
    "from": "interview_app.interview.engine:end_interview",
    "kind": "call",
    "lines": [
-    644
+    708
    ],
    "to": "interview_app.interview.engine:_set_status"
+  },
+  {
+   "from": "interview_app.interview.engine:followup_cap",
+   "kind": "ref",
+   "lines": [
+    167,
+    168
+   ],
+   "to": "interview_app.interview.persona:SessionConfig.max_followups"
   },
   {
    "from": "interview_app.interview.engine:get_session",
    "kind": "construct",
    "lines": [
-    299
+    364
    ],
    "to": "interview_app.interview.engine:SessionView"
   },
@@ -4427,7 +4469,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    297
+    362
    ],
    "to": "interview_app.interview.engine:_config"
   },
@@ -4435,7 +4477,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    298
+    363
    ],
    "to": "interview_app.interview.engine:_kept"
   },
@@ -4443,7 +4485,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    293
+    358
    ],
    "to": "interview_app.interview.engine:_load_all"
   },
@@ -4451,7 +4493,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    311
+    376
    ],
    "to": "interview_app.interview.engine:_retries_used"
   },
@@ -4459,8 +4501,8 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    298,
-    310
+    363,
+    375
    ],
    "to": "interview_app.interview.engine:_turn_view"
   },
@@ -4468,7 +4510,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    308
+    373
    ],
    "to": "interview_app.interview.engine:compute_progress"
   },
@@ -4476,7 +4518,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    309
+    374
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -4484,7 +4526,7 @@
    "from": "interview_app.interview.engine:get_session",
    "kind": "call",
    "lines": [
-    305
+    370
    ],
    "to": "interview_app.interview.persona:derive_persona"
   },
@@ -4492,7 +4534,7 @@
    "from": "interview_app.interview.engine:must_close",
    "kind": "call",
    "lines": [
-    204
+    269
    ],
    "to": "interview_app.security.limits:check_budget"
   },
@@ -4500,24 +4542,39 @@
    "from": "interview_app.interview.engine:must_close",
    "kind": "call",
    "lines": [
-    204
+    269
    ],
    "to": "interview_app.security.limits:check_turns"
   },
   {
    "from": "interview_app.interview.engine:next_directive",
-   "kind": "ref",
+   "kind": "construct",
    "lines": [
-    183,
-    193
+    224
    ],
-   "to": "interview_app.interview.persona:SessionConfig.max_followups"
+   "to": "interview_app.config:LengthPresets"
+  },
+  {
+   "from": "interview_app.interview.engine:next_directive",
+   "kind": "call",
+   "lines": [
+    226
+   ],
+   "to": "interview_app.interview.engine:_quick_directive"
+  },
+  {
+   "from": "interview_app.interview.engine:next_directive",
+   "kind": "call",
+   "lines": [
+    224
+   ],
+   "to": "interview_app.interview.engine:followup_cap"
   },
   {
    "from": "interview_app.interview.engine:respond",
    "kind": "construct",
    "lines": [
-    633
+    697
    ],
    "to": "interview_app.interview.engine:AnswerOutcome"
   },
@@ -4525,7 +4582,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "construct",
    "lines": [
-    627
+    691
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -4533,7 +4590,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    630
+    694
    ],
    "to": "interview_app.interview.engine:_add_turn"
   },
@@ -4541,7 +4598,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    629
+    693
    ],
    "to": "interview_app.interview.engine:_interviewer_turn"
   },
@@ -4549,7 +4606,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    625
+    689
    ],
    "to": "interview_app.interview.engine:_kept"
   },
@@ -4557,7 +4614,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    624
+    688
    ],
    "to": "interview_app.interview.engine:_load_active"
   },
@@ -4565,7 +4622,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    630
+    694
    ],
    "to": "interview_app.interview.engine:_next_idx"
   },
@@ -4573,7 +4630,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    632
+    696
    ],
    "to": "interview_app.interview.engine:_set_status"
   },
@@ -4581,7 +4638,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    628
+    692
    ],
    "to": "interview_app.interview.engine:must_close"
   },
@@ -4589,7 +4646,7 @@
    "from": "interview_app.interview.engine:respond",
    "kind": "call",
    "lines": [
-    628
+    692
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -4597,7 +4654,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "construct",
    "lines": [
-    616
+    680
    ],
    "to": "interview_app.interview.engine:AnswerOutcome"
   },
@@ -4605,9 +4662,9 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "construct",
    "lines": [
-    609,
-    611,
-    613
+    673,
+    675,
+    677
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -4615,7 +4672,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    615
+    679
    ],
    "to": "interview_app.interview.engine:_check_answer"
   },
@@ -4623,7 +4680,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    608
+    672
    ],
    "to": "interview_app.interview.engine:_config"
   },
@@ -4631,7 +4688,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    607
+    671
    ],
    "to": "interview_app.interview.engine:_kept"
   },
@@ -4639,7 +4696,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    606
+    670
    ],
    "to": "interview_app.interview.engine:_load_active"
   },
@@ -4647,7 +4704,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    612
+    676
    ],
    "to": "interview_app.interview.engine:_retries_used"
   },
@@ -4655,7 +4712,7 @@
    "from": "interview_app.interview.engine:retry",
    "kind": "call",
    "lines": [
-    618
+    682
    ],
    "to": "interview_app.interview.engine:_store_scored_answer"
   },
@@ -4663,7 +4720,7 @@
    "from": "interview_app.interview.engine:session_cost",
    "kind": "call",
    "lines": [
-    287
+    352
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4671,7 +4728,7 @@
    "from": "interview_app.interview.engine:session_documents",
    "kind": "construct",
    "lines": [
-    221
+    286
    ],
    "to": "interview_app.ingest:DocKind"
   },
@@ -4679,7 +4736,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    463
+    527
    ],
    "to": "interview_app.applications:get_application"
   },
@@ -4687,7 +4744,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "construct",
    "lines": [
-    471
+    535
    ],
    "to": "interview_app.db:InterviewSession"
   },
@@ -4695,9 +4752,9 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    470,
-    487,
-    500
+    534,
+    551,
+    564
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -4705,7 +4762,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    485
+    549
    ],
    "to": "interview_app.interview.engine:EngineDeps.make_llm"
   },
@@ -4713,10 +4770,10 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "construct",
    "lines": [
-    465,
-    468,
-    497,
-    505
+    529,
+    532,
+    561,
+    569
    ],
    "to": "interview_app.interview.engine:InterviewError"
   },
@@ -4724,7 +4781,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    499
+    563
    ],
    "to": "interview_app.interview.engine:_add_turn"
   },
@@ -4732,7 +4789,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    492
+    556
    ],
    "to": "interview_app.interview.engine:_interviewer_turn"
   },
@@ -4740,7 +4797,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    491
+    555
    ],
    "to": "interview_app.interview.engine:_load"
   },
@@ -4748,8 +4805,8 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    495,
-    506
+    559,
+    570
    ],
    "to": "interview_app.interview.engine:_set_status"
   },
@@ -4757,7 +4814,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    467
+    531
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -4765,7 +4822,7 @@
    "from": "interview_app.interview.engine:start_interview",
    "kind": "call",
    "lines": [
-    486
+    550
    ],
    "to": "interview_app.interview.plan:make_plan"
   },
@@ -4802,7 +4859,7 @@
    "from": "interview_app.interview.prompting:control_message",
    "kind": "call",
    "lines": [
-    146
+    148
    ],
    "to": "interview_app.interview.prompting:render"
   },
@@ -4827,7 +4884,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "ref",
    "lines": [
-    123
+    125
    ],
    "to": "interview_app.interview.persona:SessionConfig.max_followups"
   },
@@ -4835,7 +4892,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "call",
    "lines": [
-    128
+    130
    ],
    "to": "interview_app.interview.prompting:_contract_fields"
   },
@@ -4843,7 +4900,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "call",
    "lines": [
-    115
+    117
    ],
    "to": "interview_app.interview.prompting:document_blocks"
   },
@@ -4851,7 +4908,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "call",
    "lines": [
-    133
+    135
    ],
    "to": "interview_app.interview.prompting:focus_block"
   },
@@ -4859,7 +4916,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "call",
    "lines": [
-    130
+    132
    ],
    "to": "interview_app.interview.prompting:plan_block"
   },
@@ -4867,7 +4924,7 @@
    "from": "interview_app.interview.prompting:interviewer_system_prompt",
    "kind": "call",
    "lines": [
-    118
+    120
    ],
    "to": "interview_app.interview.prompting:render"
   },
@@ -4883,7 +4940,7 @@
    "from": "interview_app.interview.prompting:plan_messages",
    "kind": "call",
    "lines": [
-    161
+    171
    ],
    "to": "interview_app.interview.prompting:document_blocks"
   },
@@ -4891,7 +4948,7 @@
    "from": "interview_app.interview.prompting:plan_messages",
    "kind": "call",
    "lines": [
-    170
+    180
    ],
    "to": "interview_app.interview.prompting:focus_block"
   },
@@ -4899,7 +4956,7 @@
    "from": "interview_app.interview.prompting:plan_messages",
    "kind": "call",
    "lines": [
-    162
+    172
    ],
    "to": "interview_app.interview.prompting:render"
   },
@@ -4921,10 +4978,18 @@
   },
   {
    "from": "interview_app.journey:score_summary",
+   "kind": "call",
+   "lines": [
+    52
+   ],
+   "to": "interview_app.history:counts_towards_scores"
+  },
+  {
+   "from": "interview_app.journey:score_summary",
    "kind": "construct",
    "lines": [
-    50,
-    52
+    55,
+    57
    ],
    "to": "interview_app.journey:ScoreSummary"
   },
@@ -4932,7 +4997,7 @@
    "from": "interview_app.journey:score_summary",
    "kind": "call",
    "lines": [
-    48
+    51
    ],
    "to": "interview_app.journey:_newest_first"
   },
@@ -5285,7 +5350,7 @@
    "from": "interview_app.lab.runner:_converse",
    "kind": "call",
    "lines": [
-    62
+    66
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -5293,7 +5358,7 @@
    "from": "interview_app.lab.runner:_converse",
    "kind": "call",
    "lines": [
-    75
+    79
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -5301,7 +5366,7 @@
    "from": "interview_app.lab.runner:_converse",
    "kind": "call",
    "lines": [
-    56
+    60
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -5309,7 +5374,7 @@
    "from": "interview_app.lab.runner:_converse",
    "kind": "call",
    "lines": [
-    61
+    65
    ],
    "to": "interview_app.lab.candidate:simulate_answer"
   },
@@ -5317,7 +5382,7 @@
    "from": "interview_app.lab.runner:run_session",
    "kind": "call",
    "lines": [
-    36
+    40
    ],
    "to": "interview_app.applications:get_application"
   },
@@ -5325,7 +5390,7 @@
    "from": "interview_app.lab.runner:run_session",
    "kind": "call",
    "lines": [
-    47
+    51
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -5333,7 +5398,7 @@
    "from": "interview_app.lab.runner:run_session",
    "kind": "call",
    "lines": [
-    41
+    45
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -5341,7 +5406,7 @@
    "from": "interview_app.lab.runner:run_session",
    "kind": "call",
    "lines": [
-    43
+    47
    ],
    "to": "interview_app.lab.runner:_converse"
   },
@@ -6549,7 +6614,7 @@
   {
    "api": "chat_json",
    "gateway": "interview_app.llm.client:LLMClient.chat_json",
-   "line": 437,
+   "line": 503,
    "message_roles": [
     "assistant",
     "system",
@@ -6608,7 +6673,7 @@
   {
    "api": "chat_json",
    "gateway": "interview_app.llm.client:LLMClient.chat_json",
-   "line": 446,
+   "line": 510,
    "message_roles": [
     "assistant",
     "system",
@@ -7010,7 +7075,7 @@
     "interview_app.journey"
    ],
    "layer": "ui",
-   "lines": 255,
+   "lines": 322,
    "path": "app/views/history.py",
    "symbols": [
     "app.views.history:<module>",
@@ -7020,7 +7085,8 @@
     "app.views.history:session_detail",
     "app.views.history:session_label",
     "app.views.history:sessions_table",
-    "app.views.history:sessions_table.open_selected"
+    "app.views.history:sessions_table.open_selected",
+    "app.views.history:trend_chart"
    ]
   },
   "app.views.home": {
@@ -7325,7 +7391,7 @@
     "interview_app.evaluation.schemas"
    ],
    "layer": "evaluation",
-   "lines": 214,
+   "lines": 223,
    "path": "src/interview_app/evaluation/aggregate.py",
    "symbols": [
     "interview_app.evaluation.aggregate:_first_per_item",
@@ -7548,11 +7614,12 @@
     "interview_app.evaluation.schemas",
     "interview_app.history",
     "interview_app.interview.engine",
+    "interview_app.interview.persona",
     "interview_app.llm.client",
     "interview_app.security"
    ],
    "layer": "evaluation",
-   "lines": 142,
+   "lines": 155,
    "path": "src/interview_app/evaluation/service.py",
    "symbols": [
     "interview_app.evaluation.service:EvaluationError",
@@ -7591,7 +7658,7 @@
     "interview_app.voice"
    ],
    "layer": "core",
-   "lines": 267,
+   "lines": 295,
    "path": "src/interview_app/history.py",
    "symbols": [
     "interview_app.history:ItemMean",
@@ -7599,8 +7666,10 @@
     "interview_app.history:RecurringImprovement",
     "interview_app.history:RequirementHistory",
     "interview_app.history:SessionSummary",
+    "interview_app.history:TrendPoint",
     "interview_app.history:_reports_oldest_first",
     "interview_app.history:_visible_sessions",
+    "interview_app.history:counts_towards_scores",
     "interview_app.history:delete_session",
     "interview_app.history:list_sessions",
     "interview_app.history:load_report",
@@ -7675,7 +7744,7 @@
     "interview_app.interview.persona"
    ],
    "layer": "core",
-   "lines": 48,
+   "lines": 55,
    "path": "src/interview_app/interview/drill.py",
    "symbols": [
     "interview_app.interview.drill:drill_config",
@@ -7724,7 +7793,7 @@
     "interview_app.security"
    ],
    "layer": "core",
-   "lines": 645,
+   "lines": 709,
    "path": "src/interview_app/interview/engine.py",
    "symbols": [
     "interview_app.interview.engine:<module>",
@@ -7748,6 +7817,7 @@
     "interview_app.interview.engine:_load_all",
     "interview_app.interview.engine:_messages",
     "interview_app.interview.engine:_next_idx",
+    "interview_app.interview.engine:_quick_directive",
     "interview_app.interview.engine:_retries_used",
     "interview_app.interview.engine:_session_decider",
     "interview_app.interview.engine:_session_guard",
@@ -7756,8 +7826,10 @@
     "interview_app.interview.engine:_turn_view",
     "interview_app.interview.engine:active_session",
     "interview_app.interview.engine:answer",
+    "interview_app.interview.engine:close_correction",
     "interview_app.interview.engine:compute_progress",
     "interview_app.interview.engine:end_interview",
+    "interview_app.interview.engine:followup_cap",
     "interview_app.interview.engine:get_session",
     "interview_app.interview.engine:must_close",
     "interview_app.interview.engine:next_directive",
@@ -7781,6 +7853,7 @@
     "app.views.history",
     "app.views.interview",
     "app.views.settings",
+    "interview_app.evaluation.service",
     "interview_app.history",
     "interview_app.interview.drill",
     "interview_app.interview.engine",
@@ -7862,7 +7935,7 @@
     "interview_app.security"
    ],
    "layer": "core",
-   "lines": 181,
+   "lines": 192,
    "path": "src/interview_app/interview/prompting.py",
    "symbols": [
     "interview_app.interview.prompting:PromptContext",
@@ -7926,7 +7999,7 @@
     "interview_app.history"
    ],
    "layer": "core",
-   "lines": 53,
+   "lines": 58,
    "path": "src/interview_app/journey.py",
    "symbols": [
     "interview_app.journey:ScoreSummary",
@@ -8084,7 +8157,7 @@
     "interview_app.lab.candidate"
    ],
    "layer": "lab",
-   "lines": 77,
+   "lines": 81,
    "path": "src/interview_app/lab/runner.py",
    "symbols": [
     "interview_app.lab.runner:_converse",
@@ -10165,7 +10238,7 @@
      "default": null,
      "description": null,
      "name": "trend",
-     "type": "list[tuple[datetime, float]]"
+     "type": "list[TrendPoint]"
     },
     {
      "default": null,
@@ -10348,6 +10421,37 @@
      "default": null,
      "description": null,
      "name": "has_report",
+     "type": "bool"
+    }
+   ]
+  },
+  "interview_app.history:TrendPoint": {
+   "bases": [
+    "BaseModel"
+   ],
+   "fields": [
+    {
+     "default": null,
+     "description": null,
+     "name": "started_at",
+     "type": "datetime"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "score",
+     "type": "float"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "length",
+     "type": "Length"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "counted",
      "type": "bool"
     }
    ]
@@ -11191,28 +11295,28 @@
    ]
   }
  },
- "source_sha256": "7e6b4a4229f3b474914487c64dce35642a3932e8e04021a0b1d34b83b009f828",
+ "source_sha256": "fa2b559d12e56f0cea984b9e25cd3187e22e90402dbab58ea0fbe738416858dd",
  "stats": {
   "agents": 8,
   "call_sites": {
-   "builtin": 540,
-   "external": 844,
-   "resolved": 814,
-   "unresolved": 46
+   "builtin": 548,
+   "external": 846,
+   "resolved": 824,
+   "unresolved": 47
   },
-  "classes": 111,
+  "classes": 112,
   "edges": {
    "binds": 3,
-   "call": 498,
-   "construct": 144,
-   "ref": 27
+   "call": 505,
+   "construct": 146,
+   "ref": 26
   },
-  "functions": 274,
+  "functions": 279,
   "model_call_sites": 10,
   "modules": 54,
   "tables": 9,
   "templates": 12,
-  "unresolved_listed": 46
+  "unresolved_listed": 47
  },
  "symbols": {
   "app.drill_ui:_joined": {
@@ -11676,9 +11780,9 @@
   },
   "app.views.history:_length_channel": {
    "doc": "'Quick · Voice' for a summary row (a dataframe cell can't hold a badge, so it is plain text).",
-   "end_line": 44,
+   "end_line": 57,
    "kind": "function",
-   "line": 42,
+   "line": 55,
    "module": "app.views.history",
    "name": "_length_channel",
    "qualname": "_length_channel",
@@ -11686,18 +11790,17 @@
   },
   "app.views.history:progress_block": {
    "doc": "",
-   "end_line": 130,
+   "end_line": 141,
    "externals": [
     "streamlit.caption",
     "streamlit.column_config.ProgressColumn",
     "streamlit.dataframe",
     "streamlit.header",
-    "streamlit.line_chart",
     "streamlit.markdown",
     "streamlit.subheader"
    ],
    "kind": "function",
-   "line": 82,
+   "line": 95,
    "module": "app.views.history",
    "name": "progress_block",
    "qualname": "progress_block",
@@ -11705,7 +11808,7 @@
   },
   "app.views.history:score_metrics": {
    "doc": "Three numbers to answer \"am I improving?\" before any table has to be read.",
-   "end_line": 145,
+   "end_line": 212,
    "externals": [
     "streamlit.columns",
     "streamlit.columns()[0].metric",
@@ -11713,7 +11816,7 @@
     "streamlit.columns()[2].metric"
    ],
    "kind": "function",
-   "line": 133,
+   "line": 195,
    "module": "app.views.history",
    "name": "score_metrics",
    "qualname": "score_metrics",
@@ -11721,7 +11824,7 @@
   },
   "app.views.history:session_detail": {
    "doc": "",
-   "end_line": 207,
+   "end_line": 274,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11738,7 +11841,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 148,
+   "line": 215,
    "module": "app.views.history",
    "name": "session_detail",
    "qualname": "session_detail",
@@ -11746,9 +11849,9 @@
   },
   "app.views.history:session_label": {
    "doc": "",
-   "end_line": 39,
+   "end_line": 52,
    "kind": "function",
-   "line": 36,
+   "line": 49,
    "module": "app.views.history",
    "name": "session_label",
    "qualname": "session_label",
@@ -11756,7 +11859,7 @@
   },
   "app.views.history:sessions_table": {
    "doc": "",
-   "end_line": 79,
+   "end_line": 92,
    "externals": [
     "streamlit.column_config.DatetimeColumn",
     "streamlit.column_config.NumberColumn",
@@ -11764,7 +11867,7 @@
     "streamlit.dataframe"
    ],
    "kind": "function",
-   "line": 47,
+   "line": 60,
    "module": "app.views.history",
    "name": "sessions_table",
    "qualname": "sessions_table",
@@ -11772,14 +11875,35 @@
   },
   "app.views.history:sessions_table.open_selected": {
    "doc": "",
-   "end_line": 52,
+   "end_line": 65,
    "kind": "nested",
-   "line": 48,
+   "line": 61,
    "module": "app.views.history",
    "name": "open_selected",
    "parent": "app.views.history:sessions_table",
    "qualname": "sessions_table.open_selected",
    "signature": "open_selected() -> None"
+  },
+  "app.views.history:trend_chart": {
+   "doc": "The progress line joins Standard and Full sessions only; Quick and Custom (drill) points are drawn on top with their own shape and colour, so they stay visible without bending the line. Shape as well as colour, so the two kinds can be told apart without colour vision.",
+   "end_line": 192,
+   "externals": [
+    "streamlit.caption",
+    "streamlit.vega_lite_chart"
+   ],
+   "kind": "function",
+   "line": 148,
+   "module": "app.views.history",
+   "name": "trend_chart",
+   "qualname": "trend_chart",
+   "signature": "trend_chart(trend: list[TrendPoint]) -> None",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 154,
+     "text": "p.started_at.isoformat"
+    }
+   ]
   },
   "app.views.home:<module>": {
    "doc": "",
@@ -12428,6 +12552,7 @@
    "signature": "class LengthPresets(BaseModel)",
    "tested_by": [
     "tests.test_config",
+    "tests.test_engine",
     "tests.test_preferences"
    ]
   },
@@ -12978,7 +13103,7 @@
   },
   "interview_app.evaluation.aggregate:aggregate": {
    "doc": "Evidence (turn ids) and quotes are checked against the candidate's turns only.",
-   "end_line": 213,
+   "end_line": 222,
    "externals": [
     "statistics.mean"
    ],
@@ -12987,19 +13112,19 @@
    "module": "interview_app.evaluation.aggregate",
    "name": "aggregate",
    "qualname": "aggregate",
-   "signature": "aggregate(judgement: Judgement, exchanges: list[Exchange], metrics: SessionMetrics, rubric: Rubric, interview_type: str) -> dict",
+   "signature": "aggregate(judgement: Judgement, exchanges: list[Exchange], metrics: SessionMetrics, rubric: Rubric, interview_type: str, *, cq_optional: bool=False) -> dict",
    "tested_by": [
     "tests.test_evaluation"
    ]
   },
   "interview_app.evaluation.aggregate:aggregate.section": {
    "doc": "",
-   "end_line": 163,
+   "end_line": 169,
    "externals": [
     "statistics.mean"
    ],
    "kind": "nested",
-   "line": 161,
+   "line": 167,
    "module": "interview_app.evaluation.aggregate",
    "name": "section",
    "parent": "interview_app.evaluation.aggregate:aggregate",
@@ -13686,9 +13811,9 @@
   },
   "interview_app.evaluation.service:EvaluationError": {
    "doc": "Shown to the user as is.",
-   "end_line": 40,
+   "end_line": 41,
    "kind": "class",
-   "line": 39,
+   "line": 40,
    "module": "interview_app.evaluation.service",
    "name": "EvaluationError",
    "qualname": "EvaluationError",
@@ -13706,7 +13831,7 @@
     ]
    },
    "doc": "",
-   "end_line": 141,
+   "end_line": 154,
    "externals": [
     "Report.model_dump_json",
     "concurrent.futures.ThreadPoolExecutor",
@@ -13721,7 +13846,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 55,
+   "line": 56,
    "module": "interview_app.evaluation.service",
    "name": "evaluate_session",
    "qualname": "evaluate_session",
@@ -13732,19 +13857,19 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 104,
+     "line": 105,
      "text": "record"
     }
    ]
   },
   "interview_app.evaluation.service:evaluate_session.one_run": {
    "doc": "",
-   "end_line": 95,
+   "end_line": 96,
    "externals": [
     "logging.getLogger().warning"
    ],
    "kind": "nested",
-   "line": 88,
+   "line": 89,
    "module": "interview_app.evaluation.service",
    "name": "one_run",
    "parent": "interview_app.evaluation.service:evaluate_session",
@@ -13753,9 +13878,9 @@
   },
   "interview_app.evaluation.service:median_run": {
    "doc": "The (judgement, numbers) pair whose overall score is the median. Runs without an overall score sort last; with an even count the lower middle is taken (the more cautious score).",
-   "end_line": 48,
+   "end_line": 49,
    "kind": "function",
-   "line": 43,
+   "line": 44,
    "module": "interview_app.evaluation.service",
    "name": "median_run",
    "qualname": "median_run",
@@ -13766,9 +13891,9 @@
   },
   "interview_app.evaluation.service:stored_report": {
    "doc": "",
-   "end_line": 52,
+   "end_line": 53,
    "kind": "function",
-   "line": 51,
+   "line": 52,
    "module": "interview_app.evaluation.service",
    "name": "stored_report",
    "qualname": "stored_report",
@@ -13779,9 +13904,9 @@
   },
   "interview_app.history:ItemMean": {
    "doc": "",
-   "end_line": 58,
+   "end_line": 68,
    "kind": "class",
-   "line": 54,
+   "line": 64,
    "module": "interview_app.history",
    "name": "ItemMean",
    "qualname": "ItemMean",
@@ -13790,9 +13915,9 @@
   },
   "interview_app.history:Progress": {
    "doc": "",
-   "end_line": 77,
+   "end_line": 94,
    "kind": "class",
-   "line": 73,
+   "line": 90,
    "module": "interview_app.history",
    "name": "Progress",
    "qualname": "Progress",
@@ -13801,9 +13926,9 @@
   },
   "interview_app.history:RecurringImprovement": {
    "doc": "",
-   "end_line": 70,
+   "end_line": 80,
    "kind": "class",
-   "line": 68,
+   "line": 78,
    "module": "interview_app.history",
    "name": "RecurringImprovement",
    "qualname": "RecurringImprovement",
@@ -13812,9 +13937,9 @@
   },
   "interview_app.history:RequirementHistory": {
    "doc": "",
-   "end_line": 65,
+   "end_line": 75,
    "kind": "class",
-   "line": 61,
+   "line": 71,
    "module": "interview_app.history",
    "name": "RequirementHistory",
    "qualname": "RequirementHistory",
@@ -13823,9 +13948,9 @@
   },
   "interview_app.history:SessionSummary": {
    "doc": "",
-   "end_line": 51,
+   "end_line": 61,
    "kind": "class",
-   "line": 32,
+   "line": 42,
    "module": "interview_app.history",
    "name": "SessionSummary",
    "qualname": "SessionSummary",
@@ -13834,6 +13959,17 @@
    "tested_by": [
     "tests.test_journey"
    ]
+  },
+  "interview_app.history:TrendPoint": {
+   "doc": "",
+   "end_line": 87,
+   "kind": "class",
+   "line": 83,
+   "module": "interview_app.history",
+   "name": "TrendPoint",
+   "qualname": "TrendPoint",
+   "schema": true,
+   "signature": "class TrendPoint(BaseModel)"
   },
   "interview_app.history:_reports_oldest_first": {
    "db": {
@@ -13845,9 +13981,10 @@
     ]
    },
    "doc": "",
-   "end_line": 178,
+   "end_line": 200,
    "externals": [
     "Report.model_validate_json",
+    "SessionConfig.model_validate_json",
     "db.exec",
     "db.exec().all",
     "sqlmodel.col",
@@ -13858,11 +13995,11 @@
     "sqlmodel.select().join().where().order_by"
    ],
    "kind": "function",
-   "line": 165,
+   "line": 182,
    "module": "interview_app.history",
    "name": "_reports_oldest_first",
    "qualname": "_reports_oldest_first",
-   "signature": "_reports_oldest_first(engine: Engine, user_id: int, application_id: int) -> list[tuple[datetime, Report]]"
+   "signature": "_reports_oldest_first(engine: Engine, user_id: int, application_id: int) -> list[tuple[datetime, Length, Report]]"
   },
   "interview_app.history:_visible_sessions": {
    "db": {
@@ -13871,7 +14008,7 @@
     ]
    },
    "doc": "",
-   "end_line": 86,
+   "end_line": 103,
    "externals": [
     "sqlmodel.col",
     "sqlmodel.col().not_in",
@@ -13880,11 +14017,24 @@
     "sqlmodel.select().where().where().where"
    ],
    "kind": "function",
-   "line": 80,
+   "line": 97,
    "module": "interview_app.history",
    "name": "_visible_sessions",
    "qualname": "_visible_sessions",
    "signature": "_visible_sessions(user_id: int, application_id: int | None=None)"
+  },
+  "interview_app.history:counts_towards_scores": {
+   "doc": "Whether a session of this length counts towards latest / best (and the trend's progress line).",
+   "end_line": 39,
+   "kind": "function",
+   "line": 37,
+   "module": "interview_app.history",
+   "name": "counts_towards_scores",
+   "qualname": "counts_towards_scores",
+   "signature": "counts_towards_scores(length: Length) -> bool",
+   "tested_by": [
+    "tests.test_history"
+   ]
   },
   "interview_app.history:delete_session": {
    "db": {
@@ -13894,7 +14044,7 @@
     ]
    },
    "doc": "Delete one interview. The database cascades to its turns, evaluation and audio rows; the audio files are removed from disk here.",
-   "end_line": 266,
+   "end_line": 294,
    "externals": [
     "db.delete",
     "db.exec",
@@ -13903,7 +14053,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 249,
+   "line": 277,
    "module": "interview_app.history",
    "name": "delete_session",
    "qualname": "delete_session",
@@ -13926,7 +14076,7 @@
     ]
    },
    "doc": "The user's interviews, newest first.",
-   "end_line": 153,
+   "end_line": 170,
    "externals": [
     "SessionConfig.model_validate_json",
     "collections.defaultdict",
@@ -13943,7 +14093,7 @@
     "sqlmodel.select().where().where().order_by"
    ],
    "kind": "function",
-   "line": 89,
+   "line": 106,
    "module": "interview_app.history",
    "name": "list_sessions",
    "qualname": "list_sessions",
@@ -13960,7 +14110,7 @@
     ]
    },
    "doc": "The stored report of one session, read straight from the DB (History never calls the judge).",
-   "end_line": 162,
+   "end_line": 179,
    "externals": [
     "Report.model_validate_json",
     "db.exec",
@@ -13969,7 +14119,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 156,
+   "line": 173,
    "module": "interview_app.history",
    "name": "load_report",
    "qualname": "load_report",
@@ -13980,7 +14130,7 @@
   },
   "interview_app.history:progress": {
    "doc": "How one application's interviews developed over time.",
-   "end_line": 246,
+   "end_line": 274,
    "externals": [
     "collections.Counter",
     "collections.Counter().most_common",
@@ -13989,7 +14139,7 @@
     "collections.defaultdict().items"
    ],
    "kind": "function",
-   "line": 181,
+   "line": 203,
    "module": "interview_app.history",
    "name": "progress",
    "qualname": "progress",
@@ -14141,7 +14291,7 @@
   },
   "interview_app.interview.drill:drill_config": {
    "doc": "Same interview type, difficulty, mode and models as the original; one main question per target plus the warm-up, kept inside the allowed range.",
-   "end_line": 47,
+   "end_line": 54,
    "externals": [
     "SessionConfig.model_copy"
    ],
@@ -14301,14 +14451,14 @@
     ]
    },
    "doc": "",
-   "end_line": 357,
+   "end_line": 422,
    "externals": [
     "db.add",
     "db.flush",
     "json.dumps"
    ],
    "kind": "function",
-   "line": 343,
+   "line": 408,
    "module": "interview_app.interview.engine",
    "name": "_add_turn",
    "qualname": "_add_turn",
@@ -14316,12 +14466,12 @@
   },
   "interview_app.interview.engine:_check_answer": {
    "doc": "Run the limits and the injection guard. Returns the blocking result, or None if the answer is ok.",
-   "end_line": 522,
+   "end_line": 586,
    "externals": [
     "logging.getLogger().info"
    ],
    "kind": "function",
-   "line": 510,
+   "line": 574,
    "module": "interview_app.interview.engine",
    "name": "_check_answer",
    "qualname": "_check_answer",
@@ -14329,12 +14479,12 @@
   },
   "interview_app.interview.engine:_config": {
    "doc": "",
-   "end_line": 216,
+   "end_line": 281,
    "externals": [
     "SessionConfig.model_validate_json"
    ],
    "kind": "function",
-   "line": 215,
+   "line": 280,
    "module": "interview_app.interview.engine",
    "name": "_config",
    "qualname": "_config",
@@ -14342,12 +14492,12 @@
   },
   "interview_app.interview.engine:_interviewer_turn": {
    "doc": "",
-   "end_line": 455,
+   "end_line": 519,
    "externals": [
     "logging.getLogger().warning"
    ],
    "kind": "function",
-   "line": 421,
+   "line": 487,
    "model_roles": [
     "interviewer"
    ],
@@ -14361,13 +14511,13 @@
   },
   "interview_app.interview.engine:_is_stale_start": {
    "doc": "A \"preparing\" session older than the start timeout was interrupted (crash, closed tab mid-plan).",
-   "end_line": 321,
+   "end_line": 386,
    "externals": [
     "datetime.datetime.replace",
     "datetime.timedelta"
    ],
    "kind": "function",
-   "line": 315,
+   "line": 380,
    "module": "interview_app.interview.engine",
    "name": "_is_stale_start",
    "qualname": "_is_stale_start",
@@ -14375,9 +14525,9 @@
   },
   "interview_app.interview.engine:_kept": {
    "doc": "",
-   "end_line": 229,
+   "end_line": 294,
    "kind": "function",
-   "line": 228,
+   "line": 293,
    "module": "interview_app.interview.engine",
    "name": "_kept",
    "qualname": "_kept",
@@ -14385,9 +14535,9 @@
   },
   "interview_app.interview.engine:_live_feedback": {
    "doc": "Live scores for the answer to the latest interviewer turn, or None if scoring is off or fails.",
-   "end_line": 548,
+   "end_line": 612,
    "kind": "function",
-   "line": 525,
+   "line": 589,
    "module": "interview_app.interview.engine",
    "name": "_live_feedback",
    "qualname": "_live_feedback",
@@ -14395,9 +14545,9 @@
   },
   "interview_app.interview.engine:_load": {
    "doc": "The session and its transcript *without* superseded attempts.",
-   "end_line": 258,
+   "end_line": 323,
    "kind": "function",
-   "line": 247,
+   "line": 312,
    "module": "interview_app.interview.engine",
    "name": "_load",
    "qualname": "_load",
@@ -14405,9 +14555,9 @@
   },
   "interview_app.interview.engine:_load_active": {
    "doc": "Like _load_all, but only for an active session: the check every answer/retry/respond starts with.",
-   "end_line": 266,
+   "end_line": 331,
    "kind": "function",
-   "line": 261,
+   "line": 326,
    "module": "interview_app.interview.engine",
    "name": "_load_active",
    "qualname": "_load_active",
@@ -14423,7 +14573,7 @@
     ]
    },
    "doc": "The session and ALL its turns, superseded attempts included. Callers that reason about the interview filter them with _kept (or use _load).",
-   "end_line": 244,
+   "end_line": 309,
    "externals": [
     "db.exec",
     "db.exec().all",
@@ -14434,7 +14584,7 @@
     "sqlmodel.select().where().order_by"
    ],
    "kind": "function",
-   "line": 232,
+   "line": 297,
    "module": "interview_app.interview.engine",
    "name": "_load_all",
    "qualname": "_load_all",
@@ -14442,12 +14592,12 @@
   },
   "interview_app.interview.engine:_messages": {
    "doc": "",
-   "end_line": 418,
+   "end_line": 484,
    "externals": [
     "json.loads"
    ],
    "kind": "function",
-   "line": 372,
+   "line": 437,
    "message_roles": [
     "assistant",
     "system",
@@ -14465,7 +14615,7 @@
     ]
    },
    "doc": "",
-   "end_line": 273,
+   "end_line": 338,
    "externals": [
     "db.exec",
     "db.exec().one",
@@ -14474,17 +14624,27 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 269,
+   "line": 334,
    "module": "interview_app.interview.engine",
    "name": "_next_idx",
    "qualname": "_next_idx",
    "signature": "_next_idx(engine: Engine, session_id: int) -> int"
   },
+  "interview_app.interview.engine:_quick_directive": {
+   "doc": "Quick: one-sentence intro, no warm-up, core questions only, a one-line skippable question offer.",
+   "end_line": 209,
+   "kind": "function",
+   "line": 184,
+   "module": "interview_app.interview.engine",
+   "name": "_quick_directive",
+   "qualname": "_quick_directive",
+   "signature": "_quick_directive(progress: Progress, main_target: int, cap: int) -> str"
+  },
   "interview_app.interview.engine:_retries_used": {
    "doc": "Superseded candidate attempts since the last interviewer turn (= retries of the current answer).",
-   "end_line": 283,
+   "end_line": 348,
    "kind": "function",
-   "line": 276,
+   "line": 341,
    "module": "interview_app.interview.engine",
    "name": "_retries_used",
    "qualname": "_retries_used",
@@ -14518,13 +14678,13 @@
     ]
    },
    "doc": "",
-   "end_line": 366,
+   "end_line": 431,
    "externals": [
     "db.add",
     "db.get"
    ],
    "kind": "function",
-   "line": 360,
+   "line": 425,
    "module": "interview_app.interview.engine",
    "name": "_set_status",
    "qualname": "_set_status",
@@ -14538,14 +14698,14 @@
     ]
    },
    "doc": "Coaching mode: store the answer with its live feedback and wait for Retry / Continue.",
-   "end_line": 576,
+   "end_line": 640,
    "externals": [
     "LiveFeedback.model_dump_json",
     "db.add",
     "db.get"
    ],
    "kind": "function",
-   "line": 551,
+   "line": 615,
    "module": "interview_app.interview.engine",
    "name": "_store_scored_answer",
    "qualname": "_store_scored_answer",
@@ -14553,12 +14713,12 @@
   },
   "interview_app.interview.engine:_turn_view": {
    "doc": "",
-   "end_line": 212,
+   "end_line": 277,
    "externals": [
     "LiveFeedback.model_validate_json"
    ],
    "kind": "function",
-   "line": 210,
+   "line": 275,
    "module": "interview_app.interview.engine",
    "name": "_turn_view",
    "qualname": "_turn_view",
@@ -14571,7 +14731,7 @@
     ]
    },
    "doc": "The user's unfinished interview, if any (so a refresh resumes it).",
-   "end_line": 340,
+   "end_line": 405,
    "externals": [
     "db.exec",
     "db.exec().all",
@@ -14583,7 +14743,7 @@
     "sqlmodel.select().where().order_by"
    ],
    "kind": "function",
-   "line": 324,
+   "line": 389,
    "module": "interview_app.interview.engine",
    "name": "active_session",
    "qualname": "active_session",
@@ -14596,9 +14756,9 @@
   },
   "interview_app.interview.engine:answer": {
    "doc": "Take the candidate's answer, run the guards, and get the next interviewer turn.",
-   "end_line": 597,
+   "end_line": 661,
    "kind": "function",
-   "line": 579,
+   "line": 643,
    "module": "interview_app.interview.engine",
    "name": "answer",
    "qualname": "answer",
@@ -14607,6 +14767,16 @@
     "tests.test_engine",
     "tests.test_evaluation"
    ]
+  },
+  "interview_app.interview.engine:close_correction": {
+   "doc": "The retry message when the model closes before the candidate-questions stage (guideline §3.8). In Quick the one-line offer is that stage, so it is what the correction asks for.",
+   "end_line": 263,
+   "kind": "function",
+   "line": 258,
+   "module": "interview_app.interview.engine",
+   "name": "close_correction",
+   "qualname": "close_correction",
+   "signature": "close_correction(config: SessionConfig) -> str"
   },
   "interview_app.interview.engine:compute_progress": {
    "doc": "",
@@ -14623,9 +14793,9 @@
   },
   "interview_app.interview.engine:end_interview": {
    "doc": "The candidate stops early. No closing model call: ending must always work, even offline.",
-   "end_line": 644,
+   "end_line": 708,
    "kind": "function",
-   "line": 640,
+   "line": 704,
    "module": "interview_app.interview.engine",
    "name": "end_interview",
    "qualname": "end_interview",
@@ -14635,11 +14805,24 @@
     "tests.test_evaluation"
    ]
   },
+  "interview_app.interview.engine:followup_cap": {
+   "doc": "Follow-ups allowed per main question: the difficulty's cap, and for Quick at most the Quick cap (a short practice must stay short even on Tough). Code enforces it; the prompts only show it.",
+   "end_line": 168,
+   "kind": "function",
+   "line": 163,
+   "module": "interview_app.interview.engine",
+   "name": "followup_cap",
+   "qualname": "followup_cap",
+   "signature": "followup_cap(config: SessionConfig, presets: LengthPresets) -> int",
+   "tested_by": [
+    "tests.test_engine"
+   ]
+  },
   "interview_app.interview.engine:get_session": {
    "doc": "",
-   "end_line": 312,
+   "end_line": 377,
    "kind": "function",
-   "line": 292,
+   "line": 357,
    "module": "interview_app.interview.engine",
    "name": "get_session",
    "qualname": "get_session",
@@ -14652,9 +14835,9 @@
   },
   "interview_app.interview.engine:must_close": {
    "doc": "Hard limits (OWASP LLM10): past these the interview closes no matter what the model wants.",
-   "end_line": 204,
+   "end_line": 269,
    "kind": "function",
-   "line": 201,
+   "line": 266,
    "module": "interview_app.interview.engine",
    "name": "must_close",
    "qualname": "must_close",
@@ -14662,13 +14845,13 @@
   },
   "interview_app.interview.engine:next_directive": {
    "doc": "What the app tells the interviewer to do next. Code decides the *phase*; the model the wording.",
-   "end_line": 198,
+   "end_line": 255,
    "kind": "function",
-   "line": 163,
+   "line": 212,
    "module": "interview_app.interview.engine",
    "name": "next_directive",
    "qualname": "next_directive",
-   "signature": "next_directive(progress: Progress, config: SessionConfig, force_close: bool) -> str",
+   "signature": "next_directive(progress: Progress, config: SessionConfig, force_close: bool, presets: LengthPresets | None=None) -> str",
    "tested_by": [
     "tests.test_engine"
    ]
@@ -14678,9 +14861,9 @@
     "continue_interview"
    ],
    "doc": "Generate the interviewer's next turn. Also used to retry after a model failure, because the candidate's answer is already stored at that point.",
-   "end_line": 633,
+   "end_line": 697,
    "kind": "function",
-   "line": 621,
+   "line": 685,
    "module": "interview_app.interview.engine",
    "name": "respond",
    "qualname": "respond",
@@ -14691,9 +14874,9 @@
   },
   "interview_app.interview.engine:retry": {
    "doc": "Coaching mode: replace the latest answer with a new attempt (same guards), and score it.",
-   "end_line": 618,
+   "end_line": 682,
    "kind": "function",
-   "line": 600,
+   "line": 664,
    "module": "interview_app.interview.engine",
    "name": "retry",
    "qualname": "retry",
@@ -14709,7 +14892,7 @@
     ]
    },
    "doc": "",
-   "end_line": 289,
+   "end_line": 354,
    "externals": [
     "db.exec",
     "db.exec().one",
@@ -14718,7 +14901,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 286,
+   "line": 351,
    "module": "interview_app.interview.engine",
    "name": "session_cost",
    "qualname": "session_cost",
@@ -14726,13 +14909,13 @@
   },
   "interview_app.interview.engine:session_documents": {
    "doc": "The documents snapshot the session was started with (later edits to the application don't count).",
-   "end_line": 221,
+   "end_line": 286,
    "externals": [
     "json.loads",
     "json.loads().items"
    ],
    "kind": "function",
-   "line": 219,
+   "line": 284,
    "module": "interview_app.interview.engine",
    "name": "session_documents",
    "qualname": "session_documents",
@@ -14740,12 +14923,12 @@
   },
   "interview_app.interview.engine:session_plan": {
    "doc": "",
-   "end_line": 225,
+   "end_line": 290,
    "externals": [
     "InterviewPlan.model_validate_json"
    ],
    "kind": "function",
-   "line": 224,
+   "line": 289,
    "module": "interview_app.interview.engine",
    "name": "session_plan",
    "qualname": "session_plan",
@@ -14759,7 +14942,7 @@
     ]
    },
    "doc": "Create a session (with a plan, if the prompt variant uses one) and the interviewer's opening turn.",
-   "end_line": 507,
+   "end_line": 571,
    "externals": [
     "InterviewPlan.model_dump_json",
     "SessionConfig.model_dump_json",
@@ -14770,7 +14953,7 @@
     "logging.getLogger().warning"
    ],
    "kind": "function",
-   "line": 461,
+   "line": 525,
    "module": "interview_app.interview.engine",
    "name": "start_interview",
    "qualname": "start_interview",
@@ -14991,7 +15174,7 @@
     "dataclass"
    ],
    "doc": "",
-   "end_line": 110,
+   "end_line": 112,
    "kind": "class",
    "line": 103,
    "module": "interview_app.interview.prompting",
@@ -15039,12 +15222,12 @@
   },
   "interview_app.interview.prompting:assistant_turn_content": {
    "doc": "Earlier interviewer turns go back to the model in the same JSON shape it answers in.",
-   "end_line": 180,
+   "end_line": 191,
    "externals": [
     "json.dumps"
    ],
    "kind": "function",
-   "line": 178,
+   "line": 189,
    "module": "interview_app.interview.prompting",
    "name": "assistant_turn_content",
    "qualname": "assistant_turn_content",
@@ -15052,9 +15235,9 @@
   },
   "interview_app.interview.prompting:control_message": {
    "doc": "",
-   "end_line": 155,
+   "end_line": 157,
    "kind": "function",
-   "line": 137,
+   "line": 139,
    "message_roles": [
     "system"
    ],
@@ -15111,9 +15294,9 @@
   },
   "interview_app.interview.prompting:interviewer_system_prompt": {
    "doc": "",
-   "end_line": 134,
+   "end_line": 136,
    "kind": "function",
-   "line": 113,
+   "line": 115,
    "module": "interview_app.interview.prompting",
    "name": "interviewer_system_prompt",
    "qualname": "interviewer_system_prompt",
@@ -15145,9 +15328,9 @@
   },
   "interview_app.interview.prompting:plan_messages": {
    "doc": "",
-   "end_line": 175,
+   "end_line": 186,
    "kind": "function",
-   "line": 158,
+   "line": 168,
    "message_roles": [
     "system",
     "user"
@@ -15300,7 +15483,7 @@
     "dataclass(frozen=True)"
    ],
    "doc": "",
-   "end_line": 44,
+   "end_line": 45,
    "kind": "class",
    "line": 40,
    "module": "interview_app.journey",
@@ -15342,10 +15525,10 @@
    ]
   },
   "interview_app.journey:score_summary": {
-   "doc": "",
-   "end_line": 52,
+   "doc": "Latest, best and change over comparable sessions only: a 3-question Quick practice (or a drill on two weak spots) is not the same test as a full interview, so its score would distort the progress.",
+   "end_line": 57,
    "kind": "function",
-   "line": 47,
+   "line": 48,
    "module": "interview_app.journey",
    "name": "score_summary",
    "qualname": "score_summary",
@@ -15843,12 +16026,12 @@
   },
   "interview_app.lab.runner:_converse": {
    "doc": "",
-   "end_line": 76,
+   "end_line": 80,
    "externals": [
     "logging.getLogger().warning"
    ],
    "kind": "function",
-   "line": 51,
+   "line": 55,
    "module": "interview_app.lab.runner",
    "name": "_converse",
    "qualname": "_converse",
@@ -15856,14 +16039,14 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 53,
+     "line": 57,
      "text": "deps.make_llm"
     }
    ]
   },
   "interview_app.lab.runner:run_session": {
    "doc": "Play one interview to the end and return its session id.",
-   "end_line": 48,
+   "end_line": 52,
    "kind": "function",
    "line": 18,
    "module": "interview_app.lab.runner",
@@ -17839,7 +18022,7 @@
    "rendered_by": [
     {
      "expr": "'control.md'",
-     "line": 146,
+     "line": 148,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:control_message",
      "unused_kwargs": []
@@ -17869,7 +18052,7 @@
    "rendered_by": [
     {
      "expr": "f'interviewer_{variant.value}.md'",
-     "line": 118,
+     "line": 120,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:interviewer_system_prompt",
      "unused_kwargs": [
@@ -17897,7 +18080,7 @@
    "rendered_by": [
     {
      "expr": "f'interviewer_{variant.value}.md'",
-     "line": 118,
+     "line": 120,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:interviewer_system_prompt",
      "unused_kwargs": [
@@ -17925,7 +18108,7 @@
    "rendered_by": [
     {
      "expr": "f'interviewer_{variant.value}.md'",
-     "line": 118,
+     "line": 120,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:interviewer_system_prompt",
      "unused_kwargs": [
@@ -17953,7 +18136,7 @@
    "rendered_by": [
     {
      "expr": "f'interviewer_{variant.value}.md'",
-     "line": 118,
+     "line": 120,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:interviewer_system_prompt",
      "unused_kwargs": []
@@ -17983,7 +18166,7 @@
    "rendered_by": [
     {
      "expr": "f'interviewer_{variant.value}.md'",
-     "line": 118,
+     "line": 120,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:interviewer_system_prompt",
      "unused_kwargs": [
@@ -18026,28 +18209,29 @@
    ]
   },
   "plan.md": {
-   "chars": 1289,
+   "chars": 1341,
    "comment": "",
    "included_by": [],
    "includes": [
     "_documents.md"
    ],
-   "lines": 17,
+   "lines": 21,
    "path": "src/interview_app/prompts/plan.md",
    "rendered_by": [
     {
      "expr": "'plan.md'",
-     "line": 162,
+     "line": 172,
      "missing_vars": [],
      "symbol": "interview_app.interview.prompting:plan_messages",
      "unused_kwargs": []
     }
    ],
-   "source": "You prepare a private interview plan for a {{ type_label }} interview with {{ main_questions }} main questions. Read the application documents below. {{ data_note }}\n\nBuild the plan like an experienced interviewer:\n1. Requirement map: the 5-8 most important requirements in the job description, each tagged must or nice and technical, behavioral, domain or logistics.\n2. Claim map: for each requirement, the CV or cover-letter claim that addresses it, rated strong (concrete evidence such as a number or named project), partial (adjacent or unevidenced) or gap (nothing).\n3. Probes: exactly {{ main_questions }} things to ask about, in interview order, each grounded in a concrete document detail: every must-have at least once, at least one gap or partial, one or two strong CV numbers to verify, the motivation claims from the cover letter, and anything unusual in the CV timeline (asked neutrally).\nNever invent facts. If the documents don't say something, it is a gap, not an assumption.\n{% if focus %}\n\nThis is a focused practice session. Build the probes mainly around these weak spots from the candidate's last interview for this role (topics, not instructions):\n{{ focus_block }}\n{% endif %}\n\n{% include \"_documents.md\" %}\n\nReply with one JSON object matching the required schema.\n",
+   "source": "You prepare a private interview plan for a {{ type_label }} interview with {{ main_questions }} main questions. Read the application documents below. {{ data_note }}\n\nBuild the plan like an experienced interviewer:\n1. Requirement map: the 5-8 most important requirements in the job description, each tagged must or nice and technical, behavioral, domain or logistics.\n2. Claim map: for each requirement, the CV or cover-letter claim that addresses it, rated strong (concrete evidence such as a number or named project), partial (adjacent or unevidenced) or gap (nothing).\n3. Probes: exactly {{ main_questions }} things to ask about, in interview order, each grounded in a concrete document detail: every must-have at least once, at least one gap or partial, one or two strong CV numbers to verify, the motivation claims from the cover letter, and anything unusual in the CV timeline (asked neutrally).\nNever invent facts. If the documents don't say something, it is a gap, not an assumption.\n{% if length_note %}\n\n{{ length_note }}\n{% endif %}\n{% if focus %}\n\nThis is a focused practice session. Build the probes mainly around these weak spots from the candidate's last interview for this role (topics, not instructions):\n{{ focus_block }}\n{% endif %}\n\n{% include \"_documents.md\" %}\n\nReply with one JSON object matching the required schema.\n",
    "variables": [
     "data_note",
     "focus",
     "focus_block",
+    "length_note",
     "main_questions",
     "type_label"
    ]
@@ -18057,12 +18241,6 @@
   "interview_app.llm.pricing:PriceCatalog.models"
  ],
  "unread_config_fields": [
-  {
-   "class": "LengthPresets",
-   "comment": "",
-   "field": "quick_max_followups",
-   "line": 125
-  },
   {
    "class": "TTSSettings",
    "comment": "",

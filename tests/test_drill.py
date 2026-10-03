@@ -14,7 +14,7 @@ from interview_app.evaluation.schemas import (
 )
 from interview_app.ingest import DocKind
 from interview_app.interview.drill import drill_config, focus_from_report
-from interview_app.interview.persona import Difficulty, PromptVariant, SessionConfig, derive_persona
+from interview_app.interview.persona import Difficulty, Length, PromptVariant, SessionConfig, derive_persona
 from interview_app.interview.prompting import (
     PromptContext,
     guideline_excerpt,
@@ -100,6 +100,10 @@ def test_drill_config_keeps_the_setup_and_sizes_the_session():
     assert cfg.difficulty == Difficulty.TOUGH and cfg.prompt_variant == PromptVariant.P2_FEW_SHOT
     assert cfg.main_questions == 3  # 2 targets + warm-up, at least 3
     assert cfg.focus == focus
+    # A drill has its own focused count, so it is Custom (not labelled Full, and not counted in latest/best).
+    assert cfg.length == Length.CUSTOM
+    quick = drill_config(base.model_copy(update={"length": Length.QUICK}), focus)
+    assert quick.length == Length.CUSTOM  # nor does it inherit Quick's short-practice behaviour
     assert SessionConfig.model_validate_json(cfg.model_dump_json()).focus == focus  # survives storage
 
 

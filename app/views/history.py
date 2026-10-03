@@ -19,9 +19,22 @@ from ui_common import (
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
-from interview_app.history import SessionSummary, delete_session, list_sessions, load_report, progress
+from interview_app.history import (
+    SessionSummary,
+    TrendPoint,
+    delete_session,
+    list_sessions,
+    load_report,
+    progress,
+)
 from interview_app.interview.engine import get_session
-from interview_app.interview.persona import TYPE_LABELS, InterviewType, SessionConfig, length_channel_label
+from interview_app.interview.persona import (
+    LENGTH_LABELS,
+    TYPE_LABELS,
+    InterviewType,
+    SessionConfig,
+    length_channel_label,
+)
 from interview_app.journey import score_summary
 
 engine = get_engine()
@@ -85,9 +98,7 @@ def progress_block(application_id: int) -> None:
 
     if len(prog.trend) >= 2:
         st.subheader("Overall score over time")
-        st.line_chart(
-            [{"Date": started_at, "Score": score} for started_at, score in prog.trend], x="Date", y="Score"
-        )
+        trend_chart(prog.trend)
     elif prog.trend:
         st.caption("One scored interview so far: the trend appears after the second one.")
     else:
@@ -130,19 +141,75 @@ def progress_block(application_id: int) -> None:
             st.markdown(f"- **{safe_md(imp.area, inline=True)}** — in {imp.count} reports")
 
 
+COUNTED_KIND = "Standard / Full"
+PRACTICE_KIND = "Quick / Custom (practice)"
+
+
+def trend_chart(trend: list[TrendPoint]) -> None:
+    """The progress line joins Standard and Full sessions only; Quick and Custom (drill) points are
+    drawn on top with their own shape and colour, so they stay visible without bending the line.
+    Shape as well as colour, so the two kinds can be told apart without colour vision."""
+    rows = [
+        {
+            "Date": p.started_at.isoformat(),
+            "Score": p.score,
+            "Session": LENGTH_LABELS[p.length],
+            "Kind": COUNTED_KIND if p.counted else PRACTICE_KIND,
+        }
+        for p in trend
+    ]
+    x = {"field": "Date", "type": "temporal", "title": "Date"}
+    y = {"field": "Score", "type": "quantitative", "scale": {"domain": [0, 100]}}
+    kind_scale = {"domain": [COUNTED_KIND, PRACTICE_KIND]}
+    st.vega_lite_chart(
+        rows,
+        {
+            "layer": [
+                {
+                    "transform": [{"filter": {"field": "Kind", "equal": COUNTED_KIND}}],
+                    "mark": {"type": "line"},
+                    "encoding": {"x": x, "y": y},
+                },
+                {
+                    "mark": {"type": "point", "filled": True, "size": 90},
+                    "encoding": {
+                        "x": x,
+                        "y": y,
+                        "shape": {"field": "Kind", "type": "nominal", "scale": kind_scale, "title": None},
+                        "color": {"field": "Kind", "type": "nominal", "scale": kind_scale, "title": None},
+                        "tooltip": [
+                            {"field": "Date", "type": "temporal", "format": "%Y-%m-%d %H:%M"},
+                            {"field": "Session"},
+                            {"field": "Score", "format": ".0f"},
+                        ],
+                    },
+                },
+            ],
+        },
+        width="stretch",
+    )
+    if not all(p.counted for p in trend):
+        st.caption("The line follows Standard and Full interviews. Quick and Custom sessions are practice.")
+
+
 def score_metrics(sessions: list[SessionSummary]) -> None:
     """Three numbers to answer "am I improving?" before any table has to be read."""
     stats = score_summary(sessions)
+    counted_only = "Standard and Full interviews only: Quick and Custom sessions (and drills) are practice."
     m1, m2, m3 = st.columns(3)
-    m1.metric("Interviews", len(sessions), help=f"{stats.scored} of them with a feedback report")
+    m1.metric(
+        "Interviews",
+        len(sessions),
+        help=f"{stats.scored} of them with a feedback report ({stats.practice} practice)",
+    )
     m2.metric(
         "Latest score",
         f"{stats.latest:.0f}" if stats.latest is not None else "—",
         # The delta shows an arrow and a sign as well as a colour, so it reads without colour too.
         delta=f"{stats.change:+.0f} vs previous" if stats.change is not None else None,
-        help="Change against the previous interview with a report.",
+        help=f"Change against the previous counted interview. {counted_only}",
     )
-    m3.metric("Best score", f"{stats.best:.0f}" if stats.best is not None else "—")
+    m3.metric("Best score", f"{stats.best:.0f}" if stats.best is not None else "—", help=counted_only)
 
 
 def session_detail(summary: SessionSummary) -> None:

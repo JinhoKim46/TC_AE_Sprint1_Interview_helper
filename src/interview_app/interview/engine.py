@@ -24,13 +24,13 @@ from sqlalchemy.engine import Engine
 from sqlmodel import col, func, select
 
 from interview_app.applications import get_application
-from interview_app.config import Settings, get_settings
+from interview_app.config import LengthPresets, Settings, get_settings
 from interview_app.db import InterviewSession, LLMCall, Turn, session_scope, utcnow
 from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.live import LiveFeedback, live_score
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.ingest import DocKind
-from interview_app.interview.persona import Mode, Persona, SessionConfig, derive_persona
+from interview_app.interview.persona import Length, Mode, Persona, SessionConfig, derive_persona
 from interview_app.interview.plan import make_plan
 from interview_app.interview.prompting import (
     TURN_SCHEMA,
@@ -160,13 +160,70 @@ def compute_progress(turns: list[TurnView]) -> Progress:
     return Progress(main_asked, followups, candidate_turns, in_cq, turns[-1].speaker if turns else None)
 
 
-def next_directive(progress: Progress, config: SessionConfig, force_close: bool) -> str:
-    """What the app tells the interviewer to do next. Code decides the *phase*; the model the wording."""
+def followup_cap(config: SessionConfig, presets: LengthPresets) -> int:
+    """Follow-ups allowed per main question: the difficulty's cap, and for Quick at most the Quick cap
+    (a short practice must stay short even on Tough). Code enforces it; the prompts only show it."""
+    if config.length == Length.QUICK:
+        return min(config.max_followups, presets.quick_max_followups)
+    return config.max_followups
+
+
+# Quick's directives. The core-question choice is an instruction, not a count: the main-question
+# target (from config) is in the status block, and the model picks the wording and order.
+QUICK_CORE = (
+    "This is a quick practice, so the main questions cover only the core: the candidate's motivation for "
+    "this role, the job description's top must-have requirement, and one question typical of this "
+    "interview type."
+)
+QUICK_OFFER = (
+    "offer, in one short line they can skip, a chance to ask you a quick question "
+    '(e.g. "Any quick question for me before we wrap up?"; stage candidate_questions)'
+)
+
+
+def _quick_directive(progress: Progress, main_target: int, cap: int) -> str:
+    """Quick: one-sentence intro, no warm-up, core questions only, a one-line skippable question offer."""
+    if progress.last_speaker is None:
+        return (
+            "Open the interview: introduce yourself in one sentence, with no warm-up question and no "
+            f"overview of the format, then ask your first main question. {QUICK_CORE}"
+        )
+    if progress.in_candidate_questions:
+        return (
+            "You are in the candidate-questions stage. If they asked something, answer it briefly in "
+            "character using only the documents and company notes (say you'd need to check anything "
+            "else). Then close the interview in one or two sentences and set is_final true."
+        )
+    if progress.main_asked >= main_target:
+        if progress.followups < cap:
+            return (
+                "All planned main questions are asked. Either one follow-up on the last answer (if it was "
+                f"vague, unowned or unevidenced) or {QUICK_OFFER}."
+            )
+        return f"All planned main questions are done. Now {QUICK_OFFER}."
+    if progress.followups >= cap:
+        return f"No more follow-ups on this topic. Ask the next main question. {QUICK_CORE}"
+    return (
+        "Decide the single best next move: one follow-up on the last answer (if it was vague, unowned or "
+        f"unevidenced) or the next main question (if it was complete). {QUICK_CORE}"
+    )
+
+
+def next_directive(
+    progress: Progress, config: SessionConfig, force_close: bool, presets: LengthPresets | None = None
+) -> str:
+    """What the app tells the interviewer to do next. Code decides the *phase*; the model the wording.
+
+    `presets` defaults to the config defaults so the pure function needs no Settings in tests.
+    """
     if force_close:
         return (
             "Close the interview now: thank the candidate, describe next steps in one sentence, "
             "set is_final true."
         )
+    cap = followup_cap(config, presets or LengthPresets())
+    if config.length == Length.QUICK:
+        return _quick_directive(progress, config.main_questions, cap)
     if progress.last_speaker is None:
         return (
             "Open the interview: introduce yourself and the format in one or two sentences, "
@@ -180,7 +237,7 @@ def next_directive(progress: Progress, config: SessionConfig, force_close: bool)
         )
     if progress.main_asked >= config.main_questions:
         # The last main question deserves the same chance of a follow-up as the others.
-        if progress.followups < config.max_followups:
+        if progress.followups < cap:
             return (
                 "All planned main questions are asked. Either one follow-up on the last answer (if it was "
                 "vague, unowned or unevidenced) or invite the candidate's own questions "
@@ -190,12 +247,20 @@ def next_directive(progress: Progress, config: SessionConfig, force_close: bool)
             "All planned main questions are done. "
             "Invite the candidate's own questions now (stage candidate_questions)."
         )
-    if progress.followups >= config.max_followups:
+    if progress.followups >= cap:
         return "No more follow-ups on this topic. Ask the next main question."
     return (
         "Decide the single best next move: one follow-up on the last answer (if it was vague, unowned or "
         "unevidenced) or the next main question (if it was complete)."
     )
+
+
+def close_correction(config: SessionConfig) -> str:
+    """The retry message when the model closes before the candidate-questions stage (guideline §3.8).
+    In Quick the one-line offer is that stage, so it is what the correction asks for."""
+    if config.length == Length.QUICK:
+        return f"Do not close yet. First {QUICK_OFFER}."
+    return "Do not close yet. First invite the candidate's own questions (stage candidate_questions)."
 
 
 def must_close(turn_count: int, cost_usd: float, settings: Settings) -> bool:
@@ -386,6 +451,7 @@ def _messages(
         persona=derive_persona(config),
         guideline=guideline_excerpt(deps.settings.guideline_path),
         plan=session_plan(row),
+        max_followups=followup_cap(config, deps.settings.length_presets),
     )
     messages = [{"role": "system", "content": interviewer_system_prompt(ctx)}]
     if not turns:
@@ -410,7 +476,7 @@ def _messages(
             main_asked=progress.main_asked,
             main_target=config.main_questions,
             followups=progress.followups,
-            max_followups=config.max_followups,
+            max_followups=followup_cap(config, deps.settings.length_presets),
             candidate_turns=progress.candidate_turns,
             directive=directive,
         )
@@ -432,7 +498,7 @@ def _interviewer_turn(
         "reasoning_effort": settings.reasoning_effort,
     }
     progress = compute_progress([_turn_view(t) for t in turns])
-    directive = next_directive(progress, config, force_close)
+    directive = next_directive(progress, config, force_close, deps.settings.length_presets)
     try:
         turn, _ = llm.chat_json(
             "interviewer", _messages(deps, row, config, turns, progress, directive), schema, **call
@@ -440,9 +506,7 @@ def _interviewer_turn(
         # Guideline rule: never end without offering the candidate a chance to ask questions.
         # One corrective retry; code, not the prompt alone, guarantees this.
         if turn.is_final and not progress.in_candidate_questions and not force_close:
-            directive = (
-                "Do not close yet. First invite the candidate's own questions (stage candidate_questions)."
-            )
+            directive = close_correction(config)
             turn, _ = llm.chat_json(
                 "interviewer", _messages(deps, row, config, turns, progress, directive), schema, **call
             )

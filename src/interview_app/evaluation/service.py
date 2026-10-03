@@ -30,6 +30,7 @@ from interview_app.interview.engine import (
     session_documents,
     session_plan,
 )
+from interview_app.interview.persona import Length
 from interview_app.llm.client import LLMError
 from interview_app.security import check_budget
 
@@ -106,7 +107,19 @@ def evaluate_session(
         raise EvaluationError("The evaluator could not produce a report. Please try again.")
 
     scored = [
-        (j, aggregate(j, exchanges, metrics, rubric, view.config.interview_type.value)) for j in judgements
+        (
+            j,
+            aggregate(
+                j,
+                exchanges,
+                metrics,
+                rubric,
+                view.config.interview_type.value,
+                # Quick's question offer is one skippable line: declining it is not scored (S4 stays null).
+                cq_optional=view.config.length == Length.QUICK,
+            ),
+        )
+        for j in judgements
     ]
     judgement, numbers = median_run(scored)
     overalls = [n["overall"] for _, n in scored]
