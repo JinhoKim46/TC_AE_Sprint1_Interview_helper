@@ -4,7 +4,7 @@ import pytest
 from pydantic import BaseModel
 
 from interview_app.config import Settings
-from interview_app.llm.client import CallRecord, LLMClient
+from interview_app.llm.client import CallRecord, LLMClient, pcm_format, pcm_seconds
 from interview_app.llm.pricing import PriceCatalog
 
 pytestmark = pytest.mark.live
@@ -46,3 +46,14 @@ def test_price_catalog_has_interviewer_model(tmp_path):
     info = PriceCatalog(settings).get("openai/gpt-5-mini")
     assert info is not None
     assert info.prompt_price and info.prompt_price > 0
+
+
+def test_speech_returns_pcm_and_an_estimated_cost(tmp_path):
+    # One short sentence with the configured TTS model (about a second of audio, a fraction of a cent).
+    settings = Settings(data_dir=tmp_path)
+    records: list[CallRecord] = []
+    client = LLMClient(settings, recorder=records.append, pricing=PriceCatalog(settings))
+    result = client.speech("tts", "Hello.", model=settings.tts.model, voice=settings.tts.default_voice)
+    assert pcm_format(result.content_type) == (24000, 1)
+    assert pcm_seconds(result.audio, result.content_type) > 0.2
+    assert records[0].ok and records[0].cost_usd > 0  # the TTS model is in the price catalog

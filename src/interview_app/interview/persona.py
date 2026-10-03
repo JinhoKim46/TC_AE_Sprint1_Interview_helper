@@ -150,6 +150,9 @@ class SessionConfig(BaseModel):
     # the resolved count; for a preset length it was taken from config when the session started.
     length: Length = Length.FULL
     channel: Channel = Channel.TEXT
+    # Voice channel: the TTS voice id, fixed when the session starts so the interviewer sounds like one
+    # person throughout (voice.session_voice). None = the persona's voice from config.
+    voice: str | None = None
 
     @property
     def max_followups(self) -> int:

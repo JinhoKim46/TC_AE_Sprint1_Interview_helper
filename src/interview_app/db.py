@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import Column, ForeignKey, Integer, event, text
+from sqlalchemy import Column, ForeignKey, Integer, UniqueConstraint, event, text
 from sqlalchemy.engine import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine
 
@@ -272,4 +272,29 @@ class Evaluation(SQLModel, table=True):
     overall: float | None = None
     band: str | None = None
     report_json: str
+    created_at: datetime = Field(default_factory=utcnow)
+
+
+class TurnAudio(SQLModel, table=True):
+    """The spoken version of one interviewer turn in a Voice session (see voice.py).
+
+    A separate table rather than columns on Turn: most turns have no audio, and ON DELETE CASCADE removes
+    these rows with their session (and so with their application). The WAV files themselves are not in the
+    database; voice.delete_session_audio removes them.
+    """
+
+    __table_args__ = (UniqueConstraint("session_id", "turn_idx"),)  # generated once per turn
+
+    id: int | None = Field(default=None, primary_key=True)
+    session_id: int = Field(
+        sa_column=Column(
+            Integer, ForeignKey("interviewsession.id", ondelete="CASCADE"), nullable=False, index=True
+        )
+    )
+    user_id: int = Field(foreign_key="user.id", index=True)
+    turn_idx: int  # Turn.idx of the interviewer turn
+    path: str  # relative to Settings.data_dir, so moving DATA_DIR moves the audio with it
+    voice: str
+    model: str
+    seconds: float = 0.0
     created_at: datetime = Field(default_factory=utcnow)

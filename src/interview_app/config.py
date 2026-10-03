@@ -132,6 +132,57 @@ class LengthPresets(BaseModel):
         return self
 
 
+# Voices of the TTS model, from `GET /api/v1/models?output_modalities=speech` -> `supported_voices`
+# (checked 2026-10-03). Kept here (not fetched) so the Settings picker works offline.
+GEMINI_TTS_VOICES: list[str] = [
+    "Zephyr", "Puck", "Charon", "Kore", "Fenrir", "Leda", "Orus", "Aoede", "Callirrhoe", "Autonoe",
+    "Enceladus", "Iapetus", "Umbriel", "Algieba", "Despina", "Erinome", "Algenib", "Rasalgethi",
+    "Laomedeia", "Achernar", "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird", "Zubenelgenubi",
+    "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat",
+]  # fmt: skip
+
+
+class TTSSettings(BaseModel):
+    """Text-to-speech for the Voice channel (spec 2026-10-03-length-voice-design, voice.py).
+
+    Env example: `TTS__MODEL=...` or `TTS__VOICES='{"hiring_manager": "Puck"}'`.
+    """
+
+    model_config = _STRICT
+
+    # The only TTS model this account's OpenRouter guardrail allows (checked 2026-10-03; others 404).
+    # It returns raw 16-bit PCM only, which voice.py wraps into a WAV file.
+    model: str = "google/gemini-3.8-flash-lite-tts"
+    # Interview type -> voice, so each fixed persona (persona._BASE) always sounds like the same person.
+    # Keys are InterviewType values; config can't import persona.py, so they are plain strings here.
+    voices: dict[str, str] = {
+        "recruiter_screen": "Aoede",  # Lena Brandt: friendly, organised
+        "hiring_manager": "Charon",  # Daniel Okafor: pragmatic, direct
+        "technical_deep_dive": "Kore",  # Dr. Mira Castellano: precise
+        "ml_case": "Orus",  # Jonas Weber: collaborative but demanding
+        "behavioral": "Leda",  # Aisha Rahman: warm, structured
+        "final_round": "Zephyr",  # Sofia Lindgren: calm, thorough
+    }
+    default_voice: str = "Charon"  # for an interview type missing from `voices`
+    available_voices: list[str] = GEMINI_TTS_VOICES
+    # The speech response carries no token usage, so cost is ESTIMATED from the catalog prices (see
+    # LLMClient.speech). Gemini bills audio as tokens per second of audio; it documents 32/s for audio
+    # input, and that rate is used for the generated audio too, as a deliberately conservative estimate.
+    audio_tokens_per_second: float = Field(default=32.0, gt=0, le=1000)
+    # A question longer than this is cut before speaking (OWASP LLM10: one turn can't burn the budget).
+    max_chars: int = Field(default=2000, gt=0, le=10_000)
+
+    @model_validator(mode="after")
+    def _known_voices(self) -> Self:
+        unknown = {*self.voices.values(), self.default_voice} - set(self.available_voices)
+        if unknown:
+            raise ValueError(f"unknown TTS voice(s): {sorted(unknown)}")
+        return self
+
+    def voice_for(self, interview_type: str) -> str:
+        return self.voices.get(interview_type, self.default_voice)
+
+
 class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
@@ -174,8 +225,10 @@ class Settings(BaseSettings):
 
     openrouter_api_key: SecretStr = SecretStr("")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    # Public model catalog with per-token prices and capabilities (see llm/pricing.py).
-    openrouter_models_url: str = "https://openrouter.ai/api/v1/models"
+    # Public model catalog with per-token prices and capabilities (see llm/pricing.py). API quirk: the plain
+    # URL lists text-output models only; `output_modalities=all` also lists the TTS model, whose prices
+    # the speech cost estimate needs.
+    openrouter_models_url: str = "https://openrouter.ai/api/v1/models?output_modalities=all"
     # Jev decision model (llm/decide.py). Not OpenAI-compatible, so it has its own URL.
     openrouter_decisions_url: str = "https://openrouter.ai/api/alpha/decisions"
 
@@ -200,6 +253,7 @@ class Settings(BaseSettings):
     model_choices: list[ModelChoice] = DEFAULT_MODEL_CHOICES
     limits: Limits = Limits()
     length_presets: LengthPresets = LengthPresets()
+    tts: TTSSettings = TTSSettings()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
 

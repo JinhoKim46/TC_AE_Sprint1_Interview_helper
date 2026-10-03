@@ -1,4 +1,4 @@
-"""The one gateway for chat-model calls.
+"""The one gateway for chat-model calls (and text-to-speech).
 
 Why one gateway: every call must be logged (cost, tokens, latency) and must use the same
 retry/timeout/error rules. If modules called the SDK directly, cost tracking would leak.
@@ -9,6 +9,8 @@ only provider-specific values are `base_url` and the API key in `Settings`.
 
 import json
 import logging
+import math
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -45,6 +47,41 @@ class ChatResult:
     model: str  # the model that actually answered (OpenRouter may resolve aliases)
     record: CallRecord
     finish_reason: str | None = None  # "length" = the reply was cut off at max_tokens
+
+
+@dataclass
+class SpeechResult:
+    """Audio from the text-to-speech endpoint, exactly as the provider sent it."""
+
+    audio: bytes
+    content_type: str  # e.g. "audio/pcm;rate=24000;channels=1"
+    record: CallRecord
+    generation_id: str | None = None  # OpenRouter's X-Generation-Id, for looking the call up later
+
+
+_PCM_RATE = re.compile(r"rate=(\d+)")
+_PCM_CHANNELS = re.compile(r"channels=(\d+)")
+
+
+def pcm_format(content_type: str) -> tuple[int, int] | None:
+    """`audio/pcm;rate=24000;channels=1` -> (24000, 1). None for any other audio type.
+
+    The sample rate travels only in the Content-Type header, so it is the one source of truth for it."""
+    if not content_type.lower().startswith("audio/pcm"):
+        return None
+    rate = _PCM_RATE.search(content_type)
+    channels = _PCM_CHANNELS.search(content_type)
+    # Gemini TTS documents 24 kHz mono, so those are the fallbacks if a parameter is missing.
+    return (int(rate.group(1)) if rate else 24000, int(channels.group(1)) if channels else 1)
+
+
+def pcm_seconds(audio: bytes, content_type: str) -> float:
+    """Duration of 16-bit PCM audio (2 bytes per sample per channel); 0.0 for other formats."""
+    fmt = pcm_format(content_type)
+    if fmt is None:
+        return 0.0
+    rate, channels = fmt
+    return len(audio) / (rate * channels * 2)
 
 
 class LLMError(Exception):
@@ -196,3 +233,63 @@ class LLMClient:
                     },
                 ]
         raise AssertionError("unreachable")
+
+    def speech(self, role: str, text: str, *, model: str, voice: str) -> SpeechResult:
+        """Text-to-speech via OpenRouter's OpenAI-compatible `/audio/speech`, recorded like a chat call.
+
+        `with_raw_response` because the body is raw audio bytes and the format (sample rate) is only in the
+        Content-Type header. `response_format="pcm"`: the Gemini TTS model accepts nothing else.
+        """
+        start = time.perf_counter()
+        try:
+            raw = self.sdk.audio.speech.with_raw_response.create(
+                model=model, input=text, voice=voice, response_format="pcm"
+            )
+            audio = raw.content
+        except Exception as e:
+            record = CallRecord(role, model, latency_s=time.perf_counter() - start, ok=False, error=repr(e))
+            self.recorder(record)
+            log.warning("Speech call failed: role=%s model=%s error=%r", role, model, e)
+            raise LLMError("The voice could not be generated.") from e
+        content_type = raw.headers.get("content-type", "")
+        generation_id = raw.headers.get("x-generation-id")
+        prompt_tokens, completion_tokens = self._speech_tokens(text, audio, content_type)
+        estimate = (
+            self.pricing.estimate_cost(model, prompt_tokens, completion_tokens) if self.pricing else None
+        )
+        ok = bool(audio)
+        record = CallRecord(
+            role=role,
+            model=model,
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            cost_usd=estimate or 0.0,
+            latency_s=time.perf_counter() - start,
+            ok=ok,
+            error=None if ok else "empty audio",
+        )
+        self.recorder(record)
+        log.info(
+            "Speech call: role=%s model=%s bytes=%d est_cost=%.6f generation=%s",
+            role,
+            model,
+            len(audio),
+            record.cost_usd,
+            generation_id,
+        )
+        if not ok:
+            raise LLMError("The voice model returned no audio.")
+        return SpeechResult(audio, content_type, record, generation_id)
+
+    def _speech_tokens(self, text: str, audio: bytes, content_type: str) -> tuple[int, int]:
+        """ESTIMATED token counts for a speech call: the response reports no usage at all.
+
+        Input: about 4 characters per token (the usual rule of thumb for English). Output: Gemini bills
+        audio as tokens per second of audio, so seconds (from the PCM length) x `tts.audio_tokens_per_second`.
+        Priced with the catalog, this gives an estimate, not the charged amount (OpenRouter's activity page
+        has the real cost under the logged generation id).
+        """
+        prompt_tokens = math.ceil(len(text) / 4)
+        seconds = pcm_seconds(audio, content_type)
+        completion_tokens = math.ceil(seconds * self.settings.tts.audio_tokens_per_second)
+        return prompt_tokens, completion_tokens

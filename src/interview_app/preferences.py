@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy.engine import Engine
 from sqlmodel import select
 
-from interview_app.config import LengthPresets, Settings, get_settings
+from interview_app.config import LengthPresets, Settings, TTSSettings, get_settings
 from interview_app.db import UserPreferences, session_scope, utcnow
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
@@ -44,6 +44,8 @@ class Preferences(BaseModel):
     # unsuitable number. Same range as the sliders on the Settings and Interview pages.
     main_questions: int | None = Field(default=None, ge=3, le=12)
     mode: Mode = Mode.REALISTIC
+    # Voice channel: a fixed TTS voice for every interviewer. None = each persona's own voice (config).
+    voice: str | None = None
 
     # --- Developer settings ---
     prompt_variant: PromptVariant = PromptVariant.P4_ROLE_RICH
@@ -90,7 +92,12 @@ def preset_main_questions(
     return {Length.QUICK: presets.quick, Length.STANDARD: presets.standard}.get(length)
 
 
-def to_session_config(prefs: Preferences, presets: LengthPresets | None = None, **overrides) -> SessionConfig:
+def to_session_config(
+    prefs: Preferences,
+    presets: LengthPresets | None = None,
+    tts: TTSSettings | None = None,
+    **overrides,
+) -> SessionConfig:
     """Build a SessionConfig from saved preferences; `overrides` are what the start form changed.
 
     Example: `to_session_config(prefs, length=Length.CUSTOM, main_questions=5)`. For a preset length
@@ -103,6 +110,7 @@ def to_session_config(prefs: Preferences, presets: LengthPresets | None = None, 
         "mode": prefs.mode,
         "length": prefs.length,
         "channel": prefs.channel,
+        "voice": prefs.voice,
         "main_questions": prefs.main_questions,
         "prompt_variant": prefs.prompt_variant,
         # A copy, so editing the session config can never change the saved preferences object.
@@ -118,6 +126,14 @@ def to_session_config(prefs: Preferences, presets: LengthPresets | None = None, 
         values["main_questions"] = preset
     elif values["main_questions"] is None:
         values["main_questions"] = DEFAULT_MAIN_QUESTIONS[InterviewType(values["interview_type"])]
+    if Channel(values["channel"]) == Channel.VOICE:
+        # Resolve the voice now and store it with the session, so a later change in Settings or config
+        # can't make the same interviewer switch voices mid-interview.
+        tts = tts or get_settings().tts
+        if values["voice"] not in tts.available_voices:
+            values["voice"] = tts.voice_for(InterviewType(values["interview_type"]).value)
+    else:
+        values["voice"] = None
     return SessionConfig(**values)
 
 

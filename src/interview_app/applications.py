@@ -15,8 +15,8 @@ from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlmodel import col, select
 
-from interview_app.config import Limits, get_settings
-from interview_app.db import Application, Document, session_scope, utcnow
+from interview_app.config import Limits, Settings, get_settings
+from interview_app.db import Application, Document, InterviewSession, session_scope, utcnow
 from interview_app.ingest import (
     KIND_LABELS,
     REQUIRED_KINDS,
@@ -26,6 +26,7 @@ from interview_app.ingest import (
     clean_text,
     validate_document,
 )
+from interview_app.voice import delete_session_audio
 
 
 class ApplicationNotFoundError(LookupError):
@@ -231,12 +232,22 @@ def update_document(
     return warnings
 
 
-def delete_application(engine: Engine, user_id: int, application_id: int) -> bool:
-    """Delete the application; its documents go with it via ON DELETE CASCADE.
+def delete_application(
+    engine: Engine, user_id: int, application_id: int, settings: Settings | None = None
+) -> bool:
+    """Delete the application; its documents, sessions, turns and audio rows go with it via ON DELETE
+    CASCADE, and its sessions' audio files are removed from disk.
     Returns False if there was nothing (of this user's) to delete."""
     with session_scope(engine) as s:
         app = _get_owned(s, user_id, application_id)
         if app is None:
             return False
+        session_ids = s.exec(
+            select(InterviewSession.id).where(
+                InterviewSession.application_id == application_id, InterviewSession.user_id == user_id
+            )
+        ).all()
         s.delete(app)
+    for session_id in session_ids:
+        delete_session_audio(settings or get_settings(), user_id, session_id)
     return True
