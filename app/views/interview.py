@@ -42,6 +42,7 @@ from interview_app.preferences import (
     preset_main_questions,
     to_session_config,
 )
+from interview_app.voice import speak, stored_audio
 
 engine = get_engine()
 user_id = current_user_id()
@@ -319,6 +320,43 @@ def coaching_choice(view: eng.SessionView) -> None:
         st.rerun()
 
 
+def interviewer_message(view: eng.SessionView, t: eng.TurnView, newest: bool) -> None:
+    """One interviewer turn. Text sessions show the text; Voice sessions show a player with the text behind
+    "Show text", and the text by itself whenever there is no audio (so a TTS problem never blocks anyone)."""
+    persona = view.persona
+    header = f"**{safe_md(persona.name, inline=True)}** · {safe_md(persona.title, inline=True)}"
+    with_text = f"{header}\n\n{safe_md(t.text)}"
+    if view.config.channel != Channel.VOICE:
+        st.markdown(with_text)
+        return
+    cfg = get_settings()
+    key = f"{view.id}-{t.idx}"
+    notices = st.session_state.setdefault("voice_notices", {})
+    path = stored_audio(engine, cfg, user_id, view.id, t.idx)
+    # Generate only the newest question of a running interview (or its closing words), once: replays and
+    # older turns read the stored file, and a failure is remembered so a rerun doesn't pay for it again.
+    if path is None and newest and key not in notices and (view.status == "active" or t.is_final):
+        with st.spinner(f"{persona.name} is speaking…"):
+            outcome = speak(engine, cfg, engine_deps().make_llm, user_id, view.id, t.idx)
+        path = outcome.path
+        if path is None:
+            notices[key] = outcome.notice
+    if path is None:
+        st.markdown(with_text)
+        st.caption(
+            f":material/subtitles: {notices.get(key) or 'No audio for this question, so the text is shown.'}"
+        )
+        return
+    st.markdown(header)
+    # Autoplay the newest question once: without the memo, every rerun (e.g. "Show text") would replay it.
+    played = st.session_state.setdefault("voice_autoplayed", set())
+    st.audio(str(path), format="audio/wav", autoplay=newest and key not in played)
+    if newest:
+        played.add(key)
+    if st.toggle("Show text", key=f"show_text_{key}", help="Practise listening; check a word you missed."):
+        st.markdown(safe_md(t.text))
+
+
 def progress_text(view: eng.SessionView, done: int) -> str:
     """'Question 3 of 7 · Experience (follow-up)': where the interview is, in words."""
     text = f"Question {done} of {view.config.main_questions}"
@@ -368,13 +406,11 @@ def chat(view: eng.SessionView) -> None:
     st.progress(done / view.config.main_questions, text=progress_text(view, done))
 
     previous_idx = -1
+    newest_question = max((t.idx for t in view.turns if t.speaker == "interviewer"), default=None)
     for t in view.turns:
         if t.speaker == "interviewer":
             with st.chat_message("assistant", avatar=INTERVIEWER_AVATAR):
-                st.markdown(
-                    f"**{safe_md(persona.name, inline=True)}** · {safe_md(persona.title, inline=True)}"
-                    f"\n\n{safe_md(t.text)}"
-                )
+                interviewer_message(view, t, newest=t.idx == newest_question)
         else:
             with st.chat_message("user", avatar=CANDIDATE_AVATAR):
                 st.markdown(safe_md(t.text))

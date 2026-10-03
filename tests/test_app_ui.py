@@ -16,6 +16,8 @@ APP_DIR = PROJECT_ROOT / "app"
 @pytest.fixture(autouse=True)
 def temp_database(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", f"sqlite:///{tmp_path / 'ui.db'}")
+    # Voice interviews write audio under DATA_DIR: keep it in the temp folder, never in the real data/.
+    monkeypatch.setenv("DATA_DIR", str(tmp_path / "data"))
     monkeypatch.syspath_prepend(str(APP_DIR))  # pages import ui_common like Streamlit does
     get_settings.cache_clear()
     # st.cache_resource is keyed by the function's source, not the module object, so a cached engine
@@ -1382,3 +1384,105 @@ def test_history_and_report_show_the_length_channel_badge():
     at.selectbox(key="history_open").set_value(old).run()
     assert not at.exception, at.exception
     assert any("Full · Text" in m.value for m in at.markdown)
+
+
+def voice_deps(monkeypatch, replies: list[str], tts_error: Exception | None = None) -> list[dict]:
+    """A scripted chat model plus a fake `/audio/speech` (one second of PCM, or `tts_error`), recorded in
+    the call log like the real wiring. Returns the speech requests."""
+    from types import SimpleNamespace
+
+    import ui_common
+
+    from interview_app.interview.engine import EngineDeps
+    from interview_app.llm.calllog import make_db_recorder
+    from interview_app.llm.client import LLMClient
+
+    speech_requests: list[dict] = []
+
+    def create(**kwargs):
+        return SimpleNamespace(
+            model=kwargs["model"],
+            choices=[SimpleNamespace(message=SimpleNamespace(content=replies.pop(0)))],
+            usage=SimpleNamespace(prompt_tokens=1, completion_tokens=1, cost=0.0),
+        )
+
+    def speech(**kwargs):
+        speech_requests.append(kwargs)
+        if tts_error is not None:
+            raise tts_error
+        headers = {"content-type": "audio/pcm;rate=24000;channels=1"}
+        return SimpleNamespace(content=b"\x00\x00" * 24000, headers=headers)
+
+    sdk = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create)),
+        audio=SimpleNamespace(speech=SimpleNamespace(with_raw_response=SimpleNamespace(create=speech))),
+    )
+
+    def fake_deps():
+        settings, engine = ui_common.get_settings(), ui_common.get_engine()
+        return EngineDeps(
+            engine,
+            settings,
+            lambda uid, sid: LLMClient(settings, make_db_recorder(engine, uid, sid), sdk=sdk),
+        )
+
+    monkeypatch.setattr(ui_common, "engine_deps", fake_deps)
+    return speech_requests
+
+
+def test_voice_interview_plays_the_question_and_hides_the_text(monkeypatch, tmp_path):
+    from sqlmodel import select
+
+    from interview_app.db import LLMCall, TurnAudio, session_scope
+
+    speech = voice_deps(monkeypatch, [interviewer_reply("Hi, walk me through your background.")])
+    engine, _, _ = sample_with_p1()
+    at = run_page("interview.py")
+    assert group(at, "Channel").value == "voice"  # the default
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+
+    assert len(speech) == 1 and speech[0]["input"] == "Hi, walk me through your background."
+    audio = at.get("audio")
+    assert len(audio) == 1
+    toggle = at.toggle(key=next(t.key for t in at.toggle if t.label == "Show text"))
+    assert toggle.value is False  # hidden by default: practise listening
+    assert not any("walk me through" in m.value for m in at.chat_message[0].markdown)
+
+    toggle.set_value(True).run()
+    assert not at.exception, at.exception
+    assert any("walk me through" in m.value for m in at.chat_message[0].markdown)
+    assert len(speech) == 1  # the rerun replayed the stored file, nothing was generated again
+    with session_scope(engine) as s:
+        assert len(s.exec(select(TurnAudio)).all()) == 1
+        assert [c.role for c in s.exec(select(LLMCall).where(LLMCall.role == "tts")).all()] == ["tts"]
+    assert list((tmp_path / "data" / "audio").rglob("*.wav"))
+
+
+def test_voice_failure_shows_the_text_with_a_notice(monkeypatch, tmp_path):
+    speech = voice_deps(
+        monkeypatch, [interviewer_reply("Hi, walk me through your background.")], RuntimeError("503")
+    )
+    sample_with_p1()
+    at = run_page("interview.py")
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+    assert "walk me through your background" in at.chat_message[0].markdown[0].value
+    assert any("could not be generated" in c.value for c in at.caption)
+    assert not at.get("audio") and not any(t.label == "Show text" for t in at.toggle)
+
+    at.run()  # a rerun doesn't pay for a second attempt
+    assert len(speech) == 1
+
+
+def test_settings_page_saves_the_voice_override(offline_catalog):
+    import ui_common
+
+    from interview_app.preferences import load_preferences
+
+    at = run_page("settings.py", timeout=90)
+    at.selectbox(key="pref_voice").set_value("Puck")
+    next(b for b in at.button if b.label == "Save settings").click().run()
+    assert not at.exception, at.exception
+    engine = ui_common.get_engine()
+    assert load_preferences(engine, ui_common.ensure_local_user(engine)).voice == "Puck"
