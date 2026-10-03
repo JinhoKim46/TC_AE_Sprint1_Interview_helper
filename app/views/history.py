@@ -10,10 +10,14 @@ from report_view import BAND_LABELS, LEVEL_LABELS, render_report, session_badge
 from ui_common import (
     CANDIDATE_AVATAR,
     INTERVIEWER_AVATAR,
+    button_row,
+    card_row,
     current_user_id,
+    form_row,
     get_engine,
     go_button,
     page_link,
+    panel,
     safe_md,
 )
 
@@ -97,8 +101,9 @@ def progress_block(application_id: int) -> None:
     prog = progress(engine, user_id, application_id, get_settings().rubric_path)
 
     if len(prog.trend) >= 2:
-        st.subheader("Overall score over time")
-        trend_chart(prog.trend)
+        with panel(key="trend"):
+            st.subheader("Overall score over time")
+            trend_chart(prog.trend)
     elif prog.trend:
         st.caption("One scored interview so far: the trend appears after the second one.")
     else:
@@ -196,7 +201,8 @@ def score_metrics(sessions: list[SessionSummary]) -> None:
     """Three numbers to answer "am I improving?" before any table has to be read."""
     stats = score_summary(sessions)
     counted_only = "Standard and Full interviews only: Quick and Custom sessions (and drills) are practice."
-    m1, m2, m3 = st.columns(3)
+    # Three equal cards in one row (stacked on a phone), so the numbers line up and read as one group.
+    m1, m2, m3 = card_row(3, key="metrics")
     m1.metric(
         "Interviews",
         len(sessions),
@@ -249,24 +255,28 @@ def session_detail(summary: SessionSummary) -> None:
             drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")
-            go_button("views/interview.py", "Go to the running interview", icon=":material/forum:")
+            with button_row(key="running"):
+                go_button("views/interview.py", "Go to the running interview", icon=":material/forum:")
         else:
             # Opening the interview on the Interview page shows its "Get my feedback report" button, so
             # the judge (and its cost) only ever runs from there, on an explicit click.
             st.info("No report yet. Open the interview to get one (about a minute).")
-            go_button(
-                "views/interview.py",
-                "Open it to get feedback",
-                icon=":material/assessment:",
-                key=f"history_get_report_{summary.session_id}",
-                state={"viewing_session": summary.session_id},
-            )
+            with button_row(key="get-report"):
+                go_button(
+                    "views/interview.py",
+                    "Open it to get feedback",
+                    icon=":material/assessment:",
+                    key=f"history_get_report_{summary.session_id}",
+                    state={"viewing_session": summary.session_id},
+                )
 
     with st.expander("Delete this interview", icon=":material/delete:"):
         # Keyed per session, so a tick given for one interview never carries over to the next one opened.
         confirm_key = f"history_confirm_{summary.session_id}"
         sure = st.checkbox("Yes, delete the transcript and report for good", key=confirm_key)
-        if st.button("Delete interview", type="primary", disabled=not sure):
+        with button_row(key="delete"):
+            delete_clicked = st.button("Delete interview", type="primary", disabled=not sure)
+        if delete_clicked:
             delete_session(engine, user_id, summary.session_id)
             for key in ("history_open", confirm_key, "history_table"):
                 st.session_state.pop(key, None)
@@ -285,7 +295,10 @@ apps = {a.id: f"{a.company} — {a.role}" for a in list_applications(engine, use
 # run before the selectbox is drawn, because a drawn widget's value can't be changed in the same run.
 if st.session_state.get("history_app") not in (None, *apps):
     st.session_state.history_app = None
-app_id = st.selectbox(
+# The filter takes half the width on a wide screen: a full-width box for a short choice looked like a
+# text field. On a phone the row stacks and the box fills the width.
+filter_col, _ = form_row(2, key="filter")
+app_id = filter_col.selectbox(
     "Application",
     options=[None, *apps],
     format_func=lambda a: "All applications" if a is None else apps[a],
@@ -310,10 +323,13 @@ by_id = {s.session_id: s for s in sessions}
 # A row picked under another filter, or a deleted session, must not stay selected.
 if st.session_state.get("history_open") not in by_id:
     st.session_state.history_open = None
-opened = st.selectbox(
+open_col, _ = form_row([2, 1], key="open")
+opened = open_col.selectbox(
     "Open an interview (or click a row above)",
     options=[None, *by_id],
     format_func=lambda sid: "Choose an interview…" if sid is None else session_label(by_id[sid]),
+    # Streamlit shows its generic placeholder when the stored value is None; say the same as the None option.
+    placeholder="Choose an interview…",
     key="history_open",
 )
 if opened is not None:

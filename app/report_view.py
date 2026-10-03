@@ -1,7 +1,7 @@
 """Render a feedback report (shared by the Interview and History pages)."""
 
 import streamlit as st
-from ui_common import safe_md, short
+from ui_common import form_row, panel, safe_md, short
 
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
@@ -64,9 +64,9 @@ def render_report(report: Report, rubric_path, config: SessionConfig | None = No
     rubric = load_rubric(rubric_path)
     names = {k: v["name"] for k, v in {**rubric.exchange_items, **rubric.session_items}.items()}
 
-    # --- Verdict first: score, hiring signal and the judge's summary in one card --------------------
-    with st.container(border=True):
-        col1, col2 = st.columns([1, 3], vertical_alignment="center")
+    # --- Verdict first: score, hiring signal and the judge's summary in one panel -------------------
+    with panel(key="report-head"):
+        col1, col2 = form_row([1, 3], key="report-head", align="center")
         col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
         with col2:
             badges = band_badge(report.band) or ":gray-badge[:material/help: No overall score]"
@@ -91,13 +91,16 @@ def render_report(report: Report, rubric_path, config: SessionConfig | None = No
     parts = [(key, value) for key, value in report.components.items() if value is not None]
     if parts:
         st.subheader("Score breakdown")
-        cols = st.columns(2)
+        # Two aligned columns of bars (one grid, so the bars of a row start and end at the same x).
+        cols = form_row(2, key="breakdown", align="top")
         for i, (key, value) in enumerate(parts):
             cols[i % 2].progress(value / 100, text=f"{COMPONENT_LABELS.get(key, key)} · {value:.0f} / 100")
 
     # --- Strengths and improvements side by side, evidence quoted -----------------------------------
-    left, right = st.columns(2)
-    with left.container(border=True):
+    # Two panels in one top-aligned row, each as tall as its own list: the lists often differ a lot in length
+    # (none vs three long points), and stretching the short one to match left a large empty box.
+    left, right = form_row(2, key="report-notes", align="top")
+    with left, panel(key="report-good"):
         st.markdown("#### :material/thumb_up: What went well")
         for s in report.strengths:
             # No unsafe_allow_html: the quote is the candidate's own text, and raw HTML from it would run
@@ -107,7 +110,7 @@ def render_report(report: Report, rubric_path, config: SessionConfig | None = No
             st.markdown(f"- {safe_md(s.point, inline=True)}{quote} ({evidence})")
         if not report.strengths:
             st.caption("No strengths with clear evidence in this interview.")
-    with right.container(border=True):
+    with right, panel(key="report-improve"):
         st.markdown("#### :material/trending_up: What to improve")
         for imp in report.improvements:
             ref = f" ({safe_md(imp.example_turn, inline=True)})" if imp.example_turn else ""

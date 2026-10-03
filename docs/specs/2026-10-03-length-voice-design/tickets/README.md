@@ -14,9 +14,9 @@ graph LR
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | Length + Channel settings | — | ready-for-agent |
-| 02 | Design system + Home/Applications | — | ready-for-agent |
-| 03 | Length behaviour | 01 | ready-for-agent |
+| 01 | Length + Channel settings | — | done |
+| 02 | Design system + Home/Applications | — | done |
+| 03 | Length behaviour | 01 | done |
 | 04 | Voice channel (TTS) | 01 | done |
-| 05 | Alignment + accessibility pass on all pages | 02, 03, 04 | ready-for-agent |
+| 05 | Alignment + accessibility pass on all pages | 02, 03, 04 | done |
 | 06 | Docs + reports | 05 | ready-for-agent |

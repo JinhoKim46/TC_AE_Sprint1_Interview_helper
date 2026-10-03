@@ -2,7 +2,7 @@
 
 import streamlit as st
 import ui_common  # module attribute lookups (not `from … import`), so tests can swap engine_deps
-from ui_common import safe_md
+from ui_common import button_row, safe_md
 
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
@@ -45,13 +45,15 @@ def drill_offer(view: eng.SessionView, report: Report, key: str, go_to_interview
     started_key = f"drill_started_{key}"
     if st.session_state.get(started_key):
         st.caption("A practice interview was already started from this report.")
-    if st.button(
-        "Start a focused practice interview",
-        type="primary",
-        icon=":material/target:",
-        key=key,
-        disabled=bool(st.session_state.get(started_key)),
-    ):
+    with button_row(key=key):
+        start = st.button(
+            "Start a focused practice interview",
+            type="primary",
+            icon=":material/target:",
+            key=key,
+            disabled=bool(st.session_state.get(started_key)),
+        )
+    if start:
         st.session_state[started_key] = True
         with st.spinner("Preparing a focused interview (about 30 seconds)…"):
             try:

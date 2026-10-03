@@ -69,3 +69,32 @@ def test_sentence_case_keeps_acronyms(ui_common):
     assert ui_common.sentence_case("job description") == "Job description"
     assert ui_common.sentence_case("CV") == "CV"
     assert ui_common.sentence_case("") == ""
+
+
+def _rule(css: str, selector_end: str) -> str:
+    """The declarations of the first rule with a selector (in its comma list) ending in `selector_end`."""
+    for selectors, body in re.findall(r"([^{}]+)\{([^{}]*)\}", css):
+        if any(sel.strip().endswith(selector_end) for sel in selectors.split(",")):
+            return body
+    raise AssertionError(f"no rule for {selector_end!r}")
+
+
+def test_selected_options_are_not_marked_by_accent_text_alone():
+    # The accent is only 3.5:1 on the dark background, so a selected segment keeps the text colour and is
+    # marked by weight and a ring as well (WCAG 1.4.1 and 1.4.3).
+    css = CSS.read_text(encoding="utf-8")
+    body = _rule(css, 'button[aria-checked="true"]')
+    assert "color: inherit" in body and "box-shadow" in body
+    assert "font-weight: 600" in _rule(css, 'button[aria-checked="true"] p')
+
+
+def test_every_focusable_kind_has_a_visible_focus_ring():
+    css = CSS.read_text(encoding="utf-8")
+    for selector in (
+        "button:focus-visible",
+        "audio:focus-visible",
+        "canvas:focus-visible",
+        "div:has(> textarea:focus-visible)",
+    ):
+        assert "outline: 2px solid" in _rule(css, selector), selector
+    assert "outline: 2px solid" in _rule(css, "label:has(input:focus-visible) > span + div")

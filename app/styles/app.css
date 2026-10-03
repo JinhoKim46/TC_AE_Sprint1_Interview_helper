@@ -64,6 +64,64 @@
   color: inherit;
 }
 
+/* Segmented controls and pills (Length, Difficulty, Channel, ...) write the selected option in the accent
+   colour too: 3.5:1 on the dark background. The label keeps the normal text colour, and the selected option is
+   marked by more than colour: a heavier weight, an accent ring (2px with the border) and a light tint. */
+[data-testid="stApp"] [data-testid="stButtonGroup"] button[aria-checked="true"] p {
+  font-weight: 600;
+}
+
+[data-testid="stApp"] [data-testid="stButtonGroup"] button[aria-checked="true"] {
+  color: inherit;
+  background-color: color-mix(in srgb, var(--ih-accent) 14%, transparent);
+  box-shadow: inset 0 0 0 1px var(--ih-accent);
+}
+
+/* The audio player (Voice interviews) and the data tables (a canvas) get the same ring; Chromium draws none on
+   either. Text fields and select boxes only turn their 1px border to the accent when focused, which is hard to
+   see, so their box gets the ring too (the input inside is what has focus, hence :has). */
+[data-testid="stApp"] audio:focus-visible,
+[data-testid="stApp"] canvas:focus-visible,
+[data-testid="stApp"] div:has(> input:focus-visible:not([type="checkbox"], [type="radio"])),
+[data-testid="stApp"] div:has(> textarea:focus-visible) {
+  outline: 2px solid var(--ih-accent);
+  outline-offset: 2px;
+}
+
+/* Toggles and checkboxes hide their input, so the focus ring goes on the visible box or track instead (the
+   first element after the hidden input's wrapper). */
+[data-testid="stApp"] [data-testid="stCheckbox"] label:has(input:focus-visible) > span + div {
+  outline: 2px solid var(--ih-accent);
+  outline-offset: 2px;
+}
+
+/* Badges (`:green-badge[...]`) in the light theme: Streamlit's text colours sit on a 10% tint and reach only
+   3.2:1 (orange), 3.5:1 (gray) and exactly 4.5:1 (green, the "Hire signal" badge). Streamlit writes the colours
+   as an inline style, so these rules match its light-theme tint and set a darker text of the same hue (all
+   6:1 or better). The dark theme's badges already pass and keep their colours. The badge always carries words
+   and an icon as well, so colour is never the only signal. */
+[data-testid="stApp"] .stMarkdownBadge[style*="background-color: rgba(33, 195, 84, 0.1)"] {
+  color: #11692f !important;
+}
+
+[data-testid="stApp"] .stMarkdownBadge[style*="background-color: rgba(255, 164, 33, 0.1)"] {
+  color: #94500a !important;
+}
+
+[data-testid="stApp"] .stMarkdownBadge[style*="background-color: rgba(255, 43, 43, 0.1)"] {
+  color: #a32a2e !important;
+}
+
+[data-testid="stApp"] .stMarkdownBadge[style*="background-color: rgba(49, 51, 63, 0.1)"] {
+  color: #4a4d5c !important;
+}
+
+/* A divider inside an expander (Applications: between the sample and the form) keeps the page's spacing
+   scale instead of Streamlit's 2em above and below. */
+[data-testid="stExpanderDetails"] [data-testid="stMarkdownContainer"] hr {
+  margin: var(--ih-space-2) 0;
+}
+
 /* --- Readable prose: long paragraphs stop at a comfortable line length on a wide screen ------------- */
 
 [data-testid="stMainBlockContainer"] [data-testid="stMarkdownContainer"] > p {
@@ -123,6 +181,18 @@
   column-gap: var(--ih-space-5);
   /* Stacked on a phone, the fields of one row sit as close as fields in a column do. */
   row-gap: var(--ih-space-4);
+}
+
+/* In a form row, segmented controls are as tall as the select boxes and text inputs next to them, so the
+   controls of one row line up top and bottom. Only the options: the label's help icon is a button too. Streamlit
+   pads the option group by 3px above and below (and pulls it up 3px), which left it misaligned with a select box. */
+[class*="st-key-ih-form-"] [data-testid="stButtonGroup"] [role="radiogroup"] {
+  padding-block: 0;
+  margin-block: 0;
+}
+
+[class*="st-key-ih-form-"] [data-testid="stButtonGroup"] [role="radiogroup"] button {
+  min-height: 2.5rem;
 }
 
 /* --- Button rows: button_row() -----------------------------------------------------------------------

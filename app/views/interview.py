@@ -10,11 +10,14 @@ from report_view import render_report, session_badge
 from ui_common import (
     CANDIDATE_AVATAR,
     INTERVIEWER_AVATAR,
+    button_row,
     current_user_id,
     engine_deps,
+    form_row,
     get_engine,
     kept_widget,
     page_link,
+    panel,
     safe_md,
     slider_start,
 )
@@ -90,7 +93,9 @@ def start_form() -> None:
     labels = {a.id: f"{a.company} — {a.role}" for a in apps}
     # "Practise this application" on the Applications page pre-selects it here (read once).
     picked = st.session_state.pop("start_app_pick", None)
-    with st.container(border=True):
+    # Three panels, one per decision, in the order they are made. Inside "The interview" the four settings sit
+    # in a 2 x 2 grid (form_row): the rows share their columns, and the controls of a row are level.
+    with panel(key="start-app"):
         st.markdown("**1. Application**")
         app_id = st.selectbox(
             "Application",
@@ -100,9 +105,9 @@ def start_form() -> None:
             label_visibility="collapsed",
         )
     limits = get_settings().limits
-    with st.container(border=True):
+    with panel(key="start-interview"):
         st.markdown("**2. The interview**")
-        col1, col2 = st.columns(2)
+        col1, col2 = form_row(2, key="start-kind")
         # Options are plain strings (enum values) and labels come from a lookup: widgets compare
         # options by value across reruns, which is simplest and most robust with plain strings.
         interview_type = InterviewType(
@@ -121,7 +126,7 @@ def start_form() -> None:
             format_func=str.capitalize,
             help=DIFFICULTY_HELP,
         )
-        col3, col4 = st.columns(2)
+        col3, col4 = form_row(2, key="start-length")
         length = Length(
             col3.segmented_control(
                 "Length",
@@ -159,7 +164,7 @@ def start_form() -> None:
         else:
             count = preset_main_questions(length, get_settings().length_presets, interview_type)
             st.caption(f"{LENGTH_LABELS[length]}: {count} main questions, follow-ups come on top.")
-    with st.container(border=True):
+    with panel(key="start-mode"):
         st.markdown("**3. Feedback style**")
         mode = st.radio(
             "Mode",
@@ -173,7 +178,9 @@ def start_form() -> None:
     # Developer options live on the Settings page (course task M9): a candidate doesn't need them here.
     page_link("views/settings.py", label="Defaults, prompt and model settings", icon=":material/settings:")
 
-    if st.button("Start interview", type="primary", icon=":material/play_arrow:"):
+    with button_row(key="start"):
+        start_clicked = st.button("Start interview", type="primary", icon=":material/play_arrow:")
+    if start_clicked:
         config = to_session_config(
             prefs,
             interview_type=interview_type,
@@ -275,10 +282,12 @@ def blocked_answer_editor(view: eng.SessionView) -> bool:
         value=blocked["text"],
         key=f"blocked_text_{blocked['nonce']}",
     )
-    col1, col2 = st.columns(2)
-    if col1.button("Send again", type="primary", icon=":material/send:"):
+    with button_row(key="blocked"):
+        send = st.button("Send again", type="primary", icon=":material/send:")
+        discard = st.button("Discard", icon=":material/close:")
+    if send:
         submit(eng.retry if blocked["action"] == "retry" else eng.answer, view, text)
-    if col2.button("Discard", icon=":material/close:"):
+    if discard:
         st.session_state.pop("blocked_answer", None)
         st.rerun()
     return True
@@ -290,27 +299,32 @@ def coaching_choice(view: eng.SessionView) -> None:
     retries_left = f"{left} retr{'y' if left == 1 else 'ies'} left for this answer."
     if st.session_state.get("retrying") == view.id:
         st.caption(retries_left + " The last attempt counts.")
-        if st.button("Keep my answer", icon=":material/undo:"):
+        with button_row(key="keep"):
+            keep = st.button("Keep my answer", icon=":material/undo:")
+        if keep:
             st.session_state.pop("retrying", None)
             st.rerun()
         if text := st.chat_input("Your new answer"):
             st.session_state.pop("retrying", None)
             submit(eng.retry, view, text)
         return
-    box = st.container(border=True)
-    box.markdown("**Your answer is scored.** Try it again with the tip in mind, or move on.")
-    box.caption(retries_left)
-    col1, col2 = box.columns(2)
-    if col2.button(
-        "Retry this answer",
-        icon=":material/replay:",
-        disabled=left <= 0,
-        help=retries_left + " The last attempt counts.",
-        width="stretch",
-    ):
+    with panel(key="coach"):
+        st.markdown("**Your answer is scored.** Try it again with the tip in mind, or move on.")
+        st.caption(retries_left)
+        # Both buttons are drawn before either click is handled, so the row never loses a button while
+        # Continue waits for the interviewer. Primary action first; the row gives both one size.
+        with button_row(key="coach"):
+            go_on = st.button("Continue", type="primary", icon=":material/arrow_forward:")
+            retry = st.button(
+                "Retry this answer",
+                icon=":material/replay:",
+                disabled=left <= 0,
+                help=retries_left + " The last attempt counts.",
+            )
+    if retry:
         st.session_state.retrying = view.id
         st.rerun()
-    if col1.button("Continue", type="primary", icon=":material/arrow_forward:", width="stretch"):
+    if go_on:
         with st.spinner(f"{view.persona.name} is thinking…"):
             try:
                 eng.continue_interview(engine_deps(), user_id, view.id)
@@ -372,16 +386,18 @@ def chat(view: eng.SessionView) -> None:
     # A retry started in another interview must not put this one into retry mode.
     if st.session_state.get("retrying") not in (None, view.id):
         st.session_state.pop("retrying", None)
-    st.markdown(
-        f"**{safe_md(view.company, inline=True)}** — {safe_md(view.role, inline=True)}  \n"
-        f":gray-badge[{TYPE_LABELS[view.config.interview_type]}] "
-        f":gray-badge[{view.config.difficulty.value.capitalize()}] "
-        f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode] "
-        f"{session_badge(view.config)}"
-    )
-    st.caption(
-        f"Your interviewer: {safe_md(persona.name, inline=True)}, {safe_md(persona.title, inline=True)}"
-    )
+    # The session's facts in one panel above the conversation: what is practised, how, and with whom.
+    with panel(key="session-head"):
+        st.markdown(
+            f"**{safe_md(view.company, inline=True)}** — {safe_md(view.role, inline=True)}  \n"
+            f":gray-badge[{TYPE_LABELS[view.config.interview_type]}] "
+            f":gray-badge[{view.config.difficulty.value.capitalize()}] "
+            f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode] "
+            f"{session_badge(view.config)}"
+        )
+        st.caption(
+            f"Your interviewer: {safe_md(persona.name, inline=True)}, {safe_md(persona.title, inline=True)}"
+        )
     if view.status == "preparing":
         # The opening turn never arrived (the app was closed or crashed while preparing). Without this the
         # page would wait forever, because an unfinished session blocks starting a new one.
@@ -390,7 +406,9 @@ def chat(view: eng.SessionView) -> None:
             "in a minute, end it and start a new one.",
             icon=":material/hourglass_empty:",
         )
-        if st.button("End this interview", type="primary", icon=":material/stop:"):
+        with button_row(key="end-stuck"):
+            end_stuck = st.button("End this interview", type="primary", icon=":material/stop:")
+        if end_stuck:
             eng.end_interview(engine_deps(), user_id, view.id)
             st.session_state.pop("viewing_session", None)
             st.rerun()
@@ -428,7 +446,9 @@ def chat(view: eng.SessionView) -> None:
         elif progress.last_speaker == "candidate":
             # The model failed after the answer was saved: offer a retry instead of losing it.
             st.warning("The interviewer didn't respond.")
-            if st.button("Try again", icon=":material/refresh:"):
+            with button_row(key="try-again"):
+                try_again = st.button("Try again", icon=":material/refresh:")
+            if try_again:
                 with st.spinner(f"{persona.name} is thinking…"):
                     try:
                         eng.respond(engine_deps(), user_id, view.id)
@@ -450,7 +470,7 @@ def chat(view: eng.SessionView) -> None:
             st.error(error)
 
         with st.sidebar:
-            st.divider()
+            # No st.divider here: the navigation already ends with a rule, and two rules left a gap.
             st.caption("This interview")
             st.metric("Cost so far", f"${view.cost_usd:.4f}")
             if st.button(
@@ -467,7 +487,9 @@ def chat(view: eng.SessionView) -> None:
         )
         feedback(view)
         st.divider()
-        if st.button("Start a new interview", type="primary", icon=":material/add:"):
+        with button_row(key="new"):
+            new_clicked = st.button("Start a new interview", type="primary", icon=":material/add:")
+        if new_clicked:
             st.session_state.pop("viewing_session", None)
             st.rerun()
 
@@ -487,7 +509,9 @@ def feedback(view: eng.SessionView) -> None:
             "A judge model scores every answer against the interview rubric and writes what went well, "
             "what to improve and a stronger version of your weakest answer."
         )
-        if not st.button("Get my feedback report", type="primary", icon=":material/assessment:"):
+        with button_row(key="get-report"):
+            get_report = st.button("Get my feedback report", type="primary", icon=":material/assessment:")
+        if not get_report:
             return
         with st.status("Writing your feedback report…", expanded=True) as status:
             st.write(

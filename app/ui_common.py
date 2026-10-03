@@ -176,7 +176,7 @@ def card_row(
     `highlight` is the index of one card to mark with an accent bar (e.g. the current step). The bar is
     decoration only: also say the state in words inside the card.
 
-    Use for: the journey steps and application cards on Home, application/session summaries (History).
+    Use for: the journey steps and application cards on Home, History's score numbers, Settings' usage.
     """
     cards: list[DeltaGenerator] = []
     for start in range(0, count, per_row):
@@ -193,7 +193,8 @@ def panel(*, key: str) -> DeltaGenerator:
     """A bordered section with the same inner padding as the cards, for one block that stands on its own
     (a call to action, a form, a summary). Use as `with panel(key="next-step"):`.
 
-    Use for: Home's next step, the interview start form, the report's headline.
+    Use for: Home's next step, the start form's sections, the interview header and coaching choice, the
+    report's headline and lists, History's trend, the Settings groups.
     """
     return st.container(border=True, key=f"ih-panel-{key}")
 
@@ -219,7 +220,8 @@ def form_row(
     document's label, upload box and text box), and "center" for a caption next to a button. Rows of the
     same `spec` stack into a grid whose columns line up. On a narrow screen the columns stack.
 
-    Use for: the Company/Role row and the document grid on Applications, the start form's settings.
+    Use for: the Company/Role row and the document grid on Applications, the start form's and Settings' grids,
+    History's filters, the report's breakdown.
     """
     with st.container(key=f"ih-form-{key}"):
         return st.columns(spec, gap="medium", vertical_alignment=align)
@@ -232,7 +234,8 @@ def button_row(*, key: str, align: Literal["start", "end"] = "start") -> DeltaGe
     first. `align="end"` pushes the row to the right edge, e.g. a row's action next to its description.
     On a narrow screen the buttons stack and fill the width (easy to tap). Only buttons belong in it.
 
-    Use for: Home's next-step actions, Save/Save anyway, the Delete row, report and History actions.
+    Use for: every action row: Home's next step, Save/Save anyway/Delete, Start interview, Continue/Retry,
+    the report, drill and History actions.
     """
     prefix = "ih-buttons-end" if align == "end" else "ih-buttons"
     return st.container(horizontal=True, key=f"{prefix}-{key}")
