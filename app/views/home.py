@@ -4,7 +4,17 @@ from collections import defaultdict
 
 import streamlit as st
 from report_view import band_badge
-from ui_common import current_user_id, get_engine, go_button, safe_md, short
+from ui_common import (
+    button_row,
+    card_footer,
+    card_row,
+    current_user_id,
+    get_engine,
+    go_button,
+    panel,
+    safe_md,
+    short,
+)
 
 from interview_app.applications import list_applications
 from interview_app.history import SessionSummary, list_sessions
@@ -34,37 +44,44 @@ STEPS = [
     ("Practise an interview", "About 30 seconds to prepare, then a real conversation."),
     ("Read your feedback", "Scores against a rubric, with quotes and a stronger answer."),
 ]
-for i, (col, (title, detail)) in enumerate(zip(st.columns(3), STEPS, strict=True)):
-    with col.container(border=True):
-        if done[i]:
-            mark = ":green[:material/check_circle:] Done"
-        elif i == current:
-            mark = ":primary[:material/radio_button_checked:] Next"
-        else:
-            mark = ":gray[:material/radio_button_unchecked:] Later"
-        st.markdown(f"**{i + 1}. {title}**  \n{mark}")
+# One card per step in a row of equal-height cards; the state sits in each card's footer so the three
+# states line up, and the current step also carries the accent bar.
+for i, (card, (title, detail)) in enumerate(
+    zip(card_row(len(STEPS), key="steps", highlight=current), STEPS, strict=True)
+):
+    with card:
+        st.markdown(f"**{i + 1}. {title}**")
         st.caption(detail)
+        with card_footer(key=f"step-{i}"):
+            if done[i]:
+                st.markdown(":green[:material/check_circle:] Done")
+            elif i == current:
+                st.markdown(":primary[:material/radio_button_checked:] Next")
+            else:
+                st.markdown(":gray[:material/radio_button_unchecked:] Later")
 
 # --- The next step ---------------------------------------------------------------------------------
 
 newest = max(sessions, key=lambda s: (s.started_at, s.session_id)) if sessions else None
-with st.container(border=True):
+with panel(key="next-step"):
     st.subheader("Next step")
     if step == Step.ADD_APPLICATION:
         st.info("Start by adding an application: upload the job description and your CV.")
         st.caption("No documents at hand? The Applications page can load a fictional sample.")
-        go_button("views/applications.py", "Add an application", icon=":material/add:")
+        with button_row(key="next"):
+            go_button("views/applications.py", "Add an application", icon=":material/add:")
     elif step == Step.START_INTERVIEW:
         st.markdown("Your application is ready. Run your first mock interview.")
-        go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")
+        with button_row(key="next"):
+            go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")
     elif step == Step.RESUME_INTERVIEW:
         st.markdown("You have an interview in progress. Pick it up where you left off.")
-        go_button("views/interview.py", "Resume the interview", icon=":material/forum:")
+        with button_row(key="next"):
+            go_button("views/interview.py", "Resume the interview", icon=":material/forum:")
     elif step == Step.GET_FEEDBACK and newest is not None:
         st.markdown("Your last interview has no feedback report yet. Writing it takes about a minute.")
-        # A horizontal container keeps the buttons side by side at their natural width (columns would
-        # stretch them apart on a wide screen) and still wraps on a phone.
-        with st.container(horizontal=True):
+        # A button row gives both buttons one size, side by side; on a phone they stack full width.
+        with button_row(key="next"):
             go_button(
                 "views/interview.py",
                 "Get feedback on the last interview",
@@ -83,7 +100,7 @@ with st.container(border=True):
         st.markdown(
             "Practise again, or open a report in History and start a focused interview on your weak spots."
         )
-        with st.container(horizontal=True):
+        with button_row(key="next"):
             go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")
             go_button("views/history.py", "See your progress", icon=":material/insights:", primary=False)
 
@@ -94,18 +111,20 @@ if apps:
     by_app: dict[int, list[SessionSummary]] = defaultdict(list)
     for s in sessions:  # newest first, so [0] is the latest interview of that application
         by_app[s.application_id].append(s)
-    cols = st.columns(min(len(apps), 3))
-    for i, app in enumerate(apps):
+    # Equal-height cards: the company and role on top, the interview count and score in a footer that
+    # lines up across the row however long the role title is.
+    for app, card in zip(apps, card_row(len(apps), key="apps"), strict=True):
         app_sessions = by_app.get(app.id, [])
         latest = next((s for s in app_sessions if s.overall is not None), None)
-        with cols[i % len(cols)].container(border=True):
+        with card:
             st.markdown(
                 f"**{safe_md(short(app.company, 60), inline=True)}**  \n"
                 f"{safe_md(short(app.role, 80), inline=True)}"
             )
-            n = len(app_sessions)
-            count = f"{n} interview{'' if n == 1 else 's'}" if n else "No interviews yet"
-            if latest is not None:
-                st.markdown(f"{count} · latest score **{latest.overall:.0f}** {band_badge(latest.band)}")
-            else:
-                st.caption(count)
+            with card_footer(key=f"app-{app.id}"):
+                n = len(app_sessions)
+                count = f"{n} interview{'' if n == 1 else 's'}" if n else "No interviews yet"
+                if latest is not None:
+                    st.markdown(f"{count} · latest score **{latest.overall:.0f}** {band_badge(latest.band)}")
+                else:
+                    st.caption(count)

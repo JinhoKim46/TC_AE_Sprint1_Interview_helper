@@ -10,7 +10,17 @@ import math
 from collections import Counter
 
 import streamlit as st
-from ui_common import current_user_id, document_guard, get_engine, go_button, safe_md, short
+from ui_common import (
+    button_row,
+    current_user_id,
+    document_guard,
+    form_row,
+    get_engine,
+    go_button,
+    safe_md,
+    sentence_case,
+    short,
+)
 
 from interview_app.applications import (
     DocumentIn,
@@ -51,7 +61,7 @@ def _text_key(kind: DocKind) -> str:
 
 def _document_input(kind: DocKind) -> None:
     """Upload-or-paste widget for one document. The text always ends up in st.session_state[_text_key]."""
-    label = KIND_LABELS[kind].capitalize()
+    label = sentence_case(KIND_LABELS[kind])
     required = kind in REQUIRED_KINDS
     st.markdown(f"**{label}**" + (" *(required)*" if required else " *(optional)*"))
 
@@ -166,7 +176,7 @@ def _clear_new_form() -> None:
 first_visit = not list_applications(engine, user_id)
 with st.expander("Add a new application", icon=":material/add:", expanded=first_visit):
     # The sample sits first: on a first visit it is the fastest way to see the whole flow.
-    hint, action = st.columns([3, 1], vertical_alignment="center")
+    hint, action = form_row([3, 1], key="sample", align="center")
     hint.caption(
         "No documents at hand? Load a fictional sample (a made-up company, job and CV) to try the app."
     )
@@ -182,20 +192,25 @@ with st.expander("Add a new application", icon=":material/add:", expanded=first_
             st.rerun()
     st.divider()
     st.markdown("**Who and what**")
-    col1, col2 = st.columns(2)
+    col1, col2 = form_row(2, key="who")
     company = col1.text_input("Company", key="new_company")
     role = col2.text_input("Role", key="new_role")
 
     st.markdown("**Documents**: upload a PDF or paste the text. You can fix extracted text before saving.")
-    left, right = st.columns(2)
-    with left:
-        _document_input(DocKind.JD)
-        _document_input(DocKind.COVER_LETTER)
-    with right:
-        _document_input(DocKind.CV)
-        _document_input(DocKind.COMPANY_NOTES)
+    # One grid row per pair (required, then optional), so the two documents side by side always start at
+    # the same height, even when one of them shows a PDF warning and grows.
+    for row, (left_kind, right_kind) in enumerate(
+        [(DocKind.JD, DocKind.CV), (DocKind.COVER_LETTER, DocKind.COMPANY_NOTES)]
+    ):
+        left, right = form_row(2, key=f"docs-{row}", align="top")
+        with left:
+            _document_input(left_kind)
+        with right:
+            _document_input(right_kind)
 
-    if st.button("Save application", type="primary", icon=":material/save:"):
+    with button_row(key="save"):
+        save_clicked = st.button("Save application", type="primary", icon=":material/save:")
+    if save_clicked:
         documents = _collect_documents()
         # Documents are untrusted input (OWASP LLM01). The guard never blocks a document on its own,
         # because a real JD can contain odd text: it flags it, and the user decides.
@@ -215,7 +230,9 @@ with st.expander("Add a new application", icon=":material/add:", expanded=first_
         for reason in flags:
             st.warning(safe_md(reason), icon=":material/shield:")  # quotes the document
         st.caption("Edit the text above and save again, or save it as it is if it's fine.")
-        if st.button("Save anyway", icon=":material/check:"):
+        with button_row(key="save-anyway"):
+            save_anyway = st.button("Save anyway", icon=":material/check:")
+        if save_anyway:
             del st.session_state["new_flags"]
             _save(company, role, _collect_documents())
 
@@ -238,12 +255,12 @@ for summary in apps:
             continue
         missing = [KIND_LABELS[k] for k in DocKind if k not in detail.documents]
         n = interview_counts[summary.id]
-        info, action = st.columns([3, 1], vertical_alignment="center")
+        info, action = form_row([3, 1], key=f"app-{summary.id}", align="center")
         info.caption(
             f"Updated {detail.updated_at:%Y-%m-%d %H:%M} · {n} interview{'' if n == 1 else 's'}"
             + (f" · not provided: {', '.join(missing)}" if missing else "")
         )
-        with action:
+        with action, button_row(key=f"practise-{summary.id}", align="end"):
             go_button(
                 "views/interview.py",
                 "Practise this application",
@@ -253,7 +270,7 @@ for summary in apps:
                 state={"start_app_pick": summary.id},
             )
 
-        tabs = st.tabs([KIND_LABELS[k].capitalize() for k in DocKind])
+        tabs = st.tabs([sentence_case(KIND_LABELS[k]) for k in DocKind])
         for tab, kind in zip(tabs, DocKind, strict=True):
             with tab:
                 doc = detail.documents.get(kind)
@@ -267,7 +284,9 @@ for summary in apps:
                     max_chars=limits.max_document_chars,
                 )
                 flag_key = f"edit_flag_{summary.id}_{kind}"
-                if st.button("Save changes", key=f"save_{summary.id}_{kind}"):
+                with button_row(key=f"save-{summary.id}-{kind}"):
+                    save_edit = st.button("Save changes", key=f"save_{summary.id}_{kind}")
+                if save_edit:
                     # Edited text is as untrusted as uploaded text, so it passes the same document check
                     # (after the free length check, so an oversize text never reaches Jev).
                     try:
@@ -283,7 +302,9 @@ for summary in apps:
                             _save_edit(summary.id, kind, st.session_state[key])
                 if reason := st.session_state.get(flag_key):
                     st.warning(safe_md(reason), icon=":material/shield:")  # quotes the document
-                    if st.button("Save anyway", key=f"save_anyway_{summary.id}_{kind}"):
+                    with button_row(key=f"save-anyway-{summary.id}-{kind}"):
+                        save_edit_anyway = st.button("Save anyway", key=f"save_anyway_{summary.id}_{kind}")
+                    if save_edit_anyway:
                         del st.session_state[flag_key]
                         _save_edit(summary.id, kind, st.session_state[key])
 
@@ -295,8 +316,10 @@ for summary in apps:
         confirm = st.checkbox(
             f"I want to delete this application{consequence}", key=f"confirm_{summary.id}", disabled=in_use
         )
-        if st.button(
-            "Delete", key=f"delete_{summary.id}", disabled=in_use or not confirm, icon=":material/delete:"
-        ):
+        with button_row(key=f"delete-{summary.id}"):
+            delete_clicked = st.button(
+                "Delete", key=f"delete_{summary.id}", disabled=in_use or not confirm, icon=":material/delete:"
+            )
+        if delete_clicked:
             delete_application(engine, user_id, summary.id)
             st.rerun()
