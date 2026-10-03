@@ -127,8 +127,14 @@ def aggregate(
     metrics: SessionMetrics,
     rubric: Rubric,
     interview_type: str,
+    *,
+    cq_optional: bool = False,
 ) -> dict:
-    """Evidence (turn ids) and quotes are checked against the candidate's turns only."""
+    """Evidence (turn ids) and quotes are checked against the candidate's turns only.
+
+    `cq_optional`: the candidate-questions offer was skippable (a Quick session's one-line offer), so
+    "asked no questions" (S4's lowest level) is not rated: skipping is allowed, not a weakness.
+    """
     candidate_texts = {turn_id(t.idx): t.text for ex in exchanges for t in ex.candidate_turns}
     by_id = {j.exchange_id: j for j in judgement.exchanges}
     metric_by_id = {m.exchange_id: m for m in metrics.exchanges}
@@ -176,6 +182,9 @@ def aggregate(
         )
     }
 
+    no_questions = min(rubric.data["session_items"]["S4"]["levels"])  # rubric: "asked no questions"
+    if cq_optional and "S4" in session and session["S4"].score == no_questions:
+        del session["S4"]
     requirements = grounded_requirements(judgement.requirements, candidate_texts)
     points = rubric.requirement_points()
     req_weights = rubric.requirement_weights()

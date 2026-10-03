@@ -356,6 +356,31 @@ def test_evaluate_stores_and_reuses_the_report(finished_session):
     assert stored_report(f.deps, f.uid + 1, f.sid) is None  # other users can't read it
 
 
+@pytest.mark.parametrize(("length", "optional"), [("quick", True), ("full", False), ("standard", False)])
+def test_only_quick_sessions_treat_the_question_offer_as_optional(
+    finished_session, monkeypatch, length, optional
+):
+    from interview_app.db import InterviewSession, session_scope
+    from interview_app.evaluation import service
+
+    f = finished_session
+    with session_scope(f.deps.engine) as s:
+        row = s.get(InterviewSession, f.sid)
+        row.config_json = row.config_json.replace('"length":"full"', f'"length":"{length}"')
+        s.add(row)
+    seen = []
+    real = service.aggregate
+
+    def spy(*args, **kwargs):
+        seen.append(kwargs["cq_optional"])
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(service, "aggregate", spy)
+    f.replies.append(JUDGEMENT.model_dump_json())
+    evaluate_session(f.deps, f.uid, f.sid)
+    assert seen == [optional]
+
+
 def test_force_re_evaluates(finished_session):
     f = finished_session
     f.replies += [
@@ -536,6 +561,34 @@ def test_s4_needs_a_candidate_questions_exchange():
     judgement = judgement_with(session_items=[item("S4", 1, ["T02"])])
     result = aggregate(judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager")
     assert result["components"]["S4"] is None
+
+
+SKIPPED_OFFER = [*TRANSCRIPT[:7], tv(7, "candidate", "No, thanks, I'm all set.")]
+
+
+@pytest.mark.parametrize(("optional", "expected"), [(True, None), (False, 0.0)])
+def test_a_skipped_optional_question_offer_leaves_s4_unrated(optional, expected):
+    """Quick's one-line offer is skippable: "no questions" (the rubric's lowest S4 level) is not rated."""
+    exchanges = build_exchanges(SKIPPED_OFFER)
+    judgement = judgement_with(session_items=[item("S4", 1, ["T08"])])
+    result = aggregate(
+        judgement,
+        exchanges,
+        compute_metrics(exchanges, RUBRIC),
+        RUBRIC,
+        "hiring_manager",
+        cq_optional=optional,
+    )
+    assert result["components"]["S4"] == expected
+
+
+def test_an_asked_question_is_still_rated_when_the_offer_was_optional():
+    exchanges = build_exchanges(TRANSCRIPT)
+    judgement = judgement_with(session_items=[item("S4", 4, ["T08"])])
+    result = aggregate(
+        judgement, exchanges, compute_metrics(exchanges, RUBRIC), RUBRIC, "hiring_manager", cq_optional=True
+    )
+    assert result["components"]["S4"] == RUBRIC.norm(4)
 
 
 def test_quote_must_appear_in_order_not_as_scattered_words():
