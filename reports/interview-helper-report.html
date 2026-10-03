@@ -79,8 +79,7 @@ section { padding-block: 40px 8px; border-top: 1px solid var(--line); margin-top
 .section-head p { color: var(--muted); }
 
 /* map */
-.map-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
-@media (max-width: 900px) { .map-layout { grid-template-columns: minmax(0, 1fr); } }
+.map-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
 .map-frame { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; }
 .map-frame svg { display: block; min-width: 760px; width: 100%; height: auto; }
 .banner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; padding: 8px 12px; border-bottom: 1px solid var(--line); min-height: 42px; }
@@ -234,6 +233,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       <p>Three layers: Streamlit pages call the core; the core holds all logic and never imports the UI; every model call goes through one logged gateway. Select a part to see its files, its job, the grades it delivers and what it talks to.</p>
     </div>
     <div class="map-layout">
+      <aside class="panel" id="panel" aria-live="polite"></aside>
       <div class="map-frame">
         <div class="banner" id="banner" aria-live="polite"><span class="label">Nothing selected. Click a box, a requirement or a step.</span></div>
         <svg id="mapsvg" viewBox="0 0 1000 640" role="img" aria-label="Architecture map of the Interview Helper"></svg>
@@ -245,7 +245,6 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
           <span><i style="background:var(--graded)"></i>Graded item highlighted</span>
         </div>
       </div>
-      <aside class="panel" id="panel" aria-live="polite"></aside>
     </div>
   </section>
 
