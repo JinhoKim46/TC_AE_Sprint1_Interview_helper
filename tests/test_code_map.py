@@ -64,6 +64,9 @@ def test_agents(code_map):
     assert [s["class"] for s in agents["judge"]["schemas"]] == ["interview_app.evaluation.schemas:Judgement"]
     assert agents["guard"]["models_field"] == "jev"  # the default inside DecisionClient.decide
     assert {"system", "user", "assistant"} <= set(agents["interviewer"]["message_roles"])
+    # Text-to-speech (voice channel): one speech call site, model from TTSSettings.
+    assert agents["tts"]["api"] == ["speech"]
+    assert agents["tts"]["default_model"] == "google/gemini-3.8-flash-lite-tts"
 
 
 def test_database_access(code_map):

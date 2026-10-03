@@ -57,6 +57,7 @@ LAYERS = [
 GATEWAYS = {
     "interview_app.llm.client:LLMClient.chat_json": "chat_json",
     "interview_app.llm.client:LLMClient.chat": "chat",
+    "interview_app.llm.client:LLMClient.speech": "speech",
     "interview_app.llm.decide:DecisionClient.decide": "decide",
 }
 MODEL_SETTING_KWARGS = ("temperature", "max_tokens", "reasoning_effort")
@@ -1168,12 +1169,16 @@ def question_type_of(cm: CodeMap, cls_id: str) -> str | None:
 
 
 def models_field(node: ast.AST | None) -> str | None:
-    """`deps.settings.models.interviewer` (anywhere in an expression) -> "interviewer"."""
+    """`deps.settings.models.interviewer` (anywhere in an expression) -> "interviewer".
+
+    The TTS model lives in its own group (`settings.tts.model`, TTSSettings) and maps to "tts"."""
     if node is None:
         return None
     for n in ast.walk(node):
         if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Attribute) and n.value.attr == "models":
             return n.attr
+        if isinstance(n, ast.Attribute) and n.attr == "model" and getattr(n.value, "attr", None) == "tts":
+            return "tts"
     return None
 
 
@@ -1339,11 +1344,17 @@ def signature(node: ast.AST) -> str:
     return f"{node.name}({args}){ret}"
 
 
-AGENT_ORDER = ["interviewer", "planner", "judge", "candidate_sim", "guard", "live_score", "lab_judge"]
+AGENT_ORDER = ["interviewer", "planner", "judge", "candidate_sim", "guard", "live_score", "lab_judge", "tts"]
 
 
 def build_agents(cm: CodeMap, edges: list[dict], config: dict) -> list[dict]:
     defaults = {f["name"]: f for f in config.get("RoleModels", {}).get("fields", [])}
+    # TTSSettings.model is the "tts" role's default (see models_field).
+    tts_model = next(
+        (f for f in config.get("TTSSettings", {}).get("fields", []) if f["name"] == "model"), None
+    )
+    if tts_model:
+        defaults["tts"] = tts_model
     callers_of: dict[str, set[str]] = {}
     for e in edges:
         if e["kind"] in ("call", "ref"):

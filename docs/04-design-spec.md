@@ -35,7 +35,7 @@ Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the 
 | Inputs | JD + CV required; cover letter and company notes optional. Formats: PDF, pasted text, JD from URL. Each application owns its own copies |
 | Interview | Type (recruiter_screen, hiring_manager, technical_deep_dive, ml_case/system_design, behavioral, final_round) + difficulty (friendly/standard/tough) → derived persona; "Advanced" override. Target number of main questions + follow-up cap + elapsed-time display |
 | Modes | Realistic (live scores hidden, report at the end) and Coaching (live score chips + tip + retry; the last attempt is scored and the session is marked "coached") |
-| Input/output channel | Text, or voice (STT for answers, TTS for questions) via OpenRouter audio models; chosen per session |
+| Input/output channel | Text, or Voice (TTS speaks the questions; answers are always typed, speech-to-text was dropped) via OpenRouter's `/audio/speech`; chosen per session (spec `docs/specs/2026-10-03-length-voice-design/`) |
 | Turn format | Structured JSON per interviewer turn `{stage, question_id, message, is_final}`, no streaming |
 | 5 prompts (R4) | P1 zero-shot · P2 few-shot · P3 CoT plan-first · P4 role-rich · P5 self-critique |
 | Prompt eval (R4/H5) | Simulated-candidate LLM + judge harness (CLI); results shown read-only in Settings → Lab |
@@ -75,7 +75,7 @@ project_Interview_App/
     llm/decide.py              # Jev decisions API (pattern: sprint1/judge/judgebench/openrouter.py:decide)
     llm/pricing.py             # OpenRouter /models cache → cost per call
     llm/image.py               # avatar generation (modalities=["image","text"], base64 decode)
-    llm/audio.py               # STT + TTS via OpenRouter audio models
+    voice.py                   # TTS for interviewer turns (LLMClient.speech), stored once as WAV
     ingest.py                  # PDF (pypdf) / paste / URL (httpx + trafilatura) → text; validation
     security/{limits,injection}.py   # rules → Jev check → GuardResult(allowed, reason, score)
     prompts/                   # Jinja2: plan.md, interviewer_p1..p5.md, coach.md, candidate_sim.md, judge_*.md

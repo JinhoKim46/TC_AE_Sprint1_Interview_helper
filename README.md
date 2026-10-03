@@ -17,10 +17,10 @@ To keep it running as a local service in Docker instead: `cp .env.example .env`,
 The **Home** page shows where you are (add an application → practise an interview → read your feedback) and one **Next step** button: add an application, start or resume an interview, get the missing report of your last interview, or practise again.
 
 1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one. **Practise this application** on any saved one opens the start form with it selected.
-2. **Interview** → pick the application, the interview type, the difficulty, the length (Quick, Standard, Full, or Custom with your own question count), the channel (Text or Voice; Voice sessions still run as text until the voice feature lands) and the feedback style (realistic or coaching), then **Start interview** (about 30 seconds to prepare). The screen shows the question count and the current stage, e.g. "Question 3 of 7 · Experience (follow-up)".
+2. **Interview** → pick the application, the interview type, the difficulty, the length (Quick, Standard, Full, or Custom with your own question count), the channel (Text or Voice: in Voice the interviewer speaks each question, the newest one plays automatically, every question has a player and its text sits behind **Show text**; answers are always typed) and the feedback style (realistic or coaching), then **Start interview** (about 30 seconds to prepare). The screen shows the question count and the current stage, e.g. "Question 3 of 7 · Experience (follow-up)".
 3. Answer in the chat. When it ends (or you click **End interview** in the sidebar), click **Get my feedback report** (about a minute). The report opens with the overall score, the hiring signal and the judge's summary, then the score breakdown, what went well and what to improve (with quotes), the job requirements and every answer's scores.
 4. **History** → your latest score (with the change against the previous report), best score, and past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice). An interview without a report offers **Open it to get feedback**.
-5. **Settings** → interview defaults, plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
+5. **Settings** → interview defaults (including a fixed interviewer voice for Voice interviews), plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
 
 The theme (one indigo accent, light and dark) is set in `.streamlit/config.toml`; switch light/dark from the app menu (top right).
 
@@ -40,7 +40,8 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
 | Module | Responsibility |
 |---|---|
 | `app/` | Streamlit UI only (pages, report view). No business logic. |
-| `src/interview_app/llm/client.py` | The single chat gateway: OpenAI-compatible (provider-agnostic), retries, every call logged with tokens, cost and latency; `chat_json` validates against a pydantic schema and repairs once |
+| `src/interview_app/llm/client.py` | The single chat gateway: OpenAI-compatible (provider-agnostic), retries, every call logged with tokens, cost and latency; `chat_json` validates against a pydantic schema and repairs once; `speech` calls text-to-speech (role `tts`, estimated cost) |
+| `src/interview_app/voice.py` | Voice channel: speaks an interviewer turn once (Gemini TTS via OpenRouter, PCM wrapped as WAV), stores it under `data/audio/<user>/<session>/`, skips it over budget, falls back to text on any error |
 | `src/interview_app/llm/decide.py` | Jev decision-model client (typed yes/no, score and choice answers with probabilities) |
 | `src/interview_app/llm/pricing.py` | OpenRouter model catalog: prices for cost estimates, data for the model picker |
 | `src/interview_app/ingest.py`, `applications.py` | PDF/paste ingest and application storage |
@@ -164,7 +165,7 @@ Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before
 
 - The N-item red-flag checks with Jev.
 - Calibrate the live Jev scores against the LLM judge (they are indicative until then).
-- Voice (speech-to-text / text-to-speech); JD import from URL.
+- JD import from URL.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.
 
 ## Development

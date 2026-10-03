@@ -4,12 +4,12 @@
 
 **Blocked by:** 01
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `speech` on the LLM client + `voice` module; PCM → WAV wrapper tested (header, length)
-- [ ] Audio generated once and reused; replays and History cost nothing
-- [ ] Persona → voice mapping and Settings override; voice stored with the session
-- [ ] Deleting a session or application removes its audio files and rows
-- [ ] Budget exhaustion skips TTS; a TTS error falls back to text with a notice
-- [ ] Interview screen: autoplay newest, player per interviewer turn, "Show text" hidden by default, automatic text fallback
-- [ ] Unit tests with a fake SDK and temp data dir; AppTest for the Voice UI; one cheap `@pytest.mark.live` TTS test; full suite and ruff green; exercised once in the running app (a real voice session of 2–3 turns)
+- [x] `speech` on the LLM client + `voice` module; PCM → WAV wrapper tested (header, length)
+- [x] Audio generated once and reused; replays and History cost nothing
+- [x] Persona → voice mapping and Settings override; voice stored with the session
+- [x] Deleting a session or application removes its audio files and rows
+- [x] Budget exhaustion skips TTS; a TTS error falls back to text with a notice
+- [x] Interview screen: autoplay newest, player per interviewer turn, "Show text" hidden by default, automatic text fallback
+- [x] Unit tests with a fake SDK and temp data dir; AppTest for the Voice UI; one cheap `@pytest.mark.live` TTS test; full suite and ruff green; exercised once in the running app (a real voice session of 2–3 turns)

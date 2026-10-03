@@ -17,6 +17,6 @@ graph LR
 | 01 | Length + Channel settings | — | ready-for-agent |
 | 02 | Design system + Home/Applications | — | ready-for-agent |
 | 03 | Length behaviour | 01 | ready-for-agent |
-| 04 | Voice channel (TTS) | 01 | ready-for-agent |
+| 04 | Voice channel (TTS) | 01 | done |
 | 05 | Alignment + accessibility pass on all pages | 02, 03, 04 | ready-for-agent |
 | 06 | Docs + reports | 05 | ready-for-agent |
