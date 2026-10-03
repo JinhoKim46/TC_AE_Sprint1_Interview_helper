@@ -454,6 +454,7 @@ def seed_scored_session(
     answer: str,
     report=None,
     status: str = "finished",
+    config=None,
 ):
     """One interview with a hand-written report, written straight into the DB (no models).
     `status` other than "finished" stores no report (an unfinished interview has none)."""
@@ -483,7 +484,7 @@ def seed_scored_session(
             application_id=application_id,
             company="Northwind Robotics",
             role="Perception Engineer",
-            config_json=SessionConfig().model_dump_json(),
+            config_json=(config or SessionConfig()).model_dump_json(),
             documents_json="{}",
             status=status,
             started_at=started,
@@ -551,6 +552,48 @@ def test_history_page_shows_trend_and_opens_a_transcript():
 
     remaining = [s.session_id for s in list_sessions(engine, uid)]
     assert len(remaining) == 1 and newest not in remaining
+
+
+def test_history_latest_and_best_ignore_quick_sessions():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.persona import Length, SessionConfig
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First full try.")
+    seed_scored_session(
+        engine,
+        uid,
+        app_id,
+        datetime(2026, 9, 5, tzinfo=UTC),
+        64.0,
+        "Standard.",
+        config=SessionConfig(length=Length.STANDARD),
+    )
+    # The newest and highest score is a Quick practice: it must not become "latest" or "best".
+    seed_scored_session(
+        engine,
+        uid,
+        app_id,
+        datetime(2026, 9, 8, tzinfo=UTC),
+        95.0,
+        "Quick.",
+        config=SessionConfig(length=Length.QUICK),
+    )
+
+    at = run_page("history.py", timeout=90)
+    metrics = {m.label: m for m in at.metric}
+    assert metrics["Latest score"].value == "64" and metrics["Best score"].value == "64"
+    assert "+12" in metrics["Latest score"].delta  # against the previous counted interview (52)
+
+    at.selectbox(key="history_app").set_value(app_id).run()
+    assert not at.exception, at.exception
+    assert any("Quick and Custom sessions are practice" in c.value for c in at.caption)
 
 
 def test_weak_spot_drill_starts_a_focused_interview(monkeypatch):

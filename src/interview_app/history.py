@@ -28,6 +28,16 @@ HIDDEN_STATUSES = ("preparing", "failed")
 # Two reports mentioning the same improvement is the smallest number that makes it a pattern.
 RECURRING_MIN_REPORTS = 2
 
+# Only these lengths feed "latest" and "best": they follow the full interview flow at a realistic
+# size. Quick (a short practice) and Custom (any size, and every weak-spot drill) are practice, so
+# their scores are shown, but marked, never mixed into the progress numbers.
+COUNTED_LENGTHS = frozenset({Length.STANDARD, Length.FULL})
+
+
+def counts_towards_scores(length: Length) -> bool:
+    """Whether a session of this length counts towards latest / best (and the trend's progress line)."""
+    return length in COUNTED_LENGTHS
+
 
 class SessionSummary(BaseModel):
     session_id: int
@@ -70,8 +80,15 @@ class RecurringImprovement(BaseModel):
     count: int  # number of reports that named it
 
 
+class TrendPoint(BaseModel):
+    started_at: datetime
+    score: float  # the report's overall, 0-100
+    length: Length
+    counted: bool  # counts_towards_scores(length): False points are drawn as practice
+
+
 class Progress(BaseModel):
-    trend: list[tuple[datetime, float]]  # (started_at, overall), oldest first
+    trend: list[TrendPoint]  # oldest first
     item_means: list[ItemMean]  # weakest first
     requirements: list[RequirementHistory]
     recurring_improvements: list[RecurringImprovement]  # most frequent first
@@ -162,10 +179,12 @@ def load_report(engine: Engine, user_id: int, session_id: int) -> Report | None:
     return Report.model_validate_json(row.report_json) if row else None
 
 
-def _reports_oldest_first(engine: Engine, user_id: int, application_id: int) -> list[tuple[datetime, Report]]:
+def _reports_oldest_first(
+    engine: Engine, user_id: int, application_id: int
+) -> list[tuple[datetime, Length, Report]]:
     with session_scope(engine) as s:
         rows = s.exec(
-            select(InterviewSession.started_at, Evaluation.report_json)
+            select(InterviewSession.started_at, InterviewSession.config_json, Evaluation.report_json)
             .join(Evaluation, col(Evaluation.session_id) == col(InterviewSession.id))
             .where(
                 InterviewSession.user_id == user_id,
@@ -175,7 +194,10 @@ def _reports_oldest_first(engine: Engine, user_id: int, application_id: int) -> 
             )
             .order_by(col(InterviewSession.started_at), col(InterviewSession.id))
         ).all()
-    return [(started_at, Report.model_validate_json(raw)) for started_at, raw in rows]
+    return [
+        (started_at, SessionConfig.model_validate_json(config).length, Report.model_validate_json(raw))
+        for started_at, config, raw in rows
+    ]
 
 
 def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Path | None = None) -> Progress:
@@ -183,12 +205,18 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     rubric = load_rubric(rubric_path or get_settings().rubric_path)
     reports = _reports_oldest_first(engine, user_id, application_id)
 
-    trend = [(started_at, r.overall) for started_at, r in reports if r.overall is not None]
+    trend = [
+        TrendPoint(
+            started_at=started_at, score=r.overall, length=length, counted=counts_towards_scores(length)
+        )
+        for started_at, length, r in reports
+        if r.overall is not None
+    ]
 
     # Item means use the raw 1-5 scores, not the weighted 0-100 exchange scores: a weight says how
     # much an item counts for one question type, not how good the candidate is at that skill.
     scores: dict[str, list[int]] = defaultdict(list)
-    for _, report in reports:
+    for _, _, report in reports:
         for exchange in report.exchanges:
             for item in exchange.items:
                 if item.score is not None and item.item in rubric.exchange_items:
@@ -211,7 +239,7 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     # Requirement texts are matched case-insensitively: the judge copies them from the same plan,
     # but may capitalise differently between runs. Reports are oldest first, so the last one wins.
     requirements: dict[str, RequirementHistory] = {}
-    for _, report in reports:
+    for _, _, report in reports:
         for req in report.requirements:
             key = req.requirement.strip().casefold()
             entry = requirements.get(key)
@@ -228,7 +256,7 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     # Count each area once per report: one report naming "Quantify results" twice is not a trend.
     area_counts: Counter[str] = Counter()
     area_names: dict[str, str] = {}
-    for _, report in reports:
+    for _, _, report in reports:
         seen = {imp.area.strip().casefold(): imp.area.strip() for imp in report.improvements}
         area_counts.update(seen.keys())
         area_names.update(seen)  # latest wording wins

@@ -22,7 +22,7 @@ from interview_app.evaluation.schemas import (
     Report,
     RequirementEvidence,
 )
-from interview_app.history import delete_session, list_sessions, load_report, progress
+from interview_app.history import counts_towards_scores, delete_session, list_sessions, load_report, progress
 from interview_app.interview.persona import Channel, Difficulty, InterviewType, Length, SessionConfig
 
 RUBRIC_PATH = Settings(_env_file=None).rubric_path
@@ -220,8 +220,35 @@ def test_trend_is_oldest_first_and_skips_sessions_without_a_score(engine, user_i
     add_session(engine, user_id, app_id, started=T0 + timedelta(days=2))  # no report
 
     trend = progress(engine, user_id, app_id, RUBRIC_PATH).trend
-    assert [score for _, score in trend] == [50.0, 70.0]
-    assert trend[0][0] < trend[1][0]
+    assert [point.score for point in trend] == [50.0, 70.0]
+    assert trend[0].started_at < trend[1].started_at
+
+
+def test_trend_marks_quick_and_custom_points_as_not_counted(engine, user_id, app_id):
+    for day, length in enumerate([Length.FULL, Length.QUICK, Length.STANDARD, Length.CUSTOM]):
+        add_session(
+            engine,
+            user_id,
+            app_id,
+            started=T0 + timedelta(days=day),
+            report=make_report(60.0 + day),
+            config=SessionConfig(length=length),
+        )
+    trend = progress(engine, user_id, app_id, RUBRIC_PATH).trend
+    assert [(p.length, p.counted) for p in trend] == [
+        (Length.FULL, True),
+        (Length.QUICK, False),
+        (Length.STANDARD, True),
+        (Length.CUSTOM, False),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("length", "counted"),
+    [(Length.QUICK, False), (Length.STANDARD, True), (Length.FULL, True), (Length.CUSTOM, False)],
+)
+def test_counts_towards_scores(length, counted):
+    assert counts_towards_scores(length) is counted
 
 
 def test_item_means_are_sorted_weakest_first_with_counts(engine, user_id, app_id):
