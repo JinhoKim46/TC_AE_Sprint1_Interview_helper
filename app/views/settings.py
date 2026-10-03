@@ -109,6 +109,17 @@ channel = Channel(
     )
     or prefs.channel
 )
+# Voice channel: one fixed voice for every interviewer, or each persona's own voice (config.py TTSSettings).
+PERSONA_VOICE = ""  # the selectbox needs a plain-string option for "no override" (saved as None)
+voice_options = [PERSONA_VOICE, *cfg.tts.available_voices]
+voice = st.selectbox(
+    "Interviewer voice",
+    options=voice_options,
+    index=voice_options.index(prefs.voice) if prefs.voice in voice_options else 0,
+    format_func=lambda v: v or "Match the interviewer (each persona has its own voice)",
+    help="Used in Voice interviews. The voice is fixed when an interview starts.",
+    key="pref_voice",
+)
 # Custom keeps the saved count; a preset length leaves it untouched, so switching back to Custom later
 # brings the old number back.
 main_questions = prefs.main_questions
@@ -278,6 +289,7 @@ if st.button(
                 "mode": Mode(mode),
                 "length": length,
                 "channel": channel,
+                "voice": voice or None,
                 "main_questions": main_questions,
                 "prompt_variant": variant,
                 "interviewer": llm,

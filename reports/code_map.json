@@ -459,6 +459,37 @@
     }
    ],
    "templates": []
+  },
+  {
+   "api": [
+    "speech"
+   ],
+   "callers": [
+    "interview_app.voice:speak"
+   ],
+   "default_model": "google/gemini-3.8-flash-lite-tts",
+   "message_roles": [],
+   "model_comment": "",
+   "models_field": "tts",
+   "questions": [],
+   "role": "tts",
+   "schemas": [],
+   "sites": [
+    {
+     "api": "speech",
+     "gateway": "interview_app.llm.client:LLMClient.speech",
+     "line": 192,
+     "message_roles": [],
+     "messages_builders": [],
+     "model_expr": "settings.tts.model",
+     "models_field": "tts",
+     "role": "tts",
+     "settings": {},
+     "site": "interview_app.voice:_speak",
+     "templates": []
+    }
+   ],
+   "templates": []
   }
  ],
  "config": {
@@ -468,12 +499,12 @@
     {
      "comment": "",
      "default": "True",
-     "line": 162,
+     "line": 213,
      "name": "live_scoring",
      "type": "bool"
     }
    ],
-   "line": 157
+   "line": 208
   },
   "GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
@@ -481,33 +512,33 @@
     {
      "comment": "",
      "default": "Field(default=0.7, ge=0, le=1)",
-     "line": 144,
+     "line": 195,
      "name": "injection_threshold",
      "type": "float"
     },
     {
      "comment": "",
      "default": "True",
-     "line": 146,
+     "line": 197,
      "name": "use_model_check",
      "type": "bool"
     },
     {
      "comment": "",
      "default": "Field(default=3000, gt=0)",
-     "line": 149,
+     "line": 200,
      "name": "document_chunk_chars",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=20, gt=0, le=200)",
-     "line": 154,
+     "line": 205,
      "name": "max_document_chunks",
      "type": "int"
     }
    ],
-   "line": 135
+   "line": 186
   },
   "LengthPresets": {
    "doc": "Main questions per interview Length (spec 2026-10-03-length-voice-design).",
@@ -693,131 +724,186 @@
     {
      "comment": "",
      "default": "SecretStr('')",
-     "line": 175,
+     "line": 226,
      "name": "openrouter_api_key",
      "type": "SecretStr"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1'",
-     "line": 176,
+     "line": 227,
      "name": "openrouter_base_url",
      "type": "str"
     },
     {
      "comment": "",
-     "default": "'https://openrouter.ai/api/v1/models'",
-     "line": 178,
+     "default": "'https://openrouter.ai/api/v1/models?output_modalities=all'",
+     "line": 231,
      "name": "openrouter_models_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/alpha/decisions'",
-     "line": 180,
+     "line": 233,
      "name": "openrouter_decisions_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'data'",
-     "line": 182,
+     "line": 235,
      "name": "data_dir",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "''",
-     "line": 185,
+     "line": 238,
      "name": "database_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / 'rubric.json'",
-     "line": 186,
+     "line": 239,
      "name": "rubric_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / '01-interviewer-guideline.md'",
-     "line": 187,
+     "line": 240,
      "name": "guideline_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "Field(default=None, ge=1, le=5)",
-     "line": 190,
+     "line": 243,
      "name": "judge_runs",
      "type": "int | None"
     },
     {
      "comment": "",
      "default": "Field(default=16000, ge=1000, le=64000)",
-     "line": 193,
+     "line": 246,
      "name": "judge_max_tokens",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=60.0, gt=0, le=600)",
-     "line": 194,
+     "line": 247,
      "name": "request_timeout_s",
      "type": "float"
     },
     {
      "comment": "",
      "default": "Field(default=3, ge=0, le=10)",
-     "line": 195,
+     "line": 248,
      "name": "max_retries",
      "type": "int"
     },
     {
      "comment": "",
      "default": "RoleModels()",
-     "line": 197,
+     "line": 250,
      "name": "models",
      "type": "RoleModels"
     },
     {
      "comment": "",
      "default": "DEFAULT_MODEL_CHOICES",
-     "line": 200,
+     "line": 253,
      "name": "model_choices",
      "type": "list[ModelChoice]"
     },
     {
      "comment": "",
      "default": "Limits()",
-     "line": 201,
+     "line": 254,
      "name": "limits",
      "type": "Limits"
     },
     {
      "comment": "",
      "default": "LengthPresets()",
-     "line": 202,
+     "line": 255,
      "name": "length_presets",
      "type": "LengthPresets"
     },
     {
      "comment": "",
+     "default": "TTSSettings()",
+     "line": 256,
+     "name": "tts",
+     "type": "TTSSettings"
+    },
+    {
+     "comment": "",
      "default": "GuardSettings()",
-     "line": 203,
+     "line": 257,
      "name": "guard",
      "type": "GuardSettings"
     },
     {
      "comment": "",
      "default": "Features()",
-     "line": 204,
+     "line": 258,
      "name": "features",
      "type": "Features"
     }
    ],
-   "line": 165
+   "line": 216
+  },
+  "TTSSettings": {
+   "doc": "Text-to-speech for the Voice channel (spec 2026-10-03-length-voice-design, voice.py).",
+   "fields": [
+    {
+     "comment": "",
+     "default": "'google/gemini-3.8-flash-lite-tts'",
+     "line": 155,
+     "name": "model",
+     "type": "str"
+    },
+    {
+     "comment": "",
+     "default": "{'recruiter_screen': 'Aoede', 'hiring_manager': 'Charon', 'technical_deep_dive': 'Kore', 'ml_case':…",
+     "line": 158,
+     "name": "voices",
+     "type": "dict[str, str]"
+    },
+    {
+     "comment": "for an interview type missing from `voices`",
+     "default": "'Charon'",
+     "line": 166,
+     "name": "default_voice",
+     "type": "str"
+    },
+    {
+     "comment": "",
+     "default": "GEMINI_TTS_VOICES",
+     "line": 167,
+     "name": "available_voices",
+     "type": "list[str]"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=32.0, gt=0, le=1000)",
+     "line": 171,
+     "name": "audio_tokens_per_second",
+     "type": "float"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=2000, gt=0, le=10000)",
+     "line": 173,
+     "name": "max_chars",
+     "type": "int"
+    }
+   ],
+   "line": 145
   }
  },
  "edges": [
@@ -1846,7 +1932,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    47
+    48
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1854,7 +1940,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    46
+    47
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1862,8 +1948,8 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    480,
-    486
+    516,
+    522
    ],
    "to": "app.views.interview:chat"
   },
@@ -1871,7 +1957,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    488
+    524
    ],
    "to": "app.views.interview:start_form"
   },
@@ -1879,7 +1965,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    477
+    513
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1887,7 +1973,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    483
+    519
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -1895,7 +1981,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "call",
    "lines": [
-    279
+    280
    ],
    "to": "app.views.interview:submit"
   },
@@ -1903,7 +1989,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    279
+    280
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1911,7 +1997,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    279
+    280
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1919,7 +2005,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    342
+    380
    ],
    "to": "app.report_view:session_badge"
   },
@@ -1927,9 +2013,9 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    356,
-    398,
-    425
+    394,
+    434,
+    461
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1937,12 +2023,10 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    338,
-    345,
-    363,
-    375,
     376,
-    380
+    383,
+    401,
+    416
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1950,7 +2034,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    388
+    424
    ],
    "to": "app.views.interview:blocked_answer_editor"
   },
@@ -1958,7 +2042,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    391
+    427
    ],
    "to": "app.views.interview:coaching_choice"
   },
@@ -1966,7 +2050,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    384
+    420
    ],
    "to": "app.views.interview:earlier_attempts"
   },
@@ -1974,7 +2058,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    432
+    468
    ],
    "to": "app.views.interview:feedback"
   },
@@ -1982,7 +2066,15 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    383
+    413
+   ],
+   "to": "app.views.interview:interviewer_message"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    419
    ],
    "to": "app.views.interview:live_chips"
   },
@@ -1990,7 +2082,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    368
+    406
    ],
    "to": "app.views.interview:progress_text"
   },
@@ -1998,7 +2090,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    409
+    445
    ],
    "to": "app.views.interview:submit"
   },
@@ -2006,7 +2098,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    407
+    443
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2014,7 +2106,7 @@
    "from": "app.views.interview:chat",
    "kind": "ref",
    "lines": [
-    409
+    445
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -2022,8 +2114,8 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    356,
-    425
+    394,
+    461
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -2031,7 +2123,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    398
+    434
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -2039,7 +2131,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    315
+    316
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2047,7 +2139,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    297
+    298
    ],
    "to": "app.views.interview:submit"
   },
@@ -2055,7 +2147,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    288
+    289
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2063,7 +2155,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    315
+    316
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -2071,7 +2163,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "ref",
    "lines": [
-    297
+    298
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -2079,7 +2171,7 @@
    "from": "app.views.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    230
+    231
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -2087,7 +2179,7 @@
    "from": "app.views.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    232
+    233
    ],
    "to": "app.views.interview:live_chips"
   },
@@ -2095,7 +2187,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    474
+    510
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -2103,7 +2195,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    472
+    508
    ],
    "to": "app.report_view:render_report"
   },
@@ -2111,7 +2203,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    464
+    500
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2119,8 +2211,8 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    464,
-    472
+    500,
+    508
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2128,7 +2220,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    463
+    499
    ],
    "to": "interview_app.evaluation.service:evaluate_session"
   },
@@ -2136,7 +2228,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    448
+    484
    ],
    "to": "interview_app.history:load_report"
   },
@@ -2144,7 +2236,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    473
+    509
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -2152,7 +2244,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    464
+    500
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -2160,15 +2252,57 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    462
+    498
    ],
    "to": "interview_app.preferences:load_preferences"
+  },
+  {
+   "from": "app.views.interview:interviewer_message",
+   "kind": "call",
+   "lines": [
+    340
+   ],
+   "to": "app.ui_common:engine_deps"
+  },
+  {
+   "from": "app.views.interview:interviewer_message",
+   "kind": "call",
+   "lines": [
+    327,
+    328,
+    357
+   ],
+   "to": "app.ui_common:safe_md"
+  },
+  {
+   "from": "app.views.interview:interviewer_message",
+   "kind": "call",
+   "lines": [
+    332
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "app.views.interview:interviewer_message",
+   "kind": "call",
+   "lines": [
+    340
+   ],
+   "to": "interview_app.voice:speak"
+  },
+  {
+   "from": "app.views.interview:interviewer_message",
+   "kind": "call",
+   "lines": [
+    335
+   ],
+   "to": "interview_app.voice:stored_audio"
   },
   {
    "from": "app.views.interview:live_chips",
    "kind": "call",
    "lines": [
-    221
+    222
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -2176,7 +2310,7 @@
    "from": "app.views.interview:progress_text",
    "kind": "construct",
    "lines": [
-    327
+    365
    ],
    "to": "interview_app.interview.schemas:Stage"
   },
@@ -2184,7 +2318,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    194
+    195
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2192,7 +2326,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    149
+    150
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2200,8 +2334,8 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    81,
-    173
+    82,
+    174
    ],
    "to": "app.ui_common:page_link"
   },
@@ -2209,7 +2343,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    152
+    153
    ],
    "to": "app.ui_common:slider_start"
   },
@@ -2217,7 +2351,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    78
+    79
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -2225,8 +2359,8 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    101,
-    159
+    102,
+    160
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2234,7 +2368,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    194
+    195
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -2242,8 +2376,8 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    135,
-    140
+    136,
+    141
    ],
    "to": "interview_app.interview.persona:Channel"
   },
@@ -2251,7 +2385,7 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    179
+    180
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -2259,8 +2393,8 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    107,
-    111
+    108,
+    112
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -2268,8 +2402,8 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    124,
-    129
+    125,
+    130
    ],
    "to": "interview_app.interview.persona:Length"
   },
@@ -2277,7 +2411,7 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    184
+    185
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -2285,7 +2419,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    86
+    87
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -2293,7 +2427,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    159
+    160
    ],
    "to": "interview_app.preferences:preset_main_questions"
   },
@@ -2301,7 +2435,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    176
+    177
    ],
    "to": "interview_app.preferences:to_session_config"
   },
@@ -2309,7 +2443,7 @@
    "from": "app.views.interview:submit",
    "kind": "call",
    "lines": [
-    242
+    243
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2317,7 +2451,7 @@
    "from": "app.views.interview:submit",
    "kind": "ref",
    "lines": [
-    257
+    258
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -2341,7 +2475,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    135
+    146
    ],
    "to": "app.ui_common:get_price_catalog"
   },
@@ -2349,12 +2483,12 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    182,
-    203,
-    208,
-    220,
-    225,
-    238
+    193,
+    214,
+    219,
+    231,
+    236,
+    249
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2362,7 +2496,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    120
+    131
    ],
    "to": "app.ui_common:slider_start"
   },
@@ -2370,8 +2504,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    194,
-    257
+    205,
+    268
    ],
    "to": "app.views.settings:_model_picker"
   },
@@ -2379,8 +2513,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    326,
-    327
+    338,
+    339
    ],
    "to": "app.views.settings:_price"
   },
@@ -2388,8 +2522,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    316,
-    318
+    328,
+    330
    ],
    "to": "app.views.settings:_rows"
   },
@@ -2414,7 +2548,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    277
+    288
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -2431,7 +2565,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    249
+    260
    ],
    "to": "interview_app.interview.persona:LLMSettings"
   },
@@ -2448,7 +2582,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    278
+    289
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -2456,8 +2590,8 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    181,
-    188
+    192,
+    199
    ],
    "to": "interview_app.interview.persona:PromptVariant"
   },
@@ -2465,7 +2599,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    139
+    150
    ],
    "to": "interview_app.llm.pricing:ModelOption"
   },
@@ -2473,7 +2607,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    135
+    146
    ],
    "to": "interview_app.llm.pricing:model_options"
   },
@@ -2481,7 +2615,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    177
+    188
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -2497,7 +2631,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    124
+    135
    ],
    "to": "interview_app.preferences:preset_main_questions"
   },
@@ -2505,7 +2639,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    271
+    282
    ],
    "to": "interview_app.preferences:save_preferences"
   },
@@ -2513,7 +2647,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    294
+    306
    ],
    "to": "interview_app.usage:usage_summary"
   },
@@ -2521,7 +2655,7 @@
    "from": "app.views.settings:_model_label",
    "kind": "call",
    "lines": [
-    153
+    164
    ],
    "to": "app.views.settings:_price"
   },
@@ -2529,7 +2663,7 @@
    "from": "app.views.settings:_model_picker",
    "kind": "call",
    "lines": [
-    158
+    169
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2537,7 +2671,7 @@
    "from": "app.views.settings:_model_picker",
    "kind": "ref",
    "lines": [
-    159
+    170
    ],
    "to": "app.views.settings:_model_label"
   },
@@ -2545,7 +2679,7 @@
    "from": "interview_app.applications:_clean_label",
    "kind": "construct",
    "lines": [
-    76
+    77
    ],
    "to": "interview_app.ingest:IngestError"
   },
@@ -2553,7 +2687,7 @@
    "from": "interview_app.applications:_limits",
    "kind": "call",
    "lines": [
-    70
+    71
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2561,7 +2695,7 @@
    "from": "interview_app.applications:_prepare",
    "kind": "call",
    "lines": [
-    82
+    83
    ],
    "to": "interview_app.ingest:clean_text"
   },
@@ -2569,7 +2703,7 @@
    "from": "interview_app.applications:_prepare",
    "kind": "call",
    "lines": [
-    83
+    84
    ],
    "to": "interview_app.ingest:validate_document"
   },
@@ -2577,8 +2711,8 @@
    "from": "interview_app.applications:create_application",
    "kind": "call",
    "lines": [
-    104,
-    105
+    105,
+    106
    ],
    "to": "interview_app.applications:_clean_label"
   },
@@ -2586,7 +2720,7 @@
    "from": "interview_app.applications:create_application",
    "kind": "call",
    "lines": [
-    103
+    104
    ],
    "to": "interview_app.applications:_limits"
   },
@@ -2594,7 +2728,7 @@
    "from": "interview_app.applications:create_application",
    "kind": "call",
    "lines": [
-    115
+    116
    ],
    "to": "interview_app.applications:_prepare"
   },
@@ -2602,7 +2736,7 @@
    "from": "interview_app.applications:create_application",
    "kind": "construct",
    "lines": [
-    118
+    119
    ],
    "to": "interview_app.db:Application"
   },
@@ -2610,7 +2744,7 @@
    "from": "interview_app.applications:create_application",
    "kind": "construct",
    "lines": [
-    123
+    124
    ],
    "to": "interview_app.db:Document"
   },
@@ -2618,7 +2752,7 @@
    "from": "interview_app.applications:create_application",
    "kind": "call",
    "lines": [
-    117
+    118
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -2626,8 +2760,8 @@
    "from": "interview_app.applications:create_application",
    "kind": "construct",
    "lines": [
-    110,
-    113
+    111,
+    114
    ],
    "to": "interview_app.ingest:IngestError"
   },
@@ -2635,7 +2769,7 @@
    "from": "interview_app.applications:delete_application",
    "kind": "call",
    "lines": [
-    238
+    242
    ],
    "to": "interview_app.applications:_get_owned"
   },
@@ -2643,15 +2777,31 @@
    "from": "interview_app.applications:delete_application",
    "kind": "call",
    "lines": [
-    237
+    252
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "interview_app.applications:delete_application",
+   "kind": "call",
+   "lines": [
+    241
    ],
    "to": "interview_app.db:session_scope"
+  },
+  {
+   "from": "interview_app.applications:delete_application",
+   "kind": "call",
+   "lines": [
+    252
+   ],
+   "to": "interview_app.voice:delete_session_audio"
   },
   {
    "from": "interview_app.applications:get_application",
    "kind": "construct",
    "lines": [
-    173
+    174
    ],
    "to": "interview_app.applications:ApplicationDetail"
   },
@@ -2659,7 +2809,7 @@
    "from": "interview_app.applications:get_application",
    "kind": "construct",
    "lines": [
-    180
+    181
    ],
    "to": "interview_app.applications:DocumentOut"
   },
@@ -2667,7 +2817,7 @@
    "from": "interview_app.applications:get_application",
    "kind": "call",
    "lines": [
-    166
+    167
    ],
    "to": "interview_app.applications:_get_owned"
   },
@@ -2675,7 +2825,7 @@
    "from": "interview_app.applications:get_application",
    "kind": "call",
    "lines": [
-    165
+    166
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -2683,8 +2833,8 @@
    "from": "interview_app.applications:get_application",
    "kind": "construct",
    "lines": [
-    180,
-    181
+    181,
+    182
    ],
    "to": "interview_app.ingest:DocKind"
   },
@@ -2692,7 +2842,7 @@
    "from": "interview_app.applications:get_application",
    "kind": "construct",
    "lines": [
-    182
+    183
    ],
    "to": "interview_app.ingest:DocSource"
   },
@@ -2700,7 +2850,7 @@
    "from": "interview_app.applications:list_applications",
    "kind": "construct",
    "lines": [
-    152
+    153
    ],
    "to": "interview_app.applications:ApplicationSummary"
   },
@@ -2708,7 +2858,7 @@
    "from": "interview_app.applications:list_applications",
    "kind": "call",
    "lines": [
-    138
+    139
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -2716,7 +2866,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "construct",
    "lines": [
-    217
+    218
    ],
    "to": "interview_app.applications:ApplicationNotFoundError"
   },
@@ -2724,7 +2874,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    215
+    216
    ],
    "to": "interview_app.applications:_get_owned"
   },
@@ -2732,7 +2882,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    209
+    210
    ],
    "to": "interview_app.applications:_limits"
   },
@@ -2740,7 +2890,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "construct",
    "lines": [
-    220
+    221
    ],
    "to": "interview_app.db:Document"
   },
@@ -2748,7 +2898,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    214
+    215
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -2756,8 +2906,8 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    227,
-    228
+    228,
+    229
    ],
    "to": "interview_app.db:utcnow"
   },
@@ -2765,7 +2915,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "construct",
    "lines": [
-    210
+    211
    ],
    "to": "interview_app.ingest:DocKind"
   },
@@ -2773,7 +2923,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    211
+    212
    ],
    "to": "interview_app.ingest:clean_text"
   },
@@ -2781,7 +2931,7 @@
    "from": "interview_app.applications:update_document",
    "kind": "call",
    "lines": [
-    212
+    213
    ],
    "to": "interview_app.ingest:validate_document"
   },
@@ -2802,7 +2952,7 @@
    "from": "interview_app.config:get_settings",
    "kind": "construct",
    "lines": [
-    216
+    270
    ],
    "to": "interview_app.config:Settings"
   },
@@ -3485,7 +3635,7 @@
    "from": "interview_app.history:_reports_oldest_first",
    "kind": "call",
    "lines": [
-    165
+    166
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3493,15 +3643,31 @@
    "from": "interview_app.history:delete_session",
    "kind": "call",
    "lines": [
-    254
+    265
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "interview_app.history:delete_session",
+   "kind": "call",
+   "lines": [
+    256
    ],
    "to": "interview_app.db:session_scope"
+  },
+  {
+   "from": "interview_app.history:delete_session",
+   "kind": "call",
+   "lines": [
+    265
+   ],
+   "to": "interview_app.voice:delete_session_audio"
   },
   {
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    94
+    95
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3509,7 +3675,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    130
+    131
    ],
    "to": "interview_app.history:SessionSummary"
   },
@@ -3517,7 +3683,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    96
+    97
    ],
    "to": "interview_app.history:_visible_sessions"
   },
@@ -3525,7 +3691,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    115
+    116
    ],
    "to": "interview_app.interview.engine:TurnView"
   },
@@ -3533,7 +3699,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    145
+    146
    ],
    "to": "interview_app.interview.engine:compute_progress"
   },
@@ -3541,7 +3707,7 @@
    "from": "interview_app.history:load_report",
    "kind": "call",
    "lines": [
-    157
+    158
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3549,7 +3715,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    182
+    183
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -3557,7 +3723,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    182
+    183
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -3565,7 +3731,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    198
+    199
    ],
    "to": "interview_app.history:ItemMean"
   },
@@ -3573,7 +3739,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    240
+    241
    ],
    "to": "interview_app.history:Progress"
   },
@@ -3581,7 +3747,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    235
+    236
    ],
    "to": "interview_app.history:RecurringImprovement"
   },
@@ -3589,7 +3755,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    218
+    219
    ],
    "to": "interview_app.history:RequirementHistory"
   },
@@ -3597,7 +3763,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    183
+    184
    ],
    "to": "interview_app.history:_reports_oldest_first"
   },
@@ -4607,12 +4773,12 @@
    "from": "interview_app.interview.persona:<module>",
    "kind": "construct",
    "lines": [
-    175,
-    183,
-    191,
-    199,
-    207,
-    215
+    178,
+    186,
+    194,
+    202,
+    210,
+    218
    ],
    "to": "interview_app.interview.persona:Persona"
   },
@@ -5207,16 +5373,24 @@
    "from": "interview_app.llm.client:LLMClient._cost",
    "kind": "call",
    "lines": [
-    156
+    193
    ],
    "to": "interview_app.llm.pricing:PriceCatalog.estimate_cost"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient._speech_tokens",
+   "kind": "call",
+   "lines": [
+    293
+   ],
+   "to": "interview_app.llm.client:pcm_seconds"
   },
   {
    "from": "interview_app.llm.client:LLMClient.chat",
    "kind": "construct",
    "lines": [
-    118,
-    129
+    155,
+    166
    ],
    "to": "interview_app.llm.client:CallRecord"
   },
@@ -5224,7 +5398,7 @@
    "from": "interview_app.llm.client:LLMClient.chat",
    "kind": "construct",
    "lines": [
-    146
+    183
    ],
    "to": "interview_app.llm.client:ChatResult"
   },
@@ -5232,7 +5406,7 @@
    "from": "interview_app.llm.client:LLMClient.chat",
    "kind": "call",
    "lines": [
-    134
+    171
    ],
    "to": "interview_app.llm.client:LLMClient._cost"
   },
@@ -5240,8 +5414,8 @@
    "from": "interview_app.llm.client:LLMClient.chat",
    "kind": "construct",
    "lines": [
-    121,
-    142
+    158,
+    179
    ],
    "to": "interview_app.llm.client:LLMError"
   },
@@ -5249,7 +5423,7 @@
    "from": "interview_app.llm.client:LLMClient.chat_json",
    "kind": "call",
    "lines": [
-    177
+    214
    ],
    "to": "interview_app.llm.client:LLMClient.chat"
   },
@@ -5257,8 +5431,8 @@
    "from": "interview_app.llm.client:LLMClient.chat_json",
    "kind": "construct",
    "lines": [
-    186,
-    188
+    223,
+    225
    ],
    "to": "interview_app.llm.client:LLMError"
   },
@@ -5266,9 +5440,59 @@
    "from": "interview_app.llm.client:LLMClient.chat_json",
    "kind": "call",
    "lines": [
-    181
+    218
    ],
    "to": "interview_app.llm.client:_strip_code_fence"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient.speech",
+   "kind": "construct",
+   "lines": [
+    250,
+    261
+   ],
+   "to": "interview_app.llm.client:CallRecord"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient.speech",
+   "kind": "call",
+   "lines": [
+    256
+   ],
+   "to": "interview_app.llm.client:LLMClient._speech_tokens"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient.speech",
+   "kind": "construct",
+   "lines": [
+    253,
+    281
+   ],
+   "to": "interview_app.llm.client:LLMError"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient.speech",
+   "kind": "construct",
+   "lines": [
+    282
+   ],
+   "to": "interview_app.llm.client:SpeechResult"
+  },
+  {
+   "from": "interview_app.llm.client:LLMClient.speech",
+   "kind": "call",
+   "lines": [
+    258
+   ],
+   "to": "interview_app.llm.pricing:PriceCatalog.estimate_cost"
+  },
+  {
+   "from": "interview_app.llm.client:pcm_seconds",
+   "kind": "call",
+   "lines": [
+    80
+   ],
+   "to": "interview_app.llm.client:pcm_format"
   },
   {
    "from": "interview_app.llm.decide:DecisionClient.decide",
@@ -5447,7 +5671,7 @@
    "from": "interview_app.preferences:load_preferences",
    "kind": "call",
    "lines": [
-    56
+    58
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -5455,8 +5679,8 @@
    "from": "interview_app.preferences:load_preferences",
    "kind": "construct",
    "lines": [
-    60,
-    67
+    62,
+    69
    ],
    "to": "interview_app.preferences:Preferences"
   },
@@ -5464,7 +5688,7 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "construct",
    "lines": [
-    75
+    77
    ],
    "to": "interview_app.db:UserPreferences"
   },
@@ -5472,7 +5696,7 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "call",
    "lines": [
-    72
+    74
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -5480,7 +5704,7 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "call",
    "lines": [
-    78
+    80
    ],
    "to": "interview_app.db:utcnow"
   },
@@ -5488,7 +5712,16 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "call",
    "lines": [
-    114
+    134
+   ],
+   "to": "interview_app.config:TTSSettings.voice_for"
+  },
+  {
+   "from": "interview_app.preferences:to_session_config",
+   "kind": "call",
+   "lines": [
+    122,
+    132
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -5496,8 +5729,17 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    115,
-    120
+    129
+   ],
+   "to": "interview_app.interview.persona:Channel"
+  },
+  {
+   "from": "interview_app.preferences:to_session_config",
+   "kind": "construct",
+   "lines": [
+    123,
+    128,
+    134
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -5505,7 +5747,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    113
+    121
    ],
    "to": "interview_app.interview.persona:Length"
   },
@@ -5513,7 +5755,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    121
+    137
    ],
    "to": "interview_app.interview.persona:SessionConfig"
   },
@@ -5521,7 +5763,7 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "call",
    "lines": [
-    112
+    120
    ],
    "to": "interview_app.preferences:preset_main_questions"
   },
@@ -5848,6 +6090,165 @@
    "kind": "call",
    "lines": [
     18
+   ],
+   "to": "interview_app.db:session_scope"
+  },
+  {
+   "from": "interview_app.voice:_session_cost",
+   "kind": "call",
+   "lines": [
+    115
+   ],
+   "to": "interview_app.db:session_scope"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "construct",
+   "lines": [
+    211
+   ],
+   "to": "interview_app.db:TurnAudio"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    159,
+    209
+   ],
+   "to": "interview_app.db:session_scope"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    192
+   ],
+   "to": "interview_app.llm.client:LLMClient.speech"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    196
+   ],
+   "to": "interview_app.llm.client:pcm_format"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    199
+   ],
+   "to": "interview_app.llm.client:pcm_seconds"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    185
+   ],
+   "to": "interview_app.security.limits:check_budget"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "construct",
+   "lines": [
+    177,
+    180,
+    183,
+    186,
+    194,
+    204,
+    224
+   ],
+   "to": "interview_app.voice:SpeechOutcome"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    185
+   ],
+   "to": "interview_app.voice:_session_cost"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    207
+   ],
+   "to": "interview_app.voice:_write_private"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    198
+   ],
+   "to": "interview_app.voice:pcm_to_wav"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    206
+   ],
+   "to": "interview_app.voice:session_audio_dir"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    188
+   ],
+   "to": "interview_app.voice:session_voice"
+  },
+  {
+   "from": "interview_app.voice:_speak",
+   "kind": "call",
+   "lines": [
+    182
+   ],
+   "to": "interview_app.voice:stored_audio"
+  },
+  {
+   "from": "interview_app.voice:delete_session_audio",
+   "kind": "call",
+   "lines": [
+    229
+   ],
+   "to": "interview_app.voice:session_audio_dir"
+  },
+  {
+   "from": "interview_app.voice:session_voice",
+   "kind": "call",
+   "lines": [
+    85
+   ],
+   "to": "interview_app.config:TTSSettings.voice_for"
+  },
+  {
+   "from": "interview_app.voice:speak",
+   "kind": "construct",
+   "lines": [
+    148
+   ],
+   "to": "interview_app.voice:SpeechOutcome"
+  },
+  {
+   "from": "interview_app.voice:speak",
+   "kind": "call",
+   "lines": [
+    144
+   ],
+   "to": "interview_app.voice:_speak"
+  },
+  {
+   "from": "interview_app.voice:stored_audio",
+   "kind": "call",
+   "lines": [
+    97
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -6425,6 +6826,19 @@
     "f'chunk_{i}' (per item)"
    ],
    "templates": []
+  },
+  {
+   "api": "speech",
+   "gateway": "interview_app.llm.client:LLMClient.speech",
+   "line": 192,
+   "message_roles": [],
+   "messages_builders": [],
+   "model_expr": "settings.tts.model",
+   "models_field": "tts",
+   "role": "tts",
+   "settings": {},
+   "site": "interview_app.voice:_speak",
+   "templates": []
   }
  ],
  "modules": {
@@ -6649,10 +7063,11 @@
     "interview_app.interview.engine",
     "interview_app.interview.persona",
     "interview_app.interview.schemas",
-    "interview_app.preferences"
+    "interview_app.preferences",
+    "interview_app.voice"
    ],
    "layer": "ui",
-   "lines": 489,
+   "lines": 525,
    "path": "app/views/interview.py",
    "symbols": [
     "app.views.interview:<module>",
@@ -6661,6 +7076,7 @@
     "app.views.interview:coaching_choice",
     "app.views.interview:earlier_attempts",
     "app.views.interview:feedback",
+    "app.views.interview:interviewer_message",
     "app.views.interview:live_chips",
     "app.views.interview:progress_text",
     "app.views.interview:start_form",
@@ -6683,7 +7099,7 @@
     "interview_app.usage"
    ],
    "layer": "ui",
-   "lines": 331,
+   "lines": 343,
    "path": "app/views/settings.py",
    "symbols": [
     "app.views.settings:<module>",
@@ -6726,10 +7142,11 @@
    "imports": [
     "interview_app.config",
     "interview_app.db",
-    "interview_app.ingest"
+    "interview_app.ingest",
+    "interview_app.voice"
    ],
    "layer": "core",
-   "lines": 243,
+   "lines": 254,
    "path": "src/interview_app/applications.py",
    "symbols": [
     "interview_app.applications:ApplicationDetail",
@@ -6778,12 +7195,13 @@
     "interview_app.preferences",
     "interview_app.security.injection",
     "interview_app.security.limits",
+    "interview_app.voice",
     "lab.compare_prompts",
     "lab.sweep_setting"
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 217,
+   "lines": 271,
    "path": "src/interview_app/config.py",
    "symbols": [
     "interview_app.config:<module>",
@@ -6797,6 +7215,9 @@
     "interview_app.config:RoleModels",
     "interview_app.config:Settings",
     "interview_app.config:Settings._derive_database_url",
+    "interview_app.config:TTSSettings",
+    "interview_app.config:TTSSettings._known_voices",
+    "interview_app.config:TTSSettings.voice_for",
     "interview_app.config:get_settings"
    ]
   },
@@ -6825,11 +7246,12 @@
     "interview_app.llm.calllog",
     "interview_app.preferences",
     "interview_app.usage",
-    "interview_app.users"
+    "interview_app.users",
+    "interview_app.voice"
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 276,
+   "lines": 301,
    "path": "src/interview_app/db.py",
    "symbols": [
     "interview_app.db:Application",
@@ -6838,6 +7260,7 @@
     "interview_app.db:InterviewSession",
     "interview_app.db:LLMCall",
     "interview_app.db:Turn",
+    "interview_app.db:TurnAudio",
     "interview_app.db:User",
     "interview_app.db:UserPreferences",
     "interview_app.db:_add_missing_columns",
@@ -7164,10 +7587,11 @@
     "interview_app.evaluation.rubric",
     "interview_app.evaluation.schemas",
     "interview_app.interview.engine",
-    "interview_app.interview.persona"
+    "interview_app.interview.persona",
+    "interview_app.voice"
    ],
    "layer": "core",
-   "lines": 264,
+   "lines": 267,
    "path": "src/interview_app/history.py",
    "symbols": [
     "interview_app.history:ItemMean",
@@ -7366,12 +7790,13 @@
     "interview_app.lab.judge",
     "interview_app.lab.runner",
     "interview_app.preferences",
+    "interview_app.voice",
     "lab.compare_prompts",
     "lab.sweep_setting"
    ],
    "imports": [],
    "layer": "core",
-   "lines": 246,
+   "lines": 249,
    "path": "src/interview_app/interview/persona.py",
    "symbols": [
     "interview_app.interview.persona:<module>",
@@ -7700,15 +8125,17 @@
    ]
   },
   "interview_app.llm.client": {
-   "doc": "The one gateway for chat-model calls.",
+   "doc": "The one gateway for chat-model calls (and text-to-speech).",
    "doc_more": "Why one gateway: every call must be logged (cost, tokens, latency) and must use the same retry/timeout/error rules. If modules called the SDK directly, cost tracking would leak.\n\nProvider-agnostic: OpenRouter, OpenAI, Ollama and vLLM all speak the OpenAI chat API, so the only provider-specific values are `base_url` and the API key in `Settings`.",
    "external_imports": [
     "collections",
     "dataclasses",
     "json",
     "logging",
+    "math",
     "openai",
     "pydantic",
+    "re",
     "time",
     "typing"
    ],
@@ -7723,14 +8150,15 @@
     "interview_app.lab.compare",
     "interview_app.llm.calllog",
     "interview_app.llm.decide",
-    "interview_app.security.injection"
+    "interview_app.security.injection",
+    "interview_app.voice"
    ],
    "imports": [
     "interview_app.config",
     "interview_app.llm.pricing"
    ],
    "layer": "llm",
-   "lines": 199,
+   "lines": 296,
    "path": "src/interview_app/llm/client.py",
    "symbols": [
     "interview_app.llm.client:CallRecord",
@@ -7738,10 +8166,15 @@
     "interview_app.llm.client:LLMClient",
     "interview_app.llm.client:LLMClient.__init__",
     "interview_app.llm.client:LLMClient._cost",
+    "interview_app.llm.client:LLMClient._speech_tokens",
     "interview_app.llm.client:LLMClient.chat",
     "interview_app.llm.client:LLMClient.chat_json",
+    "interview_app.llm.client:LLMClient.speech",
     "interview_app.llm.client:LLMError",
-    "interview_app.llm.client:_strip_code_fence"
+    "interview_app.llm.client:SpeechResult",
+    "interview_app.llm.client:_strip_code_fence",
+    "interview_app.llm.client:pcm_format",
+    "interview_app.llm.client:pcm_seconds"
    ]
   },
   "interview_app.llm.decide": {
@@ -7850,7 +8283,7 @@
     "interview_app.interview.persona"
    ],
    "layer": "core",
-   "lines": 127,
+   "lines": 143,
    "path": "src/interview_app/preferences.py",
    "symbols": [
     "interview_app.preferences:Preferences",
@@ -7872,7 +8305,8 @@
     "interview_app.interview.engine",
     "interview_app.interview.prompting",
     "interview_app.lab.candidate",
-    "interview_app.lab.compare"
+    "interview_app.lab.compare",
+    "interview_app.voice"
    ],
    "imports": [
     "interview_app.security.injection",
@@ -8029,6 +8463,51 @@
    "path": "src/interview_app/users.py",
    "symbols": [
     "interview_app.users:ensure_local_user"
+   ]
+  },
+  "interview_app.voice": {
+   "doc": "Voice channel: the interviewer's questions as speech (text-to-speech), generated once per turn.",
+   "doc_more": "`speak` turns one stored interviewer turn into a WAV file under `<data_dir>/audio/<user_id>/<session_id>/<turn_idx>.wav` and records it in a `TurnAudio` row; every later call (a replay, a page refresh, History) finds the stored file and costs nothing.\n\nVoice is an extra, never a requirement: every failure (model error, budget reached, disk error) returns a short notice instead of raising, and the UI then shows the question as text. That is also why `speak` is called by the UI after a turn is stored, not inside the interview engine: a TTS problem can't fail a turn.\n\nOnly the interviewer's own questions are spoken (model output already shown on screen). Coaching tips and scores belong to candidate turns and are never passed here.",
+   "external_imports": [
+    "collections",
+    "dataclasses",
+    "enum",
+    "io",
+    "logging",
+    "os",
+    "pathlib",
+    "shutil",
+    "sqlalchemy",
+    "sqlmodel",
+    "wave"
+   ],
+   "imported_by": [
+    "app.views.interview",
+    "interview_app.applications",
+    "interview_app.history"
+   ],
+   "imports": [
+    "interview_app.config",
+    "interview_app.db",
+    "interview_app.interview.persona",
+    "interview_app.llm.client",
+    "interview_app.security"
+   ],
+   "layer": "core",
+   "lines": 233,
+   "path": "src/interview_app/voice.py",
+   "symbols": [
+    "interview_app.voice:SpeechOutcome",
+    "interview_app.voice:SpeechStatus",
+    "interview_app.voice:_session_cost",
+    "interview_app.voice:_speak",
+    "interview_app.voice:_write_private",
+    "interview_app.voice:delete_session_audio",
+    "interview_app.voice:pcm_to_wav",
+    "interview_app.voice:session_audio_dir",
+    "interview_app.voice:session_voice",
+    "interview_app.voice:speak",
+    "interview_app.voice:stored_audio"
    ]
   },
   "lab.compare_prompts": {
@@ -8464,7 +8943,7 @@
      "type": "str"
     },
     {
-     "default": "'https://openrouter.ai/api/v1/models'",
+     "default": "'https://openrouter.ai/api/v1/models?output_modalities=all'",
      "description": null,
      "name": "openrouter_models_url",
      "type": "str"
@@ -8548,6 +9027,12 @@
      "type": "LengthPresets"
     },
     {
+     "default": "TTSSettings()",
+     "description": null,
+     "name": "tts",
+     "type": "TTSSettings"
+    },
+    {
      "default": "GuardSettings()",
      "description": null,
      "name": "guard",
@@ -8558,6 +9043,49 @@
      "description": null,
      "name": "features",
      "type": "Features"
+    }
+   ]
+  },
+  "interview_app.config:TTSSettings": {
+   "bases": [
+    "BaseModel"
+   ],
+   "fields": [
+    {
+     "default": "'google/gemini-3.8-flash-lite-tts'",
+     "description": null,
+     "name": "model",
+     "type": "str"
+    },
+    {
+     "default": "{'recruiter_screen': 'Aoede', 'hiring_manager': 'Charon', '…",
+     "description": null,
+     "name": "voices",
+     "type": "dict[str, str]"
+    },
+    {
+     "default": "'Charon'",
+     "description": null,
+     "name": "default_voice",
+     "type": "str"
+    },
+    {
+     "default": "GEMINI_TTS_VOICES",
+     "description": null,
+     "name": "available_voices",
+     "type": "list[str]"
+    },
+    {
+     "default": "32.0",
+     "description": null,
+     "name": "audio_tokens_per_second",
+     "type": "float"
+    },
+    {
+     "default": "2000",
+     "description": null,
+     "name": "max_chars",
+     "type": "int"
     }
    ]
   },
@@ -8954,6 +9482,67 @@
      "description": null,
      "name": "live_json",
      "type": "str | None"
+    },
+    {
+     "default": "utcnow",
+     "description": null,
+     "name": "created_at",
+     "type": "datetime"
+    }
+   ]
+  },
+  "interview_app.db:TurnAudio": {
+   "bases": [
+    "SQLModel"
+   ],
+   "fields": [
+    {
+     "default": "None",
+     "description": null,
+     "name": "id",
+     "type": "int | None"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "session_id",
+     "type": "int"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "user_id",
+     "type": "int"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "turn_idx",
+     "type": "int"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "path",
+     "type": "str"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "voice",
+     "type": "str"
+    },
+    {
+     "default": null,
+     "description": null,
+     "name": "model",
+     "type": "str"
+    },
+    {
+     "default": "0.0",
+     "description": null,
+     "name": "seconds",
+     "type": "float"
     },
     {
      "default": "utcnow",
@@ -9982,6 +10571,12 @@
      "description": null,
      "name": "channel",
      "type": "Channel"
+    },
+    {
+     "default": "None",
+     "description": null,
+     "name": "voice",
+     "type": "str | None"
     }
    ]
   },
@@ -10527,6 +11122,12 @@
      "type": "Mode"
     },
     {
+     "default": "None",
+     "description": null,
+     "name": "voice",
+     "type": "str | None"
+    },
+    {
      "default": "PromptVariant.P4_ROLE_RICH",
      "description": null,
      "name": "prompt_variant",
@@ -10590,28 +11191,28 @@
    ]
   }
  },
- "source_sha256": "27c66d5b2453b27a0203b67d902fe15007fec18a5eaf08a788a48faa8c9fa7e6",
+ "source_sha256": "7e6b4a4229f3b474914487c64dce35642a3932e8e04021a0b1d34b83b009f828",
  "stats": {
-  "agents": 7,
+  "agents": 8,
   "call_sites": {
-   "builtin": 512,
-   "external": 771,
-   "resolved": 765,
-   "unresolved": 42
+   "builtin": 540,
+   "external": 844,
+   "resolved": 814,
+   "unresolved": 46
   },
-  "classes": 106,
+  "classes": 111,
   "edges": {
    "binds": 3,
-   "call": 467,
-   "construct": 137,
+   "call": 498,
+   "construct": 144,
    "ref": 27
   },
-  "functions": 258,
-  "model_call_sites": 9,
-  "modules": 53,
-  "tables": 8,
+  "functions": 274,
+  "model_call_sites": 10,
+  "modules": 54,
+  "tables": 9,
   "templates": 12,
-  "unresolved_listed": 42
+  "unresolved_listed": 46
  },
  "symbols": {
   "app.drill_ui:_joined": {
@@ -11230,7 +11831,7 @@
   },
   "app.views.interview:blocked_answer_editor": {
    "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
-   "end_line": 283,
+   "end_line": 284,
    "externals": [
     "streamlit.columns",
     "streamlit.columns()[0].button",
@@ -11241,7 +11842,7 @@
     "streamlit.text_area"
    ],
    "kind": "function",
-   "line": 266,
+   "line": 267,
    "module": "app.views.interview",
    "name": "blocked_answer_editor",
    "qualname": "blocked_answer_editor",
@@ -11249,7 +11850,7 @@
   },
   "app.views.interview:chat": {
    "doc": "",
-   "end_line": 436,
+   "end_line": 472,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11269,7 +11870,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 331,
+   "line": 369,
    "module": "app.views.interview",
    "name": "chat",
    "qualname": "chat",
@@ -11277,7 +11878,7 @@
   },
   "app.views.interview:coaching_choice": {
    "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
-   "end_line": 319,
+   "end_line": 320,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11295,7 +11896,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 286,
+   "line": 287,
    "module": "app.views.interview",
    "name": "coaching_choice",
    "qualname": "coaching_choice",
@@ -11303,13 +11904,13 @@
   },
   "app.views.interview:earlier_attempts": {
    "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
-   "end_line": 232,
+   "end_line": 233,
    "externals": [
     "streamlit.expander",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 224,
+   "line": 225,
    "module": "app.views.interview",
    "name": "earlier_attempts",
    "qualname": "earlier_attempts",
@@ -11317,7 +11918,7 @@
   },
   "app.views.interview:feedback": {
    "doc": "The report for a finished interview: generated once on request, then stored.",
-   "end_line": 474,
+   "end_line": 510,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11330,21 +11931,41 @@
     "streamlit.write"
    ],
    "kind": "function",
-   "line": 439,
+   "line": 475,
    "module": "app.views.interview",
    "name": "feedback",
    "qualname": "feedback",
    "signature": "feedback(view: eng.SessionView) -> None"
   },
+  "app.views.interview:interviewer_message": {
+   "doc": "One interviewer turn. Text sessions show the text; Voice sessions show a player with the text behind \"Show text\", and the text by itself whenever there is no audio (so a TTS problem never blocks anyone).",
+   "end_line": 357,
+   "externals": [
+    "streamlit.audio",
+    "streamlit.caption",
+    "streamlit.markdown",
+    "streamlit.session_state.setdefault",
+    "streamlit.session_state.setdefault().add",
+    "streamlit.session_state.setdefault().get",
+    "streamlit.spinner",
+    "streamlit.toggle"
+   ],
+   "kind": "function",
+   "line": 323,
+   "module": "app.views.interview",
+   "name": "interviewer_message",
+   "qualname": "interviewer_message",
+   "signature": "interviewer_message(view: eng.SessionView, t: eng.TurnView, newest: bool) -> None"
+  },
   "app.views.interview:live_chips": {
    "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
-   "end_line": 221,
+   "end_line": 222,
    "externals": [
     "streamlit.caption",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 205,
+   "line": 206,
    "module": "app.views.interview",
    "name": "live_chips",
    "qualname": "live_chips",
@@ -11352,9 +11973,9 @@
   },
   "app.views.interview:progress_text": {
    "doc": "'Question 3 of 7 · Experience (follow-up)': where the interview is, in words.",
-   "end_line": 328,
+   "end_line": 366,
    "kind": "function",
-   "line": 322,
+   "line": 360,
    "module": "app.views.interview",
    "name": "progress_text",
    "qualname": "progress_text",
@@ -11362,7 +11983,7 @@
   },
   "app.views.interview:start_form": {
    "doc": "",
-   "end_line": 202,
+   "end_line": 203,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11383,7 +12004,7 @@
     "streamlit.write"
    ],
    "kind": "function",
-   "line": 77,
+   "line": 78,
    "module": "app.views.interview",
    "name": "start_form",
    "qualname": "start_form",
@@ -11391,7 +12012,7 @@
   },
   "app.views.interview:submit": {
    "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
-   "end_line": 263,
+   "end_line": 264,
    "externals": [
     "streamlit.rerun",
     "streamlit.session_state.get",
@@ -11400,7 +12021,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 235,
+   "line": 236,
    "module": "app.views.interview",
    "name": "submit",
    "qualname": "submit",
@@ -11408,7 +12029,7 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 242,
+     "line": 243,
      "text": "action"
     }
    ]
@@ -11433,6 +12054,7 @@
     "streamlit.dataframe",
     "streamlit.divider",
     "streamlit.radio",
+    "streamlit.selectbox",
     "streamlit.slider",
     "streamlit.subheader",
     "streamlit.title",
@@ -11448,9 +12070,9 @@
   },
   "app.views.settings:_model_label": {
    "doc": "",
-   "end_line": 153,
+   "end_line": 164,
    "kind": "function",
-   "line": 149,
+   "line": 160,
    "module": "app.views.settings",
    "name": "_model_label",
    "qualname": "_model_label",
@@ -11458,12 +12080,12 @@
   },
   "app.views.settings:_model_picker": {
    "doc": "",
-   "end_line": 171,
+   "end_line": 182,
    "externals": [
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 156,
+   "line": 167,
    "module": "app.views.settings",
    "name": "_model_picker",
    "qualname": "_model_picker",
@@ -11471,9 +12093,9 @@
   },
   "app.views.settings:_price": {
    "doc": "",
-   "end_line": 146,
+   "end_line": 157,
    "kind": "function",
-   "line": 143,
+   "line": 154,
    "module": "app.views.settings",
    "name": "_price",
    "qualname": "_price",
@@ -11481,9 +12103,9 @@
   },
   "app.views.settings:_rows": {
    "doc": "",
-   "end_line": 310,
+   "end_line": 322,
    "kind": "function",
-   "line": 300,
+   "line": 312,
    "module": "app.views.settings",
    "name": "_rows",
    "qualname": "_rows",
@@ -11491,9 +12113,9 @@
   },
   "interview_app.applications:ApplicationDetail": {
    "doc": "",
-   "end_line": 65,
+   "end_line": 66,
    "kind": "class",
-   "line": 59,
+   "line": 60,
    "module": "interview_app.applications",
    "name": "ApplicationDetail",
    "qualname": "ApplicationDetail",
@@ -11502,9 +12124,9 @@
   },
   "interview_app.applications:ApplicationNotFoundError": {
    "doc": "No application with this id belongs to this user.",
-   "end_line": 32,
+   "end_line": 33,
    "kind": "class",
-   "line": 31,
+   "line": 32,
    "module": "interview_app.applications",
    "name": "ApplicationNotFoundError",
    "qualname": "ApplicationNotFoundError",
@@ -11512,9 +12134,9 @@
   },
   "interview_app.applications:ApplicationSummary": {
    "doc": "",
-   "end_line": 56,
+   "end_line": 57,
    "kind": "class",
-   "line": 51,
+   "line": 52,
    "module": "interview_app.applications",
    "name": "ApplicationSummary",
    "qualname": "ApplicationSummary",
@@ -11523,9 +12145,9 @@
   },
   "interview_app.applications:DocumentIn": {
    "doc": "",
-   "end_line": 39,
+   "end_line": 40,
    "kind": "class",
-   "line": 35,
+   "line": 36,
    "module": "interview_app.applications",
    "name": "DocumentIn",
    "qualname": "DocumentIn",
@@ -11538,9 +12160,9 @@
   },
   "interview_app.applications:DocumentOut": {
    "doc": "",
-   "end_line": 48,
+   "end_line": 49,
    "kind": "class",
-   "line": 42,
+   "line": 43,
    "module": "interview_app.applications",
    "name": "DocumentOut",
    "qualname": "DocumentOut",
@@ -11549,9 +12171,9 @@
   },
   "interview_app.applications:_clean_label": {
    "doc": "",
-   "end_line": 77,
+   "end_line": 78,
    "kind": "function",
-   "line": 73,
+   "line": 74,
    "module": "interview_app.applications",
    "name": "_clean_label",
    "qualname": "_clean_label",
@@ -11564,13 +12186,13 @@
     ]
    },
    "doc": "",
-   "end_line": 90,
+   "end_line": 91,
    "externals": [
     "sqlmodel.select",
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 87,
+   "line": 88,
    "module": "interview_app.applications",
    "name": "_get_owned",
    "qualname": "_get_owned",
@@ -11578,21 +12200,21 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 88,
+     "line": 89,
      "text": "session.exec(select(Application).where(Application.id == application_…"
     },
     {
      "candidates": [],
-     "line": 88,
+     "line": 89,
      "text": "session.exec"
     }
    ]
   },
   "interview_app.applications:_limits": {
    "doc": "",
-   "end_line": 70,
+   "end_line": 71,
    "kind": "function",
-   "line": 68,
+   "line": 69,
    "module": "interview_app.applications",
    "name": "_limits",
    "qualname": "_limits",
@@ -11600,9 +12222,9 @@
   },
   "interview_app.applications:_prepare": {
    "doc": "Clean then validate. Validation runs on the cleaned text, because that is what gets stored.",
-   "end_line": 84,
+   "end_line": 85,
    "kind": "function",
-   "line": 80,
+   "line": 81,
    "module": "interview_app.applications",
    "name": "_prepare",
    "qualname": "_prepare",
@@ -11618,7 +12240,7 @@
     ]
    },
    "doc": "Validate everything first, then save in one transaction, so a bad document never leaves a half-created application behind. Returns the new application id.",
-   "end_line": 133,
+   "end_line": 134,
    "externals": [
     "collections.Counter",
     "collections.Counter().items",
@@ -11626,7 +12248,7 @@
     "db.flush"
    ],
    "kind": "function",
-   "line": 93,
+   "line": 94,
    "module": "interview_app.applications",
    "name": "create_application",
    "qualname": "create_application",
@@ -11640,22 +12262,30 @@
    "db": {
     "Application": [
      "delete"
+    ],
+    "InterviewSession": [
+     "read"
     ]
    },
-   "doc": "Delete the application; its documents go with it via ON DELETE CASCADE. Returns False if there was nothing (of this user's) to delete.",
-   "end_line": 242,
+   "doc": "Delete the application; its documents, sessions, turns and audio rows go with it via ON DELETE CASCADE, and its sessions' audio files are removed from disk. Returns False if there was nothing (of this user's) to delete.",
+   "end_line": 253,
    "externals": [
-    "db.delete"
+    "db.delete",
+    "db.exec",
+    "db.exec().all",
+    "sqlmodel.select",
+    "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 234,
+   "line": 235,
    "module": "interview_app.applications",
    "name": "delete_application",
    "qualname": "delete_application",
-   "signature": "delete_application(engine: Engine, user_id: int, application_id: int) -> bool",
+   "signature": "delete_application(engine: Engine, user_id: int, application_id: int, settings: Settings | None=None) -> bool",
    "tested_by": [
     "tests.test_app_ui",
-    "tests.test_applications"
+    "tests.test_applications",
+    "tests.test_voice"
    ]
   },
   "interview_app.applications:get_application": {
@@ -11665,7 +12295,7 @@
     ]
    },
    "doc": "The application with all its documents, or None if it doesn't exist or isn't this user's.",
-   "end_line": 190,
+   "end_line": 191,
    "externals": [
     "db.exec",
     "db.exec().all",
@@ -11673,7 +12303,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 163,
+   "line": 164,
    "module": "interview_app.applications",
    "name": "get_application",
    "qualname": "get_application",
@@ -11694,7 +12324,7 @@
     ]
    },
    "doc": "All of the user's applications, most recently changed first.",
-   "end_line": 160,
+   "end_line": 161,
    "externals": [
     "db.exec",
     "db.exec().all",
@@ -11705,7 +12335,7 @@
     "sqlmodel.select().where().order_by"
    ],
    "kind": "function",
-   "line": 136,
+   "line": 137,
    "module": "interview_app.applications",
    "name": "list_applications",
    "qualname": "list_applications",
@@ -11727,7 +12357,7 @@
     ]
    },
    "doc": "Add a document of `kind`, or replace the existing one. Returns validation warnings.",
-   "end_line": 231,
+   "end_line": 232,
    "externals": [
     "db.add",
     "db.exec",
@@ -11736,7 +12366,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 193,
+   "line": 194,
    "module": "interview_app.applications",
    "name": "update_document",
    "qualname": "update_document",
@@ -11763,9 +12393,9 @@
   },
   "interview_app.config:Features": {
    "doc": "Feature flags, so an unfinished or broken feature can be switched off without code changes.",
-   "end_line": 162,
+   "end_line": 213,
    "kind": "class",
-   "line": 157,
+   "line": 208,
    "module": "interview_app.config",
    "name": "Features",
    "qualname": "Features",
@@ -11774,9 +12404,9 @@
   },
   "interview_app.config:GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
-   "end_line": 154,
+   "end_line": 205,
    "kind": "class",
-   "line": 135,
+   "line": 186,
    "module": "interview_app.config",
    "name": "GuardSettings",
    "qualname": "GuardSettings",
@@ -11876,9 +12506,9 @@
   },
   "interview_app.config:Settings": {
    "doc": "",
-   "end_line": 210,
+   "end_line": 264,
    "kind": "class",
-   "line": 165,
+   "line": 216,
    "module": "interview_app.config",
    "name": "Settings",
    "qualname": "Settings",
@@ -11902,7 +12532,8 @@
     "tests.test_preferences",
     "tests.test_pricing",
     "tests.test_prompting",
-    "tests.test_scoring_live_feedback"
+    "tests.test_scoring_live_feedback",
+    "tests.test_voice"
    ]
   },
   "interview_app.config:Settings._derive_database_url": {
@@ -11911,22 +12542,61 @@
     "model_validator(mode='after')"
    ],
    "doc": "",
-   "end_line": 210,
+   "end_line": 264,
    "kind": "method",
-   "line": 207,
+   "line": 261,
    "module": "interview_app.config",
    "name": "_derive_database_url",
    "qualname": "Settings._derive_database_url",
    "signature": "_derive_database_url(self) -> Self"
+  },
+  "interview_app.config:TTSSettings": {
+   "doc": "Text-to-speech for the Voice channel (spec 2026-10-03-length-voice-design, voice.py).",
+   "end_line": 183,
+   "kind": "class",
+   "line": 145,
+   "module": "interview_app.config",
+   "name": "TTSSettings",
+   "qualname": "TTSSettings",
+   "schema": true,
+   "signature": "class TTSSettings(BaseModel)",
+   "tested_by": [
+    "tests.test_voice"
+   ]
+  },
+  "interview_app.config:TTSSettings._known_voices": {
+   "class": "interview_app.config:TTSSettings",
+   "decorators": [
+    "model_validator(mode='after')"
+   ],
+   "doc": "",
+   "end_line": 180,
+   "kind": "method",
+   "line": 176,
+   "module": "interview_app.config",
+   "name": "_known_voices",
+   "qualname": "TTSSettings._known_voices",
+   "signature": "_known_voices(self) -> Self"
+  },
+  "interview_app.config:TTSSettings.voice_for": {
+   "class": "interview_app.config:TTSSettings",
+   "doc": "",
+   "end_line": 183,
+   "kind": "method",
+   "line": 182,
+   "module": "interview_app.config",
+   "name": "voice_for",
+   "qualname": "TTSSettings.voice_for",
+   "signature": "voice_for(self, interview_type: str) -> str"
   },
   "interview_app.config:get_settings": {
    "decorators": [
     "lru_cache"
    ],
    "doc": "One shared Settings object. Tests build their own `Settings(...)` instead.",
-   "end_line": 216,
+   "end_line": 270,
    "kind": "function",
-   "line": 214,
+   "line": 268,
    "module": "interview_app.config",
    "name": "get_settings",
    "qualname": "get_settings",
@@ -11949,7 +12619,8 @@
    "table": true,
    "tested_by": [
     "tests.test_db",
-    "tests.test_history"
+    "tests.test_history",
+    "tests.test_voice"
    ]
   },
   "interview_app.db:Document": {
@@ -11994,7 +12665,8 @@
    "tested_by": [
     "tests.test_app_ui",
     "tests.test_engine",
-    "tests.test_history"
+    "tests.test_history",
+    "tests.test_voice"
    ]
   },
   "interview_app.db:LLMCall": {
@@ -12011,7 +12683,8 @@
    "tested_by": [
     "tests.test_history",
     "tests.test_lab",
-    "tests.test_usage"
+    "tests.test_usage",
+    "tests.test_voice"
    ]
   },
   "interview_app.db:Turn": {
@@ -12028,8 +12701,21 @@
    "tested_by": [
     "tests.test_app_ui",
     "tests.test_history",
-    "tests.test_lab"
+    "tests.test_lab",
+    "tests.test_voice"
    ]
+  },
+  "interview_app.db:TurnAudio": {
+   "doc": "The spoken version of one interviewer turn in a Voice session (see voice.py).",
+   "end_line": 300,
+   "kind": "class",
+   "line": 278,
+   "module": "interview_app.db",
+   "name": "TurnAudio",
+   "qualname": "TurnAudio",
+   "schema": true,
+   "signature": "class TurnAudio(SQLModel)",
+   "table": true
   },
   "interview_app.db:User": {
    "doc": "",
@@ -12047,7 +12733,8 @@
     "tests.test_db",
     "tests.test_history",
     "tests.test_preferences",
-    "tests.test_usage"
+    "tests.test_usage",
+    "tests.test_voice"
    ]
   },
   "interview_app.db:UserPreferences": {
@@ -12208,7 +12895,8 @@
     "tests.test_history",
     "tests.test_lab",
     "tests.test_preferences",
-    "tests.test_usage"
+    "tests.test_usage",
+    "tests.test_voice"
    ]
   },
   "interview_app.db:utcnow": {
@@ -13091,9 +13779,9 @@
   },
   "interview_app.history:ItemMean": {
    "doc": "",
-   "end_line": 57,
+   "end_line": 58,
    "kind": "class",
-   "line": 53,
+   "line": 54,
    "module": "interview_app.history",
    "name": "ItemMean",
    "qualname": "ItemMean",
@@ -13102,9 +13790,9 @@
   },
   "interview_app.history:Progress": {
    "doc": "",
-   "end_line": 76,
+   "end_line": 77,
    "kind": "class",
-   "line": 72,
+   "line": 73,
    "module": "interview_app.history",
    "name": "Progress",
    "qualname": "Progress",
@@ -13113,9 +13801,9 @@
   },
   "interview_app.history:RecurringImprovement": {
    "doc": "",
-   "end_line": 69,
+   "end_line": 70,
    "kind": "class",
-   "line": 67,
+   "line": 68,
    "module": "interview_app.history",
    "name": "RecurringImprovement",
    "qualname": "RecurringImprovement",
@@ -13124,9 +13812,9 @@
   },
   "interview_app.history:RequirementHistory": {
    "doc": "",
-   "end_line": 64,
+   "end_line": 65,
    "kind": "class",
-   "line": 60,
+   "line": 61,
    "module": "interview_app.history",
    "name": "RequirementHistory",
    "qualname": "RequirementHistory",
@@ -13135,9 +13823,9 @@
   },
   "interview_app.history:SessionSummary": {
    "doc": "",
-   "end_line": 50,
+   "end_line": 51,
    "kind": "class",
-   "line": 31,
+   "line": 32,
    "module": "interview_app.history",
    "name": "SessionSummary",
    "qualname": "SessionSummary",
@@ -13157,7 +13845,7 @@
     ]
    },
    "doc": "",
-   "end_line": 177,
+   "end_line": 178,
    "externals": [
     "Report.model_validate_json",
     "db.exec",
@@ -13170,7 +13858,7 @@
     "sqlmodel.select().join().where().order_by"
    ],
    "kind": "function",
-   "line": 164,
+   "line": 165,
    "module": "interview_app.history",
    "name": "_reports_oldest_first",
    "qualname": "_reports_oldest_first",
@@ -13183,7 +13871,7 @@
     ]
    },
    "doc": "",
-   "end_line": 85,
+   "end_line": 86,
    "externals": [
     "sqlmodel.col",
     "sqlmodel.col().not_in",
@@ -13192,7 +13880,7 @@
     "sqlmodel.select().where().where().where"
    ],
    "kind": "function",
-   "line": 79,
+   "line": 80,
    "module": "interview_app.history",
    "name": "_visible_sessions",
    "qualname": "_visible_sessions",
@@ -13205,8 +13893,8 @@
      "read"
     ]
    },
-   "doc": "Delete one interview. The database cascades to its turns and evaluation.",
-   "end_line": 263,
+   "doc": "Delete one interview. The database cascades to its turns, evaluation and audio rows; the audio files are removed from disk here.",
+   "end_line": 266,
    "externals": [
     "db.delete",
     "db.exec",
@@ -13215,13 +13903,14 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 248,
+   "line": 249,
    "module": "interview_app.history",
    "name": "delete_session",
    "qualname": "delete_session",
-   "signature": "delete_session(engine: Engine, user_id: int, session_id: int) -> bool",
+   "signature": "delete_session(engine: Engine, user_id: int, session_id: int, settings: Settings | None=None) -> bool",
    "tested_by": [
-    "tests.test_history"
+    "tests.test_history",
+    "tests.test_voice"
    ]
   },
   "interview_app.history:list_sessions": {
@@ -13237,7 +13926,7 @@
     ]
    },
    "doc": "The user's interviews, newest first.",
-   "end_line": 152,
+   "end_line": 153,
    "externals": [
     "SessionConfig.model_validate_json",
     "collections.defaultdict",
@@ -13254,7 +13943,7 @@
     "sqlmodel.select().where().where().order_by"
    ],
    "kind": "function",
-   "line": 88,
+   "line": 89,
    "module": "interview_app.history",
    "name": "list_sessions",
    "qualname": "list_sessions",
@@ -13271,7 +13960,7 @@
     ]
    },
    "doc": "The stored report of one session, read straight from the DB (History never calls the judge).",
-   "end_line": 161,
+   "end_line": 162,
    "externals": [
     "Report.model_validate_json",
     "db.exec",
@@ -13280,7 +13969,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 155,
+   "line": 156,
    "module": "interview_app.history",
    "name": "load_report",
    "qualname": "load_report",
@@ -13291,7 +13980,7 @@
   },
   "interview_app.history:progress": {
    "doc": "How one application's interviews developed over time.",
-   "end_line": 245,
+   "end_line": 246,
    "externals": [
     "collections.Counter",
     "collections.Counter().most_common",
@@ -13300,7 +13989,7 @@
     "collections.defaultdict().items"
    ],
    "kind": "function",
-   "line": 180,
+   "line": 181,
    "module": "interview_app.history",
    "name": "progress",
    "qualname": "progress",
@@ -14181,9 +14870,9 @@
   },
   "interview_app.interview.persona:Persona": {
    "doc": "",
-   "end_line": 170,
+   "end_line": 173,
    "kind": "class",
-   "line": 164,
+   "line": 167,
    "module": "interview_app.interview.persona",
    "name": "Persona",
    "qualname": "Persona",
@@ -14213,7 +14902,7 @@
   },
   "interview_app.interview.persona:SessionConfig": {
    "doc": "",
-   "end_line": 156,
+   "end_line": 159,
    "kind": "class",
    "line": 138,
    "module": "interview_app.interview.persona",
@@ -14229,7 +14918,8 @@
     "tests.test_history",
     "tests.test_lab",
     "tests.test_preferences",
-    "tests.test_prompting"
+    "tests.test_prompting",
+    "tests.test_voice"
    ]
   },
   "interview_app.interview.persona:SessionConfig.max_followups": {
@@ -14238,9 +14928,9 @@
     "property"
    ],
    "doc": "",
-   "end_line": 156,
+   "end_line": 159,
    "kind": "property",
-   "line": 155,
+   "line": 158,
    "module": "interview_app.interview.persona",
    "name": "max_followups",
    "qualname": "SessionConfig.max_followups",
@@ -14248,9 +14938,9 @@
   },
   "interview_app.interview.persona:derive_persona": {
    "doc": "Type sets who the interviewer is; difficulty adjusts the tone; an override wins over both.",
-   "end_line": 245,
+   "end_line": 248,
    "kind": "function",
-   "line": 232,
+   "line": 235,
    "module": "interview_app.interview.persona",
    "name": "derive_persona",
    "qualname": "derive_persona",
@@ -14262,16 +14952,16 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 234,
+     "line": 237,
      "text": "_BASE[config.interview_type].model_copy"
     }
    ]
   },
   "interview_app.interview.persona:length_channel_label": {
    "doc": "'Quick · Voice': the session's Length and Channel in words, for badges and history rows.",
-   "end_line": 161,
+   "end_line": 164,
    "kind": "function",
-   "line": 159,
+   "line": 162,
    "module": "interview_app.interview.persona",
    "name": "length_channel_label",
    "qualname": "length_channel_label",
@@ -15194,10 +15884,12 @@
    "qualname": "make_db_recorder",
    "signature": "make_db_recorder(engine: Engine, user_id: int | None=None, session_id: int | None=None) -> Recorder",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_db",
     "tests.test_engine",
     "tests.test_evaluation",
-    "tests.test_lab"
+    "tests.test_lab",
+    "tests.test_voice"
    ]
   },
   "interview_app.llm.calllog:make_db_recorder.record": {
@@ -15224,9 +15916,9 @@
     "dataclass"
    ],
    "doc": "What one call cost. Passed to the `recorder`, which usually writes an LLMCall row.",
-   "end_line": 39,
+   "end_line": 41,
    "kind": "class",
-   "line": 29,
+   "line": 31,
    "module": "interview_app.llm.client",
    "name": "CallRecord",
    "qualname": "CallRecord",
@@ -15242,9 +15934,9 @@
     "dataclass"
    ],
    "doc": "",
-   "end_line": 47,
+   "end_line": 49,
    "kind": "class",
-   "line": 43,
+   "line": 45,
    "module": "interview_app.llm.client",
    "name": "ChatResult",
    "qualname": "ChatResult",
@@ -15252,9 +15944,9 @@
   },
   "interview_app.llm.client:LLMClient": {
    "doc": "",
-   "end_line": 198,
+   "end_line": 295,
    "kind": "class",
-   "line": 66,
+   "line": 103,
    "module": "interview_app.llm.client",
    "name": "LLMClient",
    "qualname": "LLMClient",
@@ -15267,19 +15959,20 @@
     "tests.test_live_openrouter",
     "tests.test_llm_client",
     "tests.test_pricing",
-    "tests.test_prompting"
+    "tests.test_prompting",
+    "tests.test_voice"
    ]
   },
   "interview_app.llm.client:LLMClient.__init__": {
    "class": "interview_app.llm.client:LLMClient",
    "doc": "",
-   "end_line": 85,
+   "end_line": 122,
    "externals": [
     "openai.OpenAI",
     "pydantic.SecretStr.get_secret_value"
    ],
    "kind": "method",
-   "line": 67,
+   "line": 104,
    "module": "interview_app.llm.client",
    "name": "__init__",
    "qualname": "LLMClient.__init__",
@@ -15288,25 +15981,39 @@
   "interview_app.llm.client:LLMClient._cost": {
    "class": "interview_app.llm.client:LLMClient",
    "doc": "",
-   "end_line": 159,
+   "end_line": 196,
    "kind": "method",
-   "line": 148,
+   "line": 185,
    "module": "interview_app.llm.client",
    "name": "_cost",
    "qualname": "LLMClient._cost",
    "signature": "_cost(self, usage: Any, model: str, prompt_tokens: int, completion_tokens: int) -> float"
   },
+  "interview_app.llm.client:LLMClient._speech_tokens": {
+   "class": "interview_app.llm.client:LLMClient",
+   "doc": "ESTIMATED token counts for a speech call: the response reports no usage at all.",
+   "end_line": 295,
+   "externals": [
+    "math.ceil"
+   ],
+   "kind": "method",
+   "line": 284,
+   "module": "interview_app.llm.client",
+   "name": "_speech_tokens",
+   "qualname": "LLMClient._speech_tokens",
+   "signature": "_speech_tokens(self, text: str, audio: bytes, content_type: str) -> tuple[int, int]"
+  },
   "interview_app.llm.client:LLMClient.chat": {
    "class": "interview_app.llm.client:LLMClient",
    "doc": "Send one chat request. `role` names the app role (interviewer, judge...) for the call log.",
-   "end_line": 146,
+   "end_line": 183,
    "externals": [
     "logging.getLogger().warning",
     "openai.OpenAI().chat.completions.create",
     "time.perf_counter"
    ],
    "kind": "method",
-   "line": 87,
+   "line": 124,
    "module": "interview_app.llm.client",
    "name": "chat",
    "qualname": "LLMClient.chat",
@@ -15317,12 +16024,12 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 119,
+     "line": 156,
      "text": "self.recorder"
     },
     {
      "candidates": [],
-     "line": 139,
+     "line": 176,
      "text": "self.recorder"
     }
    ]
@@ -15330,9 +16037,9 @@
   "interview_app.llm.client:LLMClient.chat_json": {
    "class": "interview_app.llm.client:LLMClient",
    "doc": "Ask for JSON matching `schema` (a pydantic model) and return the validated object.",
-   "end_line": 198,
+   "end_line": 235,
    "kind": "method",
-   "line": 161,
+   "line": 198,
    "message_roles": [
     "assistant",
     "user"
@@ -15344,21 +16051,55 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 173,
+     "line": 210,
      "text": "schema.model_json_schema"
     },
     {
      "candidates": [],
-     "line": 181,
+     "line": 218,
      "text": "schema.model_validate_json"
+    }
+   ]
+  },
+  "interview_app.llm.client:LLMClient.speech": {
+   "class": "interview_app.llm.client:LLMClient",
+   "doc": "Text-to-speech via OpenRouter's OpenAI-compatible `/audio/speech`, recorded like a chat call.",
+   "end_line": 282,
+   "externals": [
+    "logging.getLogger().info",
+    "logging.getLogger().warning",
+    "openai.OpenAI().audio.speech.with_raw_response.create",
+    "openai.OpenAI().audio.speech.with_raw_response.create().headers.get",
+    "time.perf_counter"
+   ],
+   "kind": "method",
+   "line": 237,
+   "module": "interview_app.llm.client",
+   "name": "speech",
+   "qualname": "LLMClient.speech",
+   "signature": "speech(self, role: str, text: str, *, model: str, voice: str) -> SpeechResult",
+   "tested_by": [
+    "tests.test_live_openrouter",
+    "tests.test_voice"
+   ],
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 251,
+     "text": "self.recorder"
+    },
+    {
+     "candidates": [],
+     "line": 271,
+     "text": "self.recorder"
     }
    ]
   },
   "interview_app.llm.client:LLMError": {
    "doc": "A model call failed after retries, or its output could not be used.",
-   "end_line": 51,
+   "end_line": 88,
    "kind": "class",
-   "line": 50,
+   "line": 87,
    "module": "interview_app.llm.client",
    "name": "LLMError",
    "qualname": "LLMError",
@@ -15368,15 +16109,60 @@
     "tests.test_guards"
    ]
   },
+  "interview_app.llm.client:SpeechResult": {
+   "decorators": [
+    "dataclass"
+   ],
+   "doc": "Audio from the text-to-speech endpoint, exactly as the provider sent it.",
+   "end_line": 59,
+   "kind": "class",
+   "line": 53,
+   "module": "interview_app.llm.client",
+   "name": "SpeechResult",
+   "qualname": "SpeechResult",
+   "signature": "class SpeechResult"
+  },
   "interview_app.llm.client:_strip_code_fence": {
    "doc": "",
-   "end_line": 63,
+   "end_line": 100,
    "kind": "function",
-   "line": 57,
+   "line": 94,
    "module": "interview_app.llm.client",
    "name": "_strip_code_fence",
    "qualname": "_strip_code_fence",
    "signature": "_strip_code_fence(text: str) -> str"
+  },
+  "interview_app.llm.client:pcm_format": {
+   "doc": "`audio/pcm;rate=24000;channels=1` -> (24000, 1). None for any other audio type.",
+   "end_line": 75,
+   "externals": [
+    "re.compile().search",
+    "re.compile().search().group"
+   ],
+   "kind": "function",
+   "line": 66,
+   "module": "interview_app.llm.client",
+   "name": "pcm_format",
+   "qualname": "pcm_format",
+   "signature": "pcm_format(content_type: str) -> tuple[int, int] | None",
+   "tested_by": [
+    "tests.test_live_openrouter",
+    "tests.test_voice"
+   ]
+  },
+  "interview_app.llm.client:pcm_seconds": {
+   "doc": "Duration of 16-bit PCM audio (2 bytes per sample per channel); 0.0 for other formats.",
+   "end_line": 84,
+   "kind": "function",
+   "line": 78,
+   "module": "interview_app.llm.client",
+   "name": "pcm_seconds",
+   "qualname": "pcm_seconds",
+   "signature": "pcm_seconds(audio: bytes, content_type: str) -> float",
+   "tested_by": [
+    "tests.test_live_openrouter",
+    "tests.test_voice"
+   ]
   },
   "interview_app.llm.decide:ChoiceAnswer": {
    "doc": "",
@@ -15651,7 +16437,8 @@
    "tested_by": [
     "tests.test_app_ui",
     "tests.test_live_openrouter",
-    "tests.test_pricing"
+    "tests.test_pricing",
+    "tests.test_voice"
    ]
   },
   "interview_app.llm.pricing:PriceCatalog.__init__": {
@@ -15866,7 +16653,7 @@
   },
   "interview_app.preferences:Preferences": {
    "doc": "",
-   "end_line": 51,
+   "end_line": 53,
    "kind": "class",
    "line": 31,
    "module": "interview_app.preferences",
@@ -15876,14 +16663,15 @@
    "signature": "class Preferences(BaseModel)",
    "tested_by": [
     "tests.test_app_ui",
-    "tests.test_preferences"
+    "tests.test_preferences",
+    "tests.test_voice"
    ]
   },
   "interview_app.preferences:judge_model": {
    "doc": "The model the final LLM judge should use for this user.",
-   "end_line": 126,
+   "end_line": 142,
    "kind": "function",
-   "line": 124,
+   "line": 140,
    "module": "interview_app.preferences",
    "name": "judge_model",
    "qualname": "judge_model",
@@ -15899,7 +16687,7 @@
     ]
    },
    "doc": "The user's saved preferences, or the defaults if nothing (usable) is saved.",
-   "end_line": 67,
+   "end_line": 69,
    "externals": [
     "Preferences.model_validate_json",
     "db.exec",
@@ -15909,7 +16697,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 54,
+   "line": 56,
    "module": "interview_app.preferences",
    "name": "load_preferences",
    "qualname": "load_preferences",
@@ -15921,9 +16709,9 @@
   },
   "interview_app.preferences:preset_main_questions": {
    "doc": "The question count of a preset Length; None for Custom (the slider decides).",
-   "end_line": 90,
+   "end_line": 92,
    "kind": "function",
-   "line": 82,
+   "line": 84,
    "module": "interview_app.preferences",
    "name": "preset_main_questions",
    "qualname": "preset_main_questions",
@@ -15940,7 +16728,7 @@
     ]
    },
    "doc": "Insert or replace the user's one preferences row.",
-   "end_line": 79,
+   "end_line": 81,
    "externals": [
     "Preferences.model_dump_json",
     "db.add",
@@ -15950,7 +16738,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 70,
+   "line": 72,
    "module": "interview_app.preferences",
    "name": "save_preferences",
    "qualname": "save_preferences",
@@ -15962,18 +16750,19 @@
   },
   "interview_app.preferences:to_session_config": {
    "doc": "Build a SessionConfig from saved preferences; `overrides` are what the start form changed.",
-   "end_line": 121,
+   "end_line": 137,
    "externals": [
     "Preferences.interviewer.model_copy"
    ],
    "kind": "function",
-   "line": 93,
+   "line": 95,
    "module": "interview_app.preferences",
    "name": "to_session_config",
    "qualname": "to_session_config",
-   "signature": "to_session_config(prefs: Preferences, presets: LengthPresets | None=None, **overrides) -> SessionConfig",
+   "signature": "to_session_config(prefs: Preferences, presets: LengthPresets | None=None, tts: TTSSettings | None=None, **overrides) -> SessionConfig",
    "tested_by": [
-    "tests.test_preferences"
+    "tests.test_preferences",
+    "tests.test_voice"
    ]
   },
   "interview_app.security.injection:<module>": {
@@ -16408,6 +17197,218 @@
     "tests.test_users_demo"
    ]
   },
+  "interview_app.voice:SpeechOutcome": {
+   "decorators": [
+    "dataclass"
+   ],
+   "doc": "",
+   "end_line": 55,
+   "kind": "class",
+   "line": 52,
+   "module": "interview_app.voice",
+   "name": "SpeechOutcome",
+   "qualname": "SpeechOutcome",
+   "signature": "class SpeechOutcome"
+  },
+  "interview_app.voice:SpeechStatus": {
+   "doc": "",
+   "end_line": 48,
+   "kind": "class",
+   "line": 43,
+   "module": "interview_app.voice",
+   "name": "SpeechStatus",
+   "qualname": "SpeechStatus",
+   "signature": "class SpeechStatus(StrEnum)"
+  },
+  "interview_app.voice:_session_cost": {
+   "db": {
+    "LLMCall": [
+     "read"
+    ]
+   },
+   "doc": "",
+   "end_line": 117,
+   "externals": [
+    "db.exec",
+    "db.exec().one",
+    "sqlmodel.func.sum",
+    "sqlmodel.select",
+    "sqlmodel.select().where"
+   ],
+   "kind": "function",
+   "line": 112,
+   "module": "interview_app.voice",
+   "name": "_session_cost",
+   "qualname": "_session_cost",
+   "signature": "_session_cost(engine: Engine, session_id: int) -> float"
+  },
+  "interview_app.voice:_speak": {
+   "db": {
+    "InterviewSession": [
+     "read"
+    ],
+    "Turn": [
+     "read"
+    ],
+    "TurnAudio": [
+     "write"
+    ]
+   },
+   "doc": "",
+   "end_line": 224,
+   "externals": [
+    "SessionConfig.model_validate_json",
+    "db.add",
+    "db.exec",
+    "db.exec().first",
+    "logging.getLogger().info",
+    "logging.getLogger().warning",
+    "pathlib.Path.relative_to",
+    "sqlmodel.select",
+    "sqlmodel.select().where"
+   ],
+   "kind": "function",
+   "line": 151,
+   "model_roles": [
+    "tts"
+   ],
+   "module": "interview_app.voice",
+   "name": "_speak",
+   "qualname": "_speak",
+   "signature": "_speak(engine: Engine, settings: Settings, make_llm: Callable[[int, int | None], LLMClient], user_id: int, session_id: int, turn_idx: int) -> SpeechOutcome",
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 190,
+     "text": "make_llm"
+    }
+   ]
+  },
+  "interview_app.voice:_write_private": {
+   "doc": "",
+   "end_line": 127,
+   "externals": [
+    "os.fdopen",
+    "os.fdopen().write",
+    "os.open",
+    "pathlib.Path.parent.mkdir",
+    "pathlib.Path.with_suffix",
+    "pathlib.Path.with_suffix().replace"
+   ],
+   "kind": "function",
+   "line": 120,
+   "module": "interview_app.voice",
+   "name": "_write_private",
+   "qualname": "_write_private",
+   "signature": "_write_private(path: Path, data: bytes) -> None"
+  },
+  "interview_app.voice:delete_session_audio": {
+   "doc": "Remove a session's audio files. Its TurnAudio rows go with the session (ON DELETE CASCADE).",
+   "end_line": 232,
+   "externals": [
+    "logging.getLogger().info",
+    "pathlib.Path.exists",
+    "shutil.rmtree"
+   ],
+   "kind": "function",
+   "line": 227,
+   "module": "interview_app.voice",
+   "name": "delete_session_audio",
+   "qualname": "delete_session_audio",
+   "signature": "delete_session_audio(settings: Settings, user_id: int, session_id: int) -> None"
+  },
+  "interview_app.voice:pcm_to_wav": {
+   "doc": "Wrap raw little-endian PCM in a WAV header, so a browser's audio player can play it.",
+   "end_line": 74,
+   "externals": [
+    "io.BytesIO",
+    "io.BytesIO().getvalue",
+    "wave.open",
+    "wave.open().setframerate",
+    "wave.open().setnchannels",
+    "wave.open().setsampwidth",
+    "wave.open().writeframes"
+   ],
+   "kind": "function",
+   "line": 62,
+   "module": "interview_app.voice",
+   "name": "pcm_to_wav",
+   "qualname": "pcm_to_wav",
+   "signature": "pcm_to_wav(pcm: bytes, rate: int, channels: int=1, sample_width: int=2) -> bytes",
+   "tested_by": [
+    "tests.test_voice"
+   ]
+  },
+  "interview_app.voice:session_audio_dir": {
+   "doc": "",
+   "end_line": 90,
+   "kind": "function",
+   "line": 88,
+   "module": "interview_app.voice",
+   "name": "session_audio_dir",
+   "qualname": "session_audio_dir",
+   "signature": "session_audio_dir(settings: Settings, user_id: int, session_id: int) -> Path"
+  },
+  "interview_app.voice:session_voice": {
+   "doc": "The session's voice: the one stored in its config, else the persona's voice from config.",
+   "end_line": 85,
+   "kind": "function",
+   "line": 77,
+   "module": "interview_app.voice",
+   "name": "session_voice",
+   "qualname": "session_voice",
+   "signature": "session_voice(config: SessionConfig, settings: Settings) -> str",
+   "tested_by": [
+    "tests.test_voice"
+   ]
+  },
+  "interview_app.voice:speak": {
+   "doc": "Return the audio of one interviewer turn, generating and storing it on the first call.",
+   "end_line": 148,
+   "externals": [
+    "logging.getLogger().exception"
+   ],
+   "kind": "function",
+   "line": 130,
+   "module": "interview_app.voice",
+   "name": "speak",
+   "qualname": "speak",
+   "signature": "speak(engine: Engine, settings: Settings, make_llm: Callable[[int, int | None], LLMClient], user_id: int, session_id: int, turn_idx: int) -> SpeechOutcome",
+   "tested_by": [
+    "tests.test_voice"
+   ]
+  },
+  "interview_app.voice:stored_audio": {
+   "db": {
+    "TurnAudio": [
+     "read"
+    ]
+   },
+   "doc": "The stored WAV file for a turn, or None. Reads only: never calls a model.",
+   "end_line": 109,
+   "externals": [
+    "db.exec",
+    "db.exec().first",
+    "sqlmodel.select",
+    "sqlmodel.select().where"
+   ],
+   "kind": "function",
+   "line": 93,
+   "module": "interview_app.voice",
+   "name": "stored_audio",
+   "qualname": "stored_audio",
+   "signature": "stored_audio(engine: Engine, settings: Settings, user_id: int, session_id: int, turn_idx: int) -> Path | None",
+   "tested_by": [
+    "tests.test_voice"
+   ],
+   "unresolved": [
+    {
+     "candidates": [],
+     "line": 109,
+     "text": "path.is_file"
+    }
+   ]
+  },
   "lab.compare_prompts:<module>": {
    "doc": "",
    "end_line": 1,
@@ -16602,6 +17603,7 @@
    "line": 200,
    "path": "src/interview_app/db.py",
    "readers": [
+    "interview_app.applications:delete_application",
     "interview_app.evaluation.service:evaluate_session",
     "interview_app.history:_reports_oldest_first",
     "interview_app.history:_visible_sessions",
@@ -16610,7 +17612,8 @@
     "interview_app.interview.engine:_set_status",
     "interview_app.interview.engine:active_session",
     "interview_app.interview.engine:start_interview",
-    "interview_app.lab.judge:load_session"
+    "interview_app.lab.judge:load_session",
+    "interview_app.voice:_speak"
    ],
    "symbol": "interview_app.db:InterviewSession",
    "writers": [
@@ -16636,7 +17639,8 @@
     "interview_app.lab.compare:last_call_id",
     "interview_app.lab.compare:spend_since",
     "interview_app.lab.judge:load_session",
-    "interview_app.usage:_grouped"
+    "interview_app.usage:_grouped",
+    "interview_app.voice:_session_cost"
    ],
    "symbol": "interview_app.db:LLMCall",
    "writers": [
@@ -16665,12 +17669,38 @@
     "interview_app.interview.engine:_load_all",
     "interview_app.interview.engine:_next_idx",
     "interview_app.interview.engine:_store_scored_answer",
-    "interview_app.lab.judge:load_session"
+    "interview_app.lab.judge:load_session",
+    "interview_app.voice:_speak"
    ],
    "symbol": "interview_app.db:Turn",
    "writers": [
     "interview_app.interview.engine:_add_turn",
     "interview_app.interview.engine:_store_scored_answer"
+   ]
+  },
+  "TurnAudio": {
+   "deleters": [],
+   "doc": "The spoken version of one interviewer turn in a Voice session (see voice.py).",
+   "foreign_keys": [
+    {
+     "cascade": true,
+     "field": "session_id",
+     "references": "interviewsession.id"
+    },
+    {
+     "cascade": false,
+     "field": "user_id",
+     "references": "user.id"
+    }
+   ],
+   "line": 278,
+   "path": "src/interview_app/db.py",
+   "readers": [
+    "interview_app.voice:stored_audio"
+   ],
+   "symbol": "interview_app.db:TurnAudio",
+   "writers": [
+    "interview_app.voice:_speak"
    ]
   },
   "User": {
@@ -17032,6 +18062,18 @@
    "comment": "",
    "field": "quick_max_followups",
    "line": 125
+  },
+  {
+   "class": "TTSSettings",
+   "comment": "",
+   "field": "voices",
+   "line": 158
+  },
+  {
+   "class": "TTSSettings",
+   "comment": "for an interview type missing from `voices`",
+   "field": "default_voice",
+   "line": 166
   }
  ],
  "unreferenced": []

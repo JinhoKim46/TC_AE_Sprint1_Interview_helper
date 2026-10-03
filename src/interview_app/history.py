@@ -13,12 +13,13 @@ from pydantic import BaseModel
 from sqlalchemy.engine import Engine
 from sqlmodel import col, func, select
 
-from interview_app.config import get_settings
+from interview_app.config import Settings, get_settings
 from interview_app.db import Evaluation, InterviewSession, LLMCall, Turn, session_scope
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
 from interview_app.interview.engine import TurnView, compute_progress
 from interview_app.interview.persona import Channel, Length, SessionConfig
+from interview_app.voice import delete_session_audio
 
 # A session that never got going (still preparing, or the plan call failed) has no transcript worth
 # showing, so History hides it. "active" stays visible: it is a real, resumable interview.
@@ -245,8 +246,9 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     )
 
 
-def delete_session(engine: Engine, user_id: int, session_id: int) -> bool:
-    """Delete one interview. The database cascades to its turns and evaluation.
+def delete_session(engine: Engine, user_id: int, session_id: int, settings: Settings | None = None) -> bool:
+    """Delete one interview. The database cascades to its turns, evaluation and audio rows; the audio
+    files are removed from disk here.
 
     LLMCall rows are kept on purpose: they have no foreign key, and they are the spend history
     (the Settings page total must not drop because an old interview was tidied away).
@@ -260,4 +262,5 @@ def delete_session(engine: Engine, user_id: int, session_id: int) -> bool:
         if row is None:
             return False
         s.delete(row)
+    delete_session_audio(settings or get_settings(), user_id, session_id)
     return True
