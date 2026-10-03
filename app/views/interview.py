@@ -6,7 +6,7 @@ page re-reads it on each rerun, so refreshing the browser resumes the interview 
 
 import streamlit as st
 from drill_ui import drill_offer
-from report_view import render_report
+from report_view import render_report, session_badge
 from ui_common import (
     CANDIDATE_AVATAR,
     INTERVIEWER_AVATAR,
@@ -25,14 +25,23 @@ from interview_app.evaluation.service import EvaluationError, evaluate_session
 from interview_app.history import load_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
+    CHANNEL_LABELS,
     DEFAULT_MAIN_QUESTIONS,
+    LENGTH_LABELS,
     TYPE_LABELS,
+    Channel,
     Difficulty,
     InterviewType,
+    Length,
     Mode,
 )
 from interview_app.interview.schemas import Stage
-from interview_app.preferences import judge_model, load_preferences, to_session_config
+from interview_app.preferences import (
+    judge_model,
+    load_preferences,
+    preset_main_questions,
+    to_session_config,
+)
 
 engine = get_engine()
 user_id = current_user_id()
@@ -51,6 +60,11 @@ STAGE_LABELS = {
     Stage.CANDIDATE_QUESTIONS: "Your questions for the interviewer",
     Stage.CLOSE: "Wrap-up",
 }
+LENGTH_HELP = (
+    "Quick: a short practice on the core questions. Full: the real interview. "
+    "Custom: pick the number of questions yourself."
+)
+CHANNEL_HELP = "Voice: the interviewer speaks each question. Text: you read them. Answers are always typed."
 DIFFICULTY_HELP = "Friendly: supportive, one follow-up per topic. Tough: probes gaps and assumptions harder."
 
 MODE_LABELS = {Mode.REALISTIC.value: "Realistic", Mode.COACHING.value: "Coaching"}
@@ -106,17 +120,44 @@ def start_form() -> None:
             format_func=str.capitalize,
             help=DIFFICULTY_HELP,
         )
-        # One key per interview type: each type keeps the user's choice when they switch back and forth,
-        # and a type not touched yet starts at its saved or usual length (like the Settings page's slider).
-        main_questions = kept_widget(
-            st.slider,
-            f"start_main_questions_{interview_type.value}",
-            slider_start(prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type]),
-            "Main questions (follow-ups come on top)",
-            limits.min_main_questions,
-            limits.max_main_questions,
-            help="Each main question opens a topic; the interviewer may ask follow-ups before moving on.",
+        col3, col4 = st.columns(2)
+        length = Length(
+            col3.segmented_control(
+                "Length",
+                options=[v.value for v in Length],
+                default=prefs.length.value,
+                format_func=lambda v: LENGTH_LABELS[Length(v)],
+                help=LENGTH_HELP,
+            )
+            # Clicking the selected segment again deselects it; fall back to the saved default.
+            or prefs.length
         )
+        channel = Channel(
+            col4.segmented_control(
+                "Channel",
+                options=[c.value for c in Channel],
+                default=prefs.channel.value,
+                format_func=lambda v: CHANNEL_LABELS[Channel(v)],
+                help=CHANNEL_HELP,
+            )
+            or prefs.channel
+        )
+        main_questions = None
+        if length == Length.CUSTOM:
+            # One key per interview type: each type keeps the user's choice when they switch back and
+            # forth, and a type not touched yet starts at its saved or usual length (like Settings).
+            main_questions = kept_widget(
+                st.slider,
+                f"start_main_questions_{interview_type.value}",
+                slider_start(prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type]),
+                "Main questions (follow-ups come on top)",
+                limits.min_main_questions,
+                limits.max_main_questions,
+                help="Each main question opens a topic; the interviewer may ask follow-ups before moving on.",
+            )
+        else:
+            count = preset_main_questions(length, get_settings().length_presets, interview_type)
+            st.caption(f"{LENGTH_LABELS[length]}: {count} main questions, follow-ups come on top.")
     with st.container(border=True):
         st.markdown("**3. Feedback style**")
         mode = st.radio(
@@ -136,6 +177,9 @@ def start_form() -> None:
             prefs,
             interview_type=interview_type,
             difficulty=Difficulty(difficulty or Difficulty.STANDARD),
+            length=length,
+            channel=channel,
+            # Only used for Custom: a preset length takes its count from config (to_session_config).
             main_questions=main_questions,
             mode=Mode(mode),
         )
@@ -294,7 +338,8 @@ def chat(view: eng.SessionView) -> None:
         f"**{safe_md(view.company, inline=True)}** — {safe_md(view.role, inline=True)}  \n"
         f":gray-badge[{TYPE_LABELS[view.config.interview_type]}] "
         f":gray-badge[{view.config.difficulty.value.capitalize()}] "
-        f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode]"
+        f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode] "
+        f"{session_badge(view.config)}"
     )
     st.caption(
         f"Your interviewer: {safe_md(persona.name, inline=True)}, {safe_md(persona.title, inline=True)}"
@@ -424,7 +469,7 @@ def feedback(view: eng.SessionView) -> None:
                 st.caption("Your interview is saved: press the button again to retry.")
                 return
             status.update(label="Report ready", state="complete", expanded=False)
-    render_report(report, get_settings().rubric_path)
+    render_report(report, get_settings().rubric_path, view.config)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
     drill_offer(view, report, key="drill-interview")
 

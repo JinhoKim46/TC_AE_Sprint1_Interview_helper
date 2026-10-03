@@ -1,20 +1,26 @@
 import logging
 
+import pytest
 from sqlmodel import select
 
-from interview_app.config import Settings
+from interview_app.config import LengthPresets, Settings
 from interview_app.db import User, UserPreferences, session_scope
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
+    Channel,
     Difficulty,
     InterviewType,
+    Length,
     LLMSettings,
     PromptVariant,
+    SessionConfig,
+    length_channel_label,
 )
 from interview_app.preferences import (
     Preferences,
     judge_model,
     load_preferences,
+    preset_main_questions,
     save_preferences,
     to_session_config,
 )
@@ -89,6 +95,7 @@ def test_to_session_config_uses_prefs_and_overrides():
         interview_type=InterviewType.RECRUITER_SCREEN,
         prompt_variant=PromptVariant.P5_SELF_CRITIQUE,
         interviewer=LLMSettings(model="minimax/minimax-m2.7", reasoning_effort="high"),
+        length=Length.CUSTOM,
         main_questions=4,
     )
     config = to_session_config(prefs)
@@ -104,8 +111,74 @@ def test_to_session_config_uses_prefs_and_overrides():
 
 
 def test_to_session_config_uses_type_length_when_unset():
-    config = to_session_config(Preferences(), interview_type=InterviewType.ML_CASE)
+    config = to_session_config(Preferences(length=Length.CUSTOM), interview_type=InterviewType.ML_CASE)
     assert config.main_questions == DEFAULT_MAIN_QUESTIONS[InterviewType.ML_CASE]
+
+
+# --- Length and Channel ---------------------------------------------------------------------------
+
+
+def test_new_preferences_default_to_standard_voice():
+    prefs = Preferences()
+    assert prefs.length == Length.STANDARD and prefs.channel == Channel.VOICE
+
+
+def test_preferences_saved_before_length_existed_load_with_the_new_defaults(engine):
+    uid = add_user(engine, "alex")
+    with session_scope(engine) as s:
+        s.add(UserPreferences(user_id=uid, prefs_json='{"main_questions": 6, "difficulty": "tough"}'))
+    prefs = load_preferences(engine, uid)
+    assert prefs.main_questions == 6 and prefs.length == Length.STANDARD and prefs.channel == Channel.VOICE
+
+
+def test_length_and_channel_round_trip(engine):
+    uid = add_user(engine, "alex")
+    save_preferences(engine, uid, Preferences(length=Length.QUICK, channel=Channel.TEXT))
+    prefs = load_preferences(engine, uid)
+    assert prefs.length == Length.QUICK and prefs.channel == Channel.TEXT
+
+
+def test_sessions_stored_before_length_existed_load_as_full_text():
+    old = '{"interview_type": "behavioral", "difficulty": "tough", "main_questions": 6}'
+    config = SessionConfig.model_validate_json(old)
+    assert config.length == Length.FULL and config.channel == Channel.TEXT
+    assert config.main_questions == 6  # the stored count stays the truth for an old session
+
+
+@pytest.mark.parametrize(("length", "expected"), [(Length.QUICK, 3), (Length.STANDARD, 5), (Length.FULL, 4)])
+def test_preset_lengths_take_their_question_count_from_config(length, expected):
+    # The saved custom count is ignored for a preset length; Full keeps the type's realistic count
+    # (4 for an ML case), so it is exactly today's interview.
+    prefs = Preferences(length=length, main_questions=11)
+    config = to_session_config(prefs, presets=LengthPresets(), interview_type=InterviewType.ML_CASE)
+    assert config.length == length and config.main_questions == expected
+
+
+def test_an_override_count_is_ignored_unless_length_is_custom():
+    config = to_session_config(Preferences(), presets=LengthPresets(), length=Length.QUICK, main_questions=9)
+    assert config.main_questions == 3
+    config = to_session_config(Preferences(), presets=LengthPresets(), length=Length.CUSTOM, main_questions=9)
+    assert config.main_questions == 9
+
+
+def test_presets_come_from_the_given_config_group():
+    presets = LengthPresets(quick=2, standard=6)
+    assert to_session_config(Preferences(length=Length.STANDARD), presets=presets).main_questions == 6
+    assert preset_main_questions(Length.QUICK, presets, InterviewType.HIRING_MANAGER) == 2
+    assert preset_main_questions(Length.FULL, presets, InterviewType.FINAL_ROUND) == 8
+    assert preset_main_questions(Length.CUSTOM, presets, InterviewType.HIRING_MANAGER) is None
+
+
+def test_channel_comes_from_prefs_unless_the_form_changes_it():
+    prefs = Preferences(channel=Channel.TEXT)
+    assert to_session_config(prefs).channel == Channel.TEXT
+    assert to_session_config(prefs, channel=Channel.VOICE).channel == Channel.VOICE
+
+
+def test_length_channel_label():
+    config = SessionConfig(length=Length.QUICK, channel=Channel.VOICE)
+    assert length_channel_label(config) == "Quick · Voice"
+    assert length_channel_label(SessionConfig()) == "Full · Text"
 
 
 def test_judge_model_falls_back_to_settings():

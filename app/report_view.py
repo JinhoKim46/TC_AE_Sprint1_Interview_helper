@@ -5,6 +5,7 @@ from ui_common import safe_md, short
 
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
+from interview_app.interview.persona import Channel, SessionConfig, length_channel_label
 
 # Above this spread between judge runs, the overall score (0-100) is flagged as approximate. This is not a
 # copy of rubric.json's `unstable_spread` (2 levels on one item's 1-5 scale); it measures whole runs.
@@ -47,7 +48,19 @@ def band_badge(band: str | None) -> str:
     return f":{BAND_COLORS[band]}-badge[{icon} {label}]"
 
 
-def render_report(report: Report, rubric_path) -> None:
+# The icon tells the channel apart without relying on the badge colour.
+CHANNEL_ICONS = {Channel.TEXT: ":material/chat:", Channel.VOICE: ":material/record_voice_over:"}
+
+
+def session_badge(config: SessionConfig) -> str:
+    """The session's Length and Channel as one badge, e.g. "Quick · Voice" (interview screen, History,
+    report header). Static text only (enum labels), so it is safe in markdown as it is."""
+    return f":blue-badge[{CHANNEL_ICONS[config.channel]} {length_channel_label(config)}]"
+
+
+def render_report(report: Report, rubric_path, config: SessionConfig | None = None) -> None:
+    """`config`: the interviewed session's settings, shown as a Length · Channel badge in the header so
+    the reader knows what kind of session the score came from (a Quick score is not a Full one)."""
     rubric = load_rubric(rubric_path)
     names = {k: v["name"] for k, v in {**rubric.exchange_items, **rubric.session_items}.items()}
 
@@ -56,7 +69,10 @@ def render_report(report: Report, rubric_path) -> None:
         col1, col2 = st.columns([1, 3], vertical_alignment="center")
         col1.metric("Overall", f"{report.overall:.0f} / 100" if report.overall is not None else "—")
         with col2:
-            st.markdown(band_badge(report.band) or ":gray-badge[:material/help: No overall score]")
+            badges = band_badge(report.band) or ":gray-badge[:material/help: No overall score]"
+            if config is not None:
+                badges += f" {session_badge(config)}"
+            st.markdown(badges)
             st.markdown(safe_md(report.summary))
         runs = [r for r in report.runs if r is not None]
         if len(runs) > 1:

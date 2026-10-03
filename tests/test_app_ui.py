@@ -36,6 +36,11 @@ def temp_database(tmp_path: Path, monkeypatch):
         sys.modules.pop(name, None)
 
 
+def group(at: AppTest, label: str):
+    """A segmented control (AppTest calls them button groups) by its label."""
+    return next(g for g in at.button_group if g.label == label)
+
+
 def run_page(name: str, timeout: float = 30) -> AppTest:
     """Run one page directly (no navigation context)."""
     at = AppTest.from_file(str(APP_DIR / "views" / name), default_timeout=timeout)
@@ -275,14 +280,15 @@ def test_settings_page_renders_and_hides_developer_settings(offline_catalog):
 def test_settings_page_saves_preferences(offline_catalog):
     import ui_common
 
-    from interview_app.interview.persona import InterviewType, PromptVariant
+    from interview_app.interview.persona import Channel, InterviewType, Length, PromptVariant
     from interview_app.preferences import load_preferences
 
     # Longer timeout: the first st.dataframe imports pyarrow, which is slow on a cold start.
     at = run_page("settings.py", timeout=90)
     at.selectbox[0].set_value(InterviewType.BEHAVIORAL.value)
-    at.checkbox[0].uncheck().run()  # pick an explicit number of questions
+    group(at, "Default length").set_value("custom").run()  # pick an explicit number of questions
     at.slider(key="pref_main_questions").set_value(5)
+    group(at, "Default channel").set_value("text")
     at.toggle[0].set_value(True).run()
     at.radio(key="pref_mode").set_value("coaching")
     next(r for r in at.radio if r.label == "Interviewer system prompt").set_value(
@@ -297,6 +303,7 @@ def test_settings_page_saves_preferences(offline_catalog):
     prefs = load_preferences(engine, ui_common.ensure_local_user(engine))
     assert prefs.interview_type == InterviewType.BEHAVIORAL
     assert prefs.main_questions == 5
+    assert prefs.length == Length.CUSTOM and prefs.channel == Channel.TEXT
     assert prefs.prompt_variant == PromptVariant.P3_COT_PLAN
     assert prefs.interviewer.model == "google/gemma-4-31b-it"
     assert prefs.judge_model is None  # left at the config default
@@ -307,7 +314,7 @@ def test_interview_form_starts_from_saved_preferences():
     import ui_common
 
     from interview_app.demo import load_sample_application
-    from interview_app.interview.persona import Difficulty, InterviewType
+    from interview_app.interview.persona import Channel, Difficulty, InterviewType, Length
     from interview_app.preferences import Preferences, save_preferences
 
     engine = ui_common.get_engine()
@@ -316,11 +323,18 @@ def test_interview_form_starts_from_saved_preferences():
     save_preferences(
         engine,
         uid,
-        Preferences(interview_type=InterviewType.ML_CASE, difficulty=Difficulty.TOUGH, main_questions=9),
+        Preferences(
+            interview_type=InterviewType.ML_CASE,
+            difficulty=Difficulty.TOUGH,
+            length=Length.CUSTOM,
+            channel=Channel.TEXT,
+            main_questions=9,
+        ),
     )
 
     at = run_page("interview.py")
     assert at.slider[0].value == 9
+    assert group(at, "Length").value == "custom" and group(at, "Channel").value == "text"
     assert next(s for s in at.selectbox if s.label == "Interview type").value == InterviewType.ML_CASE.value
     assert not any(e.label == "Developer options" for e in at.expander)
 
@@ -1061,6 +1075,7 @@ def test_start_form_settings_link_and_per_type_question_count():
     at = run_page("interview.py")
     # Standalone (no st.navigation) the page link falls back to plain text instead of crashing.
     assert any("Defaults, prompt and model settings" in c.value for c in at.caption)
+    group(at, "Length").set_value("custom").run()
 
     first = InterviewType(next(s for s in at.selectbox if s.label == "Interview type").value)
     second = next(t for t in InterviewType if t != first)
@@ -1297,5 +1312,73 @@ def test_question_slider_range_comes_from_config(monkeypatch):
     get_settings.cache_clear()
     sample_with_p1()
     at = run_page("interview.py")
+    group(at, "Length").set_value("custom").run()
     slider = next(s for s in at.slider if s.label.startswith("Main questions"))
     assert (slider.min, slider.max) == (4, 9)
+
+
+# --- Length and Channel ----------------------------------------------------------------------------
+
+
+def test_start_form_length_presets_custom_slider_and_stored_choice(monkeypatch):
+    """Standard/Voice by default; a preset hides the slider; the choice is stored with the session and
+    shown as a badge on the interview screen."""
+    from interview_app.interview.engine import active_session
+    from interview_app.interview.persona import Channel, Length
+
+    scripted_deps(monkeypatch, [interviewer_reply("Hi, walk me through your background.")])
+    engine, uid, _ = sample_with_p1()
+    at = run_page("interview.py")
+    assert group(at, "Length").value == "standard" and group(at, "Channel").value == "voice"
+    assert not any(s.label.startswith("Main questions") for s in at.slider)
+    assert any("Standard: 5 main questions" in c.value for c in at.caption)
+
+    group(at, "Length").set_value("custom").run()
+    assert any(s.label.startswith("Main questions") for s in at.slider)
+    group(at, "Length").set_value("quick").run()
+    assert not any(s.label.startswith("Main questions") for s in at.slider)
+    group(at, "Channel").set_value("text").run()
+
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+    config = active_session(engine, uid).config
+    assert (config.length, config.channel, config.main_questions) == (Length.QUICK, Channel.TEXT, 3)
+    assert any("Quick · Text" in m.value for m in at.markdown)
+
+
+def test_history_and_report_show_the_length_channel_badge():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.db import InterviewSession, session_scope
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.persona import Channel, Length, SessionConfig
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    old = seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "Old answer.")
+    quick = seed_scored_session(engine, uid, app_id, datetime(2026, 9, 8, tzinfo=UTC), 64.0, "Quick one.")
+    with session_scope(engine) as s:
+        row = s.get(InterviewSession, quick)
+        row.config_json = SessionConfig(length=Length.QUICK, channel=Channel.VOICE).model_dump_json()
+        s.add(row)
+        # A session stored before Length existed: its JSON has no length/channel keys at all.
+        row = s.get(InterviewSession, old)
+        row.config_json = '{"interview_type": "hiring_manager", "main_questions": 6}'
+        s.add(row)
+
+    at = run_page("history.py", timeout=90)
+    assert not at.exception, at.exception
+    rows = at.dataframe[0].value
+    assert list(rows["Session"]) == ["Quick · Voice", "Full · Text"]
+
+    at.selectbox(key="history_open").set_value(quick).run()
+    assert not at.exception, at.exception
+    # Once under the title and once in the report header.
+    assert sum("Quick · Voice" in m.value for m in at.markdown) >= 2
+
+    at.selectbox(key="history_open").set_value(old).run()
+    assert not at.exception, at.exception
+    assert any("Full · Text" in m.value for m in at.markdown)

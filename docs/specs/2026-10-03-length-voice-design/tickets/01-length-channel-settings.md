@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `SessionConfig` has `length` and `channel` enums; `main_questions` comes from a `LengthPresets` config group (quick 3, standard 5, full 7, quick follow-up cap 1) unless length is custom
-- [ ] Sessions stored before this change load as full + text
-- [ ] Start form: Length segmented control (Custom shows the slider, bounds from `Limits`), Channel control; defaults from preferences
-- [ ] Settings saves default Length and Channel (preferences)
-- [ ] Badges "Quick · Voice" style on the interview screen, History rows and the report header
-- [ ] Tests at the engine/config seam and AppTest for the form, Settings and badges; full non-live suite and ruff green
+- [x] `SessionConfig` has `length` and `channel` enums; `main_questions` comes from a `LengthPresets` config group (quick 3, standard 5, quick follow-up cap 1; Full keeps the type's realistic count) unless length is custom
+- [x] Sessions stored before this change load as full + text
+- [x] Start form: Length segmented control (Custom shows the slider, bounds from `Limits`), Channel control; defaults from preferences
+- [x] Settings saves default Length and Channel (preferences)
+- [x] Badges "Quick · Voice" style on the interview screen, History rows and the report header
+- [x] Tests at the engine/config seam and AppTest for the form, Settings and badges; full non-live suite and ruff green

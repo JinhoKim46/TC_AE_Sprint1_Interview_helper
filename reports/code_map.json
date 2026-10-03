@@ -468,12 +468,12 @@
     {
      "comment": "",
      "default": "True",
-     "line": 138,
+     "line": 162,
      "name": "live_scoring",
      "type": "bool"
     }
    ],
-   "line": 133
+   "line": 157
   },
   "GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
@@ -481,29 +481,56 @@
     {
      "comment": "",
      "default": "Field(default=0.7, ge=0, le=1)",
-     "line": 120,
+     "line": 144,
      "name": "injection_threshold",
      "type": "float"
     },
     {
      "comment": "",
      "default": "True",
-     "line": 122,
+     "line": 146,
      "name": "use_model_check",
      "type": "bool"
     },
     {
      "comment": "",
      "default": "Field(default=3000, gt=0)",
-     "line": 125,
+     "line": 149,
      "name": "document_chunk_chars",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=20, gt=0, le=200)",
-     "line": 130,
+     "line": 154,
      "name": "max_document_chunks",
+     "type": "int"
+    }
+   ],
+   "line": 135
+  },
+  "LengthPresets": {
+   "doc": "Main questions per interview Length (spec 2026-10-03-length-voice-design).",
+   "fields": [
+    {
+     "comment": "a short practice on the core questions",
+     "default": "Field(default=3, ge=2, le=15)",
+     "line": 122,
+     "name": "quick",
+     "type": "int"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=5, ge=2, le=15)",
+     "line": 123,
+     "name": "standard",
+     "type": "int"
+    },
+    {
+     "comment": "",
+     "default": "Field(default=1, ge=0, le=3)",
+     "line": 125,
+     "name": "quick_max_followups",
      "type": "int"
     }
    ],
@@ -666,124 +693,131 @@
     {
      "comment": "",
      "default": "SecretStr('')",
-     "line": 151,
+     "line": 175,
      "name": "openrouter_api_key",
      "type": "SecretStr"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1'",
-     "line": 152,
+     "line": 176,
      "name": "openrouter_base_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/v1/models'",
-     "line": 154,
+     "line": 178,
      "name": "openrouter_models_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "'https://openrouter.ai/api/alpha/decisions'",
-     "line": 156,
+     "line": 180,
      "name": "openrouter_decisions_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'data'",
-     "line": 158,
+     "line": 182,
      "name": "data_dir",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "''",
-     "line": 161,
+     "line": 185,
      "name": "database_url",
      "type": "str"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / 'rubric.json'",
-     "line": 162,
+     "line": 186,
      "name": "rubric_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "PROJECT_ROOT / 'docs' / '01-interviewer-guideline.md'",
-     "line": 163,
+     "line": 187,
      "name": "guideline_path",
      "type": "Path"
     },
     {
      "comment": "",
      "default": "Field(default=None, ge=1, le=5)",
-     "line": 166,
+     "line": 190,
      "name": "judge_runs",
      "type": "int | None"
     },
     {
      "comment": "",
      "default": "Field(default=16000, ge=1000, le=64000)",
-     "line": 169,
+     "line": 193,
      "name": "judge_max_tokens",
      "type": "int"
     },
     {
      "comment": "",
      "default": "Field(default=60.0, gt=0, le=600)",
-     "line": 170,
+     "line": 194,
      "name": "request_timeout_s",
      "type": "float"
     },
     {
      "comment": "",
      "default": "Field(default=3, ge=0, le=10)",
-     "line": 171,
+     "line": 195,
      "name": "max_retries",
      "type": "int"
     },
     {
      "comment": "",
      "default": "RoleModels()",
-     "line": 173,
+     "line": 197,
      "name": "models",
      "type": "RoleModels"
     },
     {
      "comment": "",
      "default": "DEFAULT_MODEL_CHOICES",
-     "line": 176,
+     "line": 200,
      "name": "model_choices",
      "type": "list[ModelChoice]"
     },
     {
      "comment": "",
      "default": "Limits()",
-     "line": 177,
+     "line": 201,
      "name": "limits",
      "type": "Limits"
     },
     {
      "comment": "",
+     "default": "LengthPresets()",
+     "line": 202,
+     "name": "length_presets",
+     "type": "LengthPresets"
+    },
+    {
+     "comment": "",
      "default": "GuardSettings()",
-     "line": 178,
+     "line": 203,
      "name": "guard",
      "type": "GuardSettings"
     },
     {
      "comment": "",
      "default": "Features()",
-     "line": 179,
+     "line": 204,
      "name": "features",
      "type": "Features"
     }
    ],
-   "line": 141
+   "line": 165
   }
  },
  "edges": [
@@ -890,7 +924,7 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    59
+    72
    ],
    "to": "app.report_view:band_badge"
   },
@@ -898,21 +932,29 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    60,
-    72,
-    89,
-    90,
-    91,
-    97,
-    98,
-    104,
+    74
+   ],
+   "to": "app.report_view:session_badge"
+  },
+  {
+   "from": "app.report_view:render_report",
+   "kind": "call",
+   "lines": [
+    76,
+    88,
+    105,
+    106,
     107,
-    108,
-    131,
-    134,
-    137,
-    138,
-    141
+    113,
+    114,
+    120,
+    123,
+    124,
+    147,
+    150,
+    153,
+    154,
+    157
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -920,8 +962,8 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    104,
-    130
+    120,
+    146
    ],
    "to": "app.ui_common:short"
   },
@@ -929,9 +971,17 @@
    "from": "app.report_view:render_report",
    "kind": "call",
    "lines": [
-    51
+    64
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
+  },
+  {
+   "from": "app.report_view:session_badge",
+   "kind": "call",
+   "lines": [
+    58
+   ],
+   "to": "interview_app.interview.persona:length_channel_label"
   },
   {
    "from": "app.ui_common:_document_guard_for",
@@ -1479,7 +1529,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    206
+    213
    ],
    "to": "app.ui_common:page_link"
   },
@@ -1487,7 +1537,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    226
+    233
    ],
    "to": "app.views.history:progress_block"
   },
@@ -1495,7 +1545,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    223
+    230
    ],
    "to": "app.views.history:score_metrics"
   },
@@ -1503,7 +1553,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    247
+    254
    ],
    "to": "app.views.history:session_detail"
   },
@@ -1511,7 +1561,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    242
+    249
    ],
    "to": "app.views.history:session_label"
   },
@@ -1519,7 +1569,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    234
+    241
    ],
    "to": "app.views.history:sessions_table"
   },
@@ -1527,7 +1577,7 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    209
+    216
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -1535,16 +1585,32 @@
    "from": "app.views.history:<module>",
    "kind": "call",
    "lines": [
-    203,
-    220
+    210,
+    227
    ],
    "to": "interview_app.history:list_sessions"
+  },
+  {
+   "from": "app.views.history:_length_channel",
+   "kind": "construct",
+   "lines": [
+    44
+   ],
+   "to": "interview_app.interview.persona:SessionConfig"
+  },
+  {
+   "from": "app.views.history:_length_channel",
+   "kind": "call",
+   "lines": [
+    44
+   ],
+   "to": "interview_app.interview.persona:length_channel_label"
   },
   {
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    124
+    130
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1552,7 +1618,7 @@
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    78
+    84
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1560,7 +1626,7 @@
    "from": "app.views.history:progress_block",
    "kind": "call",
    "lines": [
-    78
+    84
    ],
    "to": "interview_app.history:progress"
   },
@@ -1568,7 +1634,7 @@
    "from": "app.views.history:score_metrics",
    "kind": "call",
    "lines": [
-    129
+    135
    ],
    "to": "interview_app.journey:score_summary"
   },
@@ -1576,7 +1642,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    175
+    182
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -1584,7 +1650,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    174
+    181
    ],
    "to": "app.report_view:render_report"
   },
@@ -1592,8 +1658,16 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    178,
-    183
+    156
+   ],
+   "to": "app.report_view:session_badge"
+  },
+  {
+   "from": "app.views.history:session_detail",
+   "kind": "call",
+   "lines": [
+    185,
+    190
    ],
    "to": "app.ui_common:go_button"
   },
@@ -1601,10 +1675,10 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    149,
-    163,
-    164,
-    168
+    155,
+    170,
+    171,
+    175
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1612,7 +1686,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    174
+    181
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1620,7 +1694,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    196
+    203
    ],
    "to": "interview_app.history:delete_session"
   },
@@ -1628,7 +1702,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    172
+    179
    ],
    "to": "interview_app.history:load_report"
   },
@@ -1636,7 +1710,7 @@
    "from": "app.views.history:session_detail",
    "kind": "call",
    "lines": [
-    143
+    149
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -1644,9 +1718,17 @@
    "from": "app.views.history:session_detail",
    "kind": "construct",
    "lines": [
-    147
+    153
    ],
    "to": "interview_app.interview.persona:InterviewType"
+  },
+  {
+   "from": "app.views.history:session_label",
+   "kind": "call",
+   "lines": [
+    39
+   ],
+   "to": "app.views.history:_length_channel"
   },
   {
    "from": "app.views.history:session_label",
@@ -1658,9 +1740,17 @@
   },
   {
    "from": "app.views.history:sessions_table",
+   "kind": "call",
+   "lines": [
+    60
+   ],
+   "to": "app.views.history:_length_channel"
+  },
+  {
+   "from": "app.views.history:sessions_table",
    "kind": "ref",
    "lines": [
-    71
+    77
    ],
    "to": "app.views.history:sessions_table.open_selected"
   },
@@ -1668,7 +1758,7 @@
    "from": "app.views.history:sessions_table",
    "kind": "construct",
    "lines": [
-    54
+    59
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -1756,7 +1846,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    38
+    47
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -1764,7 +1854,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    37
+    46
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -1772,8 +1862,8 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    435,
-    441
+    480,
+    486
    ],
    "to": "app.views.interview:chat"
   },
@@ -1781,7 +1871,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    443
+    488
    ],
    "to": "app.views.interview:start_form"
   },
@@ -1789,7 +1879,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    432
+    477
    ],
    "to": "interview_app.interview.engine:active_session"
   },
@@ -1797,7 +1887,7 @@
    "from": "app.views.interview:<module>",
    "kind": "call",
    "lines": [
-    438
+    483
    ],
    "to": "interview_app.interview.engine:get_session"
   },
@@ -1805,7 +1895,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "call",
    "lines": [
-    235
+    279
    ],
    "to": "app.views.interview:submit"
   },
@@ -1813,7 +1903,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    235
+    279
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1821,7 +1911,7 @@
    "from": "app.views.interview:blocked_answer_editor",
    "kind": "ref",
    "lines": [
-    235
+    279
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1829,9 +1919,17 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    311,
-    353,
-    380
+    342
+   ],
+   "to": "app.report_view:session_badge"
+  },
+  {
+   "from": "app.views.interview:chat",
+   "kind": "call",
+   "lines": [
+    356,
+    398,
+    425
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1839,12 +1937,12 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    294,
-    300,
-    318,
-    330,
-    331,
-    335
+    338,
+    345,
+    363,
+    375,
+    376,
+    380
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1852,7 +1950,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    343
+    388
    ],
    "to": "app.views.interview:blocked_answer_editor"
   },
@@ -1860,7 +1958,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    346
+    391
    ],
    "to": "app.views.interview:coaching_choice"
   },
@@ -1868,7 +1966,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    339
+    384
    ],
    "to": "app.views.interview:earlier_attempts"
   },
@@ -1876,7 +1974,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    387
+    432
    ],
    "to": "app.views.interview:feedback"
   },
@@ -1884,7 +1982,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    338
+    383
    ],
    "to": "app.views.interview:live_chips"
   },
@@ -1892,7 +1990,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    323
+    368
    ],
    "to": "app.views.interview:progress_text"
   },
@@ -1900,7 +1998,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    364
+    409
    ],
    "to": "app.views.interview:submit"
   },
@@ -1908,7 +2006,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    362
+    407
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1916,7 +2014,7 @@
    "from": "app.views.interview:chat",
    "kind": "ref",
    "lines": [
-    364
+    409
    ],
    "to": "interview_app.interview.engine:answer"
   },
@@ -1924,8 +2022,8 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    311,
-    380
+    356,
+    425
    ],
    "to": "interview_app.interview.engine:end_interview"
   },
@@ -1933,7 +2031,7 @@
    "from": "app.views.interview:chat",
    "kind": "call",
    "lines": [
-    353
+    398
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1941,7 +2039,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    271
+    315
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -1949,7 +2047,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    253
+    297
    ],
    "to": "app.views.interview:submit"
   },
@@ -1957,7 +2055,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    244
+    288
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -1965,7 +2063,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "call",
    "lines": [
-    271
+    315
    ],
    "to": "interview_app.interview.engine:respond"
   },
@@ -1973,7 +2071,7 @@
    "from": "app.views.interview:coaching_choice",
    "kind": "ref",
    "lines": [
-    253
+    297
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -1981,7 +2079,7 @@
    "from": "app.views.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    186
+    230
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -1989,7 +2087,7 @@
    "from": "app.views.interview:earlier_attempts",
    "kind": "call",
    "lines": [
-    188
+    232
    ],
    "to": "app.views.interview:live_chips"
   },
@@ -1997,7 +2095,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    429
+    474
    ],
    "to": "app.drill_ui:drill_offer"
   },
@@ -2005,7 +2103,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    427
+    472
    ],
    "to": "app.report_view:render_report"
   },
@@ -2013,7 +2111,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    419
+    464
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2021,8 +2119,8 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    419,
-    427
+    464,
+    472
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2030,7 +2128,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    418
+    463
    ],
    "to": "interview_app.evaluation.service:evaluate_session"
   },
@@ -2038,7 +2136,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    403
+    448
    ],
    "to": "interview_app.history:load_report"
   },
@@ -2046,7 +2144,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    428
+    473
    ],
    "to": "interview_app.interview.engine:session_cost"
   },
@@ -2054,7 +2152,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    419
+    464
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -2062,7 +2160,7 @@
    "from": "app.views.interview:feedback",
    "kind": "call",
    "lines": [
-    417
+    462
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -2070,7 +2168,7 @@
    "from": "app.views.interview:live_chips",
    "kind": "call",
    "lines": [
-    177
+    221
    ],
    "to": "app.ui_common:safe_md"
   },
@@ -2078,7 +2176,7 @@
    "from": "app.views.interview:progress_text",
    "kind": "construct",
    "lines": [
-    283
+    327
    ],
    "to": "interview_app.interview.schemas:Stage"
   },
@@ -2086,7 +2184,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    150
+    194
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2094,7 +2192,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    111
+    149
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2102,8 +2200,8 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    67,
-    132
+    81,
+    173
    ],
    "to": "app.ui_common:page_link"
   },
@@ -2111,7 +2209,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    114
+    152
    ],
    "to": "app.ui_common:slider_start"
   },
@@ -2119,7 +2217,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    64
+    78
    ],
    "to": "interview_app.applications:list_applications"
   },
@@ -2127,7 +2225,8 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    87
+    101,
+    159
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2135,7 +2234,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    150
+    194
    ],
    "to": "interview_app.interview.engine:start_interview"
   },
@@ -2143,7 +2242,16 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    138
+    135,
+    140
+   ],
+   "to": "interview_app.interview.persona:Channel"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "construct",
+   "lines": [
+    179
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -2151,8 +2259,8 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    93,
-    97
+    107,
+    111
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -2160,7 +2268,16 @@
    "from": "app.views.interview:start_form",
    "kind": "construct",
    "lines": [
-    140
+    124,
+    129
+   ],
+   "to": "interview_app.interview.persona:Length"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "construct",
+   "lines": [
+    184
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -2168,7 +2285,7 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    72
+    86
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -2176,7 +2293,15 @@
    "from": "app.views.interview:start_form",
    "kind": "call",
    "lines": [
-    135
+    159
+   ],
+   "to": "interview_app.preferences:preset_main_questions"
+  },
+  {
+   "from": "app.views.interview:start_form",
+   "kind": "call",
+   "lines": [
+    176
    ],
    "to": "interview_app.preferences:to_session_config"
   },
@@ -2184,7 +2309,7 @@
    "from": "app.views.interview:submit",
    "kind": "call",
    "lines": [
-    198
+    242
    ],
    "to": "app.ui_common:engine_deps"
   },
@@ -2192,7 +2317,7 @@
    "from": "app.views.interview:submit",
    "kind": "ref",
    "lines": [
-    213
+    257
    ],
    "to": "interview_app.interview.engine:retry"
   },
@@ -2200,7 +2325,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    28
+    32
    ],
    "to": "app.ui_common:current_user_id"
   },
@@ -2208,7 +2333,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    27
+    31
    ],
    "to": "app.ui_common:get_engine"
   },
@@ -2216,7 +2341,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    111
+    135
    ],
    "to": "app.ui_common:get_price_catalog"
   },
@@ -2224,12 +2349,12 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    158,
-    179,
-    184,
-    196,
-    201,
-    214
+    182,
+    203,
+    208,
+    220,
+    225,
+    238
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2237,7 +2362,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    99
+    120
    ],
    "to": "app.ui_common:slider_start"
   },
@@ -2245,8 +2370,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    170,
-    233
+    194,
+    257
    ],
    "to": "app.views.settings:_model_picker"
   },
@@ -2254,8 +2379,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    300,
-    301
+    326,
+    327
    ],
    "to": "app.views.settings:_price"
   },
@@ -2263,8 +2388,8 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    290,
-    292
+    316,
+    318
    ],
    "to": "app.views.settings:_rows"
   },
@@ -2272,7 +2397,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    29
+    33
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -2280,7 +2405,16 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    253
+    101,
+    106
+   ],
+   "to": "interview_app.interview.persona:Channel"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    277
    ],
    "to": "interview_app.interview.persona:Difficulty"
   },
@@ -2288,8 +2422,8 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    56,
-    60
+    60,
+    64
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -2297,7 +2431,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    225
+    249
    ],
    "to": "interview_app.interview.persona:LLMSettings"
   },
@@ -2305,7 +2439,16 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    254
+    88,
+    93
+   ],
+   "to": "interview_app.interview.persona:Length"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "construct",
+   "lines": [
+    278
    ],
    "to": "interview_app.interview.persona:Mode"
   },
@@ -2313,8 +2456,8 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    157,
-    164
+    181,
+    188
    ],
    "to": "interview_app.interview.persona:PromptVariant"
   },
@@ -2322,7 +2465,7 @@
    "from": "app.views.settings:<module>",
    "kind": "construct",
    "lines": [
-    115
+    139
    ],
    "to": "interview_app.llm.pricing:ModelOption"
   },
@@ -2330,7 +2473,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    111
+    135
    ],
    "to": "interview_app.llm.pricing:model_options"
   },
@@ -2338,7 +2481,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    153
+    177
    ],
    "to": "interview_app.preferences:judge_model"
   },
@@ -2346,7 +2489,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    30
+    34
    ],
    "to": "interview_app.preferences:load_preferences"
   },
@@ -2354,7 +2497,15 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    247
+    124
+   ],
+   "to": "interview_app.preferences:preset_main_questions"
+  },
+  {
+   "from": "app.views.settings:<module>",
+   "kind": "call",
+   "lines": [
+    271
    ],
    "to": "interview_app.preferences:save_preferences"
   },
@@ -2362,7 +2513,7 @@
    "from": "app.views.settings:<module>",
    "kind": "call",
    "lines": [
-    268
+    294
    ],
    "to": "interview_app.usage:usage_summary"
   },
@@ -2370,7 +2521,7 @@
    "from": "app.views.settings:_model_label",
    "kind": "call",
    "lines": [
-    129
+    153
    ],
    "to": "app.views.settings:_price"
   },
@@ -2378,7 +2529,7 @@
    "from": "app.views.settings:_model_picker",
    "kind": "call",
    "lines": [
-    134
+    158
    ],
    "to": "app.ui_common:kept_widget"
   },
@@ -2386,7 +2537,7 @@
    "from": "app.views.settings:_model_picker",
    "kind": "ref",
    "lines": [
-    135
+    159
    ],
    "to": "app.views.settings:_model_label"
   },
@@ -2651,7 +2802,7 @@
    "from": "interview_app.config:get_settings",
    "kind": "construct",
    "lines": [
-    191
+    216
    ],
    "to": "interview_app.config:Settings"
   },
@@ -3334,7 +3485,7 @@
    "from": "interview_app.history:_reports_oldest_first",
    "kind": "call",
    "lines": [
-    160
+    165
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3342,7 +3493,7 @@
    "from": "interview_app.history:delete_session",
    "kind": "call",
    "lines": [
-    249
+    254
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3350,7 +3501,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    91
+    94
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3358,7 +3509,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    127
+    130
    ],
    "to": "interview_app.history:SessionSummary"
   },
@@ -3366,7 +3517,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    93
+    96
    ],
    "to": "interview_app.history:_visible_sessions"
   },
@@ -3374,7 +3525,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "construct",
    "lines": [
-    112
+    115
    ],
    "to": "interview_app.interview.engine:TurnView"
   },
@@ -3382,7 +3533,7 @@
    "from": "interview_app.history:list_sessions",
    "kind": "call",
    "lines": [
-    140
+    145
    ],
    "to": "interview_app.interview.engine:compute_progress"
   },
@@ -3390,7 +3541,7 @@
    "from": "interview_app.history:load_report",
    "kind": "call",
    "lines": [
-    152
+    157
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -3398,7 +3549,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    177
+    182
    ],
    "to": "interview_app.config:get_settings"
   },
@@ -3406,7 +3557,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    177
+    182
    ],
    "to": "interview_app.evaluation.rubric:load_rubric"
   },
@@ -3414,7 +3565,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    193
+    198
    ],
    "to": "interview_app.history:ItemMean"
   },
@@ -3422,7 +3573,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    235
+    240
    ],
    "to": "interview_app.history:Progress"
   },
@@ -3430,7 +3581,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    230
+    235
    ],
    "to": "interview_app.history:RecurringImprovement"
   },
@@ -3438,7 +3589,7 @@
    "from": "interview_app.history:progress",
    "kind": "construct",
    "lines": [
-    213
+    218
    ],
    "to": "interview_app.history:RequirementHistory"
   },
@@ -3446,7 +3597,7 @@
    "from": "interview_app.history:progress",
    "kind": "call",
    "lines": [
-    178
+    183
    ],
    "to": "interview_app.history:_reports_oldest_first"
   },
@@ -4456,12 +4607,12 @@
    "from": "interview_app.interview.persona:<module>",
    "kind": "construct",
    "lines": [
-    132,
-    140,
-    148,
-    156,
-    164,
-    172
+    175,
+    183,
+    191,
+    199,
+    207,
+    215
    ],
    "to": "interview_app.interview.persona:Persona"
   },
@@ -5296,7 +5447,7 @@
    "from": "interview_app.preferences:load_preferences",
    "kind": "call",
    "lines": [
-    50
+    56
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -5304,8 +5455,8 @@
    "from": "interview_app.preferences:load_preferences",
    "kind": "construct",
    "lines": [
-    54,
-    61
+    60,
+    67
    ],
    "to": "interview_app.preferences:Preferences"
   },
@@ -5313,7 +5464,7 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "construct",
    "lines": [
-    69
+    75
    ],
    "to": "interview_app.db:UserPreferences"
   },
@@ -5321,7 +5472,7 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "call",
    "lines": [
-    66
+    72
    ],
    "to": "interview_app.db:session_scope"
   },
@@ -5329,15 +5480,24 @@
    "from": "interview_app.preferences:save_preferences",
    "kind": "call",
    "lines": [
-    72
+    78
    ],
    "to": "interview_app.db:utcnow"
   },
   {
    "from": "interview_app.preferences:to_session_config",
+   "kind": "call",
+   "lines": [
+    114
+   ],
+   "to": "interview_app.config:get_settings"
+  },
+  {
+   "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    92
+    115,
+    120
    ],
    "to": "interview_app.interview.persona:InterviewType"
   },
@@ -5345,9 +5505,25 @@
    "from": "interview_app.preferences:to_session_config",
    "kind": "construct",
    "lines": [
-    93
+    113
+   ],
+   "to": "interview_app.interview.persona:Length"
+  },
+  {
+   "from": "interview_app.preferences:to_session_config",
+   "kind": "construct",
+   "lines": [
+    121
    ],
    "to": "interview_app.interview.persona:SessionConfig"
+  },
+  {
+   "from": "interview_app.preferences:to_session_config",
+   "kind": "call",
+   "lines": [
+    112
+   ],
+   "to": "interview_app.preferences:preset_main_questions"
   },
   {
    "from": "interview_app.security.injection:<module>",
@@ -6305,14 +6481,16 @@
    "imports": [
     "app.ui_common",
     "interview_app.evaluation.rubric",
-    "interview_app.evaluation.schemas"
+    "interview_app.evaluation.schemas",
+    "interview_app.interview.persona"
    ],
    "layer": "ui",
-   "lines": 145,
+   "lines": 161,
    "path": "app/report_view.py",
    "symbols": [
     "app.report_view:band_badge",
-    "app.report_view:render_report"
+    "app.report_view:render_report",
+    "app.report_view:session_badge"
    ]
   },
   "app.ui_common": {
@@ -6418,10 +6596,11 @@
     "interview_app.journey"
    ],
    "layer": "ui",
-   "lines": 248,
+   "lines": 255,
    "path": "app/views/history.py",
    "symbols": [
     "app.views.history:<module>",
+    "app.views.history:_length_channel",
     "app.views.history:progress_block",
     "app.views.history:score_metrics",
     "app.views.history:session_detail",
@@ -6473,7 +6652,7 @@
     "interview_app.preferences"
    ],
    "layer": "ui",
-   "lines": 444,
+   "lines": 489,
    "path": "app/views/interview.py",
    "symbols": [
     "app.views.interview:<module>",
@@ -6504,7 +6683,7 @@
     "interview_app.usage"
    ],
    "layer": "ui",
-   "lines": 305,
+   "lines": 331,
    "path": "app/views/settings.py",
    "symbols": [
     "app.views.settings:<module>",
@@ -6604,12 +6783,14 @@
    ],
    "imports": [],
    "layer": "foundation",
-   "lines": 192,
+   "lines": 217,
    "path": "src/interview_app/config.py",
    "symbols": [
     "interview_app.config:<module>",
     "interview_app.config:Features",
     "interview_app.config:GuardSettings",
+    "interview_app.config:LengthPresets",
+    "interview_app.config:LengthPresets._ordered",
     "interview_app.config:Limits",
     "interview_app.config:Limits._slider_range",
     "interview_app.config:ModelChoice",
@@ -6986,7 +7167,7 @@
     "interview_app.interview.persona"
    ],
    "layer": "core",
-   "lines": 259,
+   "lines": 264,
    "path": "src/interview_app/history.py",
    "symbols": [
     "interview_app.history:ItemMean",
@@ -7172,6 +7353,7 @@
     "pydantic"
    ],
    "imported_by": [
+    "app.report_view",
     "app.views.history",
     "app.views.interview",
     "app.views.settings",
@@ -7189,21 +7371,24 @@
    ],
    "imports": [],
    "layer": "core",
-   "lines": 203,
+   "lines": 246,
    "path": "src/interview_app/interview/persona.py",
    "symbols": [
     "interview_app.interview.persona:<module>",
+    "interview_app.interview.persona:Channel",
     "interview_app.interview.persona:Difficulty",
     "interview_app.interview.persona:Focus",
     "interview_app.interview.persona:InterviewType",
     "interview_app.interview.persona:LLMSettings",
+    "interview_app.interview.persona:Length",
     "interview_app.interview.persona:Mode",
     "interview_app.interview.persona:Persona",
     "interview_app.interview.persona:PersonaOverride",
     "interview_app.interview.persona:PromptVariant",
     "interview_app.interview.persona:SessionConfig",
     "interview_app.interview.persona:SessionConfig.max_followups",
-    "interview_app.interview.persona:derive_persona"
+    "interview_app.interview.persona:derive_persona",
+    "interview_app.interview.persona:length_channel_label"
    ]
   },
   "interview_app.interview.plan": {
@@ -7648,7 +7833,7 @@
   },
   "interview_app.preferences": {
    "doc": "Saved user preferences: interview defaults and developer settings (course tasks M1, M9).",
-   "doc_more": "The Settings page writes them; the Interview page reads them to pre-fill its start form and to build the SessionConfig. The candidate-facing part (type, difficulty, length) and the developer part (prompt variant, model settings) live in one object but are shown in separate areas of the UI.",
+   "doc_more": "The Settings page writes them; the Interview page reads them to pre-fill its start form and to build the SessionConfig. The candidate-facing part (type, difficulty, length, channel) and the developer part (prompt variant, model settings) live in one object but are shown in separate areas of the UI.",
    "external_imports": [
     "logging",
     "pydantic",
@@ -7665,12 +7850,13 @@
     "interview_app.interview.persona"
    ],
    "layer": "core",
-   "lines": 99,
+   "lines": 127,
    "path": "src/interview_app/preferences.py",
    "symbols": [
     "interview_app.preferences:Preferences",
     "interview_app.preferences:judge_model",
     "interview_app.preferences:load_preferences",
+    "interview_app.preferences:preset_main_questions",
     "interview_app.preferences:save_preferences",
     "interview_app.preferences:to_session_config"
    ]
@@ -8100,6 +8286,31 @@
     }
    ]
   },
+  "interview_app.config:LengthPresets": {
+   "bases": [
+    "BaseModel"
+   ],
+   "fields": [
+    {
+     "default": "3",
+     "description": null,
+     "name": "quick",
+     "type": "int"
+    },
+    {
+     "default": "5",
+     "description": null,
+     "name": "standard",
+     "type": "int"
+    },
+    {
+     "default": "1",
+     "description": null,
+     "name": "quick_max_followups",
+     "type": "int"
+    }
+   ]
+  },
   "interview_app.config:Limits": {
    "bases": [
     "BaseModel"
@@ -8329,6 +8540,12 @@
      "description": null,
      "name": "limits",
      "type": "Limits"
+    },
+    {
+     "default": "LengthPresets()",
+     "description": null,
+     "name": "length_presets",
+     "type": "LengthPresets"
     },
     {
      "default": "GuardSettings()",
@@ -9503,6 +9720,18 @@
      "type": "str"
     },
     {
+     "default": "Length.FULL",
+     "description": null,
+     "name": "length",
+     "type": "Length"
+    },
+    {
+     "default": "Channel.TEXT",
+     "description": null,
+     "name": "channel",
+     "type": "Channel"
+    },
+    {
      "default": null,
      "description": null,
      "name": "main_questions_asked",
@@ -9741,6 +9970,18 @@
      "description": null,
      "name": "focus",
      "type": "Focus | None"
+    },
+    {
+     "default": "Length.FULL",
+     "description": null,
+     "name": "length",
+     "type": "Length"
+    },
+    {
+     "default": "Channel.TEXT",
+     "description": null,
+     "name": "channel",
+     "type": "Channel"
     }
    ]
   },
@@ -10262,6 +10503,18 @@
      "type": "Difficulty"
     },
     {
+     "default": "Length.STANDARD",
+     "description": null,
+     "name": "length",
+     "type": "Length"
+    },
+    {
+     "default": "Channel.VOICE",
+     "description": null,
+     "name": "channel",
+     "type": "Channel"
+    },
+    {
      "default": "None",
      "description": null,
      "name": "main_questions",
@@ -10337,23 +10590,23 @@
    ]
   }
  },
- "source_sha256": "1c8363229415aadc02129493a102e456007cfc61f4823c78b78924119209e602",
+ "source_sha256": "27c66d5b2453b27a0203b67d902fe15007fec18a5eaf08a788a48faa8c9fa7e6",
  "stats": {
   "agents": 7,
   "call_sites": {
-   "builtin": 510,
-   "external": 764,
-   "resolved": 742,
+   "builtin": 512,
+   "external": 771,
+   "resolved": 765,
    "unresolved": 42
   },
-  "classes": 103,
+  "classes": 106,
   "edges": {
    "binds": 3,
-   "call": 456,
-   "construct": 131,
+   "call": 467,
+   "construct": 137,
    "ref": 27
   },
-  "functions": 253,
+  "functions": 258,
   "model_call_sites": 9,
   "modules": 53,
   "tables": 8,
@@ -10396,17 +10649,17 @@
   },
   "app.report_view:band_badge": {
    "doc": "The hiring signal as a coloured badge with an icon and words, so colour is never the only cue. Static text only (labels from BAND_LABELS), so it is safe in markdown as it is.",
-   "end_line": 47,
+   "end_line": 48,
    "kind": "function",
-   "line": 41,
+   "line": 42,
    "module": "app.report_view",
    "name": "band_badge",
    "qualname": "band_badge",
    "signature": "band_badge(band: str | None) -> str"
   },
   "app.report_view:render_report": {
-   "doc": "",
-   "end_line": 144,
+   "doc": "`config`: the interviewed session's settings, shown as a Length · Channel badge in the header so the reader knows what kind of session the score came from (a Quick score is not a Full one).",
+   "end_line": 160,
    "externals": [
     "streamlit.caption",
     "streamlit.columns",
@@ -10421,18 +10674,28 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 50,
+   "line": 61,
    "module": "app.report_view",
    "name": "render_report",
    "qualname": "render_report",
-   "signature": "render_report(report: Report, rubric_path) -> None",
+   "signature": "render_report(report: Report, rubric_path, config: SessionConfig | None=None) -> None",
    "unresolved": [
     {
      "candidates": [],
-     "line": 80,
+     "line": 96,
      "text": "cols[i % 2].progress"
     }
    ]
+  },
+  "app.report_view:session_badge": {
+   "doc": "The session's Length and Channel as one badge, e.g. \"Quick · Voice\" (interview screen, History, report header). Static text only (enum labels), so it is safe in markdown as it is.",
+   "end_line": 58,
+   "kind": "function",
+   "line": 55,
+   "module": "app.report_view",
+   "name": "session_badge",
+   "qualname": "session_badge",
+   "signature": "session_badge(config: SessionConfig) -> str"
   },
   "app.ui_common:_document_guard_for": {
    "decorators": [
@@ -10810,9 +11073,19 @@
    "qualname": "<module>",
    "signature": "module-level code"
   },
+  "app.views.history:_length_channel": {
+   "doc": "'Quick · Voice' for a summary row (a dataframe cell can't hold a badge, so it is plain text).",
+   "end_line": 44,
+   "kind": "function",
+   "line": 42,
+   "module": "app.views.history",
+   "name": "_length_channel",
+   "qualname": "_length_channel",
+   "signature": "_length_channel(s: SessionSummary) -> str"
+  },
   "app.views.history:progress_block": {
    "doc": "",
-   "end_line": 124,
+   "end_line": 130,
    "externals": [
     "streamlit.caption",
     "streamlit.column_config.ProgressColumn",
@@ -10823,7 +11096,7 @@
     "streamlit.subheader"
    ],
    "kind": "function",
-   "line": 76,
+   "line": 82,
    "module": "app.views.history",
    "name": "progress_block",
    "qualname": "progress_block",
@@ -10831,7 +11104,7 @@
   },
   "app.views.history:score_metrics": {
    "doc": "Three numbers to answer \"am I improving?\" before any table has to be read.",
-   "end_line": 139,
+   "end_line": 145,
    "externals": [
     "streamlit.columns",
     "streamlit.columns()[0].metric",
@@ -10839,7 +11112,7 @@
     "streamlit.columns()[2].metric"
    ],
    "kind": "function",
-   "line": 127,
+   "line": 133,
    "module": "app.views.history",
    "name": "score_metrics",
    "qualname": "score_metrics",
@@ -10847,7 +11120,7 @@
   },
   "app.views.history:session_detail": {
    "doc": "",
-   "end_line": 200,
+   "end_line": 207,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -10864,7 +11137,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 142,
+   "line": 148,
    "module": "app.views.history",
    "name": "session_detail",
    "qualname": "session_detail",
@@ -10882,7 +11155,7 @@
   },
   "app.views.history:sessions_table": {
    "doc": "",
-   "end_line": 73,
+   "end_line": 79,
    "externals": [
     "streamlit.column_config.DatetimeColumn",
     "streamlit.column_config.NumberColumn",
@@ -10890,7 +11163,7 @@
     "streamlit.dataframe"
    ],
    "kind": "function",
-   "line": 42,
+   "line": 47,
    "module": "app.views.history",
    "name": "sessions_table",
    "qualname": "sessions_table",
@@ -10898,9 +11171,9 @@
   },
   "app.views.history:sessions_table.open_selected": {
    "doc": "",
-   "end_line": 47,
+   "end_line": 52,
    "kind": "nested",
-   "line": 43,
+   "line": 48,
    "module": "app.views.history",
    "name": "open_selected",
    "parent": "app.views.history:sessions_table",
@@ -10957,7 +11230,7 @@
   },
   "app.views.interview:blocked_answer_editor": {
    "doc": "A blocked answer comes back in an editable box. Returns True while it is shown (in place of the chat input, so there is only one place to type).",
-   "end_line": 239,
+   "end_line": 283,
    "externals": [
     "streamlit.columns",
     "streamlit.columns()[0].button",
@@ -10968,7 +11241,7 @@
     "streamlit.text_area"
    ],
    "kind": "function",
-   "line": 222,
+   "line": 266,
    "module": "app.views.interview",
    "name": "blocked_answer_editor",
    "qualname": "blocked_answer_editor",
@@ -10976,7 +11249,7 @@
   },
   "app.views.interview:chat": {
    "doc": "",
-   "end_line": 391,
+   "end_line": 436,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -10996,7 +11269,7 @@
     "streamlit.warning"
    ],
    "kind": "function",
-   "line": 287,
+   "line": 331,
    "module": "app.views.interview",
    "name": "chat",
    "qualname": "chat",
@@ -11004,7 +11277,7 @@
   },
   "app.views.interview:coaching_choice": {
    "doc": "Coaching mode, after an answer: retry it (up to the limit) or continue to the next question.",
-   "end_line": 275,
+   "end_line": 319,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11022,7 +11295,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 242,
+   "line": 286,
    "module": "app.views.interview",
    "name": "coaching_choice",
    "qualname": "coaching_choice",
@@ -11030,13 +11303,13 @@
   },
   "app.views.interview:earlier_attempts": {
    "doc": "Superseded attempts for this answer: those stored between the previous kept turn and this one.",
-   "end_line": 188,
+   "end_line": 232,
    "externals": [
     "streamlit.expander",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 180,
+   "line": 224,
    "module": "app.views.interview",
    "name": "earlier_attempts",
    "qualname": "earlier_attempts",
@@ -11044,7 +11317,7 @@
   },
   "app.views.interview:feedback": {
    "doc": "The report for a finished interview: generated once on request, then stored.",
-   "end_line": 429,
+   "end_line": 474,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
@@ -11057,7 +11330,7 @@
     "streamlit.write"
    ],
    "kind": "function",
-   "line": 394,
+   "line": 439,
    "module": "app.views.interview",
    "name": "feedback",
    "qualname": "feedback",
@@ -11065,13 +11338,13 @@
   },
   "app.views.interview:live_chips": {
    "doc": "Coaching mode: the answer's live rubric scores as small coloured badges, then the tip.",
-   "end_line": 177,
+   "end_line": 221,
    "externals": [
     "streamlit.caption",
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 161,
+   "line": 205,
    "module": "app.views.interview",
    "name": "live_chips",
    "qualname": "live_chips",
@@ -11079,9 +11352,9 @@
   },
   "app.views.interview:progress_text": {
    "doc": "'Question 3 of 7 · Experience (follow-up)': where the interview is, in words.",
-   "end_line": 284,
+   "end_line": 328,
    "kind": "function",
-   "line": 278,
+   "line": 322,
    "module": "app.views.interview",
    "name": "progress_text",
    "qualname": "progress_text",
@@ -11089,11 +11362,12 @@
   },
   "app.views.interview:start_form": {
    "doc": "",
-   "end_line": 158,
+   "end_line": 202,
    "externals": [
     "streamlit.button",
     "streamlit.caption",
     "streamlit.columns",
+    "streamlit.columns()[0].segmented_control",
     "streamlit.columns()[0].selectbox",
     "streamlit.columns()[1].segmented_control",
     "streamlit.container",
@@ -11109,7 +11383,7 @@
     "streamlit.write"
    ],
    "kind": "function",
-   "line": 63,
+   "line": 77,
    "module": "app.views.interview",
    "name": "start_form",
    "qualname": "start_form",
@@ -11117,7 +11391,7 @@
   },
   "app.views.interview:submit": {
    "doc": "Send an answer (eng.answer or eng.retry), then rerun so the page re-reads the stored turns.",
-   "end_line": 219,
+   "end_line": 263,
    "externals": [
     "streamlit.rerun",
     "streamlit.session_state.get",
@@ -11126,7 +11400,7 @@
     "streamlit.spinner"
    ],
    "kind": "function",
-   "line": 191,
+   "line": 235,
    "module": "app.views.interview",
    "name": "submit",
    "qualname": "submit",
@@ -11134,7 +11408,7 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 198,
+     "line": 242,
      "text": "action"
     }
    ]
@@ -11146,11 +11420,11 @@
     "load_preferences().model_copy",
     "streamlit.button",
     "streamlit.caption",
-    "streamlit.checkbox",
     "streamlit.columns",
     "streamlit.columns()[0].caption",
     "streamlit.columns()[0].dataframe",
     "streamlit.columns()[0].metric",
+    "streamlit.columns()[0].segmented_control",
     "streamlit.columns()[0].selectbox",
     "streamlit.columns()[1].caption",
     "streamlit.columns()[1].dataframe",
@@ -11174,9 +11448,9 @@
   },
   "app.views.settings:_model_label": {
    "doc": "",
-   "end_line": 129,
+   "end_line": 153,
    "kind": "function",
-   "line": 125,
+   "line": 149,
    "module": "app.views.settings",
    "name": "_model_label",
    "qualname": "_model_label",
@@ -11184,12 +11458,12 @@
   },
   "app.views.settings:_model_picker": {
    "doc": "",
-   "end_line": 147,
+   "end_line": 171,
    "externals": [
     "streamlit.markdown"
    ],
    "kind": "function",
-   "line": 132,
+   "line": 156,
    "module": "app.views.settings",
    "name": "_model_picker",
    "qualname": "_model_picker",
@@ -11197,9 +11471,9 @@
   },
   "app.views.settings:_price": {
    "doc": "",
-   "end_line": 122,
+   "end_line": 146,
    "kind": "function",
-   "line": 119,
+   "line": 143,
    "module": "app.views.settings",
    "name": "_price",
    "qualname": "_price",
@@ -11207,9 +11481,9 @@
   },
   "app.views.settings:_rows": {
    "doc": "",
-   "end_line": 284,
+   "end_line": 310,
    "kind": "function",
-   "line": 274,
+   "line": 300,
    "module": "app.views.settings",
    "name": "_rows",
    "qualname": "_rows",
@@ -11489,9 +11763,9 @@
   },
   "interview_app.config:Features": {
    "doc": "Feature flags, so an unfinished or broken feature can be switched off without code changes.",
-   "end_line": 138,
+   "end_line": 162,
    "kind": "class",
-   "line": 133,
+   "line": 157,
    "module": "interview_app.config",
    "name": "Features",
    "qualname": "Features",
@@ -11500,9 +11774,9 @@
   },
   "interview_app.config:GuardSettings": {
    "doc": "Prompt-injection guard (OWASP LLM01), see security/injection.py.",
-   "end_line": 130,
+   "end_line": 154,
    "kind": "class",
-   "line": 111,
+   "line": 135,
    "module": "interview_app.config",
    "name": "GuardSettings",
    "qualname": "GuardSettings",
@@ -11511,6 +11785,35 @@
    "tested_by": [
     "tests.test_config"
    ]
+  },
+  "interview_app.config:LengthPresets": {
+   "doc": "Main questions per interview Length (spec 2026-10-03-length-voice-design).",
+   "end_line": 132,
+   "kind": "class",
+   "line": 111,
+   "module": "interview_app.config",
+   "name": "LengthPresets",
+   "qualname": "LengthPresets",
+   "schema": true,
+   "signature": "class LengthPresets(BaseModel)",
+   "tested_by": [
+    "tests.test_config",
+    "tests.test_preferences"
+   ]
+  },
+  "interview_app.config:LengthPresets._ordered": {
+   "class": "interview_app.config:LengthPresets",
+   "decorators": [
+    "model_validator(mode='after')"
+   ],
+   "doc": "",
+   "end_line": 132,
+   "kind": "method",
+   "line": 128,
+   "module": "interview_app.config",
+   "name": "_ordered",
+   "qualname": "LengthPresets._ordered",
+   "signature": "_ordered(self) -> Self"
   },
   "interview_app.config:Limits": {
    "doc": "Hard limits enforced in code (OWASP LLM10: unbounded consumption).",
@@ -11573,9 +11876,9 @@
   },
   "interview_app.config:Settings": {
    "doc": "",
-   "end_line": 185,
+   "end_line": 210,
    "kind": "class",
-   "line": 141,
+   "line": 165,
    "module": "interview_app.config",
    "name": "Settings",
    "qualname": "Settings",
@@ -11608,9 +11911,9 @@
     "model_validator(mode='after')"
    ],
    "doc": "",
-   "end_line": 185,
+   "end_line": 210,
    "kind": "method",
-   "line": 182,
+   "line": 207,
    "module": "interview_app.config",
    "name": "_derive_database_url",
    "qualname": "Settings._derive_database_url",
@@ -11621,9 +11924,9 @@
     "lru_cache"
    ],
    "doc": "One shared Settings object. Tests build their own `Settings(...)` instead.",
-   "end_line": 191,
+   "end_line": 216,
    "kind": "function",
-   "line": 189,
+   "line": 214,
    "module": "interview_app.config",
    "name": "get_settings",
    "qualname": "get_settings",
@@ -12788,9 +13091,9 @@
   },
   "interview_app.history:ItemMean": {
    "doc": "",
-   "end_line": 54,
+   "end_line": 57,
    "kind": "class",
-   "line": 50,
+   "line": 53,
    "module": "interview_app.history",
    "name": "ItemMean",
    "qualname": "ItemMean",
@@ -12799,9 +13102,9 @@
   },
   "interview_app.history:Progress": {
    "doc": "",
-   "end_line": 73,
+   "end_line": 76,
    "kind": "class",
-   "line": 69,
+   "line": 72,
    "module": "interview_app.history",
    "name": "Progress",
    "qualname": "Progress",
@@ -12810,9 +13113,9 @@
   },
   "interview_app.history:RecurringImprovement": {
    "doc": "",
-   "end_line": 66,
+   "end_line": 69,
    "kind": "class",
-   "line": 64,
+   "line": 67,
    "module": "interview_app.history",
    "name": "RecurringImprovement",
    "qualname": "RecurringImprovement",
@@ -12821,9 +13124,9 @@
   },
   "interview_app.history:RequirementHistory": {
    "doc": "",
-   "end_line": 61,
+   "end_line": 64,
    "kind": "class",
-   "line": 57,
+   "line": 60,
    "module": "interview_app.history",
    "name": "RequirementHistory",
    "qualname": "RequirementHistory",
@@ -12832,7 +13135,7 @@
   },
   "interview_app.history:SessionSummary": {
    "doc": "",
-   "end_line": 47,
+   "end_line": 50,
    "kind": "class",
    "line": 31,
    "module": "interview_app.history",
@@ -12854,7 +13157,7 @@
     ]
    },
    "doc": "",
-   "end_line": 172,
+   "end_line": 177,
    "externals": [
     "Report.model_validate_json",
     "db.exec",
@@ -12867,7 +13170,7 @@
     "sqlmodel.select().join().where().order_by"
    ],
    "kind": "function",
-   "line": 159,
+   "line": 164,
    "module": "interview_app.history",
    "name": "_reports_oldest_first",
    "qualname": "_reports_oldest_first",
@@ -12880,7 +13183,7 @@
     ]
    },
    "doc": "",
-   "end_line": 82,
+   "end_line": 85,
    "externals": [
     "sqlmodel.col",
     "sqlmodel.col().not_in",
@@ -12889,7 +13192,7 @@
     "sqlmodel.select().where().where().where"
    ],
    "kind": "function",
-   "line": 76,
+   "line": 79,
    "module": "interview_app.history",
    "name": "_visible_sessions",
    "qualname": "_visible_sessions",
@@ -12903,7 +13206,7 @@
     ]
    },
    "doc": "Delete one interview. The database cascades to its turns and evaluation.",
-   "end_line": 258,
+   "end_line": 263,
    "externals": [
     "db.delete",
     "db.exec",
@@ -12912,7 +13215,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 243,
+   "line": 248,
    "module": "interview_app.history",
    "name": "delete_session",
    "qualname": "delete_session",
@@ -12934,7 +13237,7 @@
     ]
    },
    "doc": "The user's interviews, newest first.",
-   "end_line": 147,
+   "end_line": 152,
    "externals": [
     "SessionConfig.model_validate_json",
     "collections.defaultdict",
@@ -12951,7 +13254,7 @@
     "sqlmodel.select().where().where().order_by"
    ],
    "kind": "function",
-   "line": 85,
+   "line": 88,
    "module": "interview_app.history",
    "name": "list_sessions",
    "qualname": "list_sessions",
@@ -12968,7 +13271,7 @@
     ]
    },
    "doc": "The stored report of one session, read straight from the DB (History never calls the judge).",
-   "end_line": 156,
+   "end_line": 161,
    "externals": [
     "Report.model_validate_json",
     "db.exec",
@@ -12977,7 +13280,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 150,
+   "line": 155,
    "module": "interview_app.history",
    "name": "load_report",
    "qualname": "load_report",
@@ -12988,7 +13291,7 @@
   },
   "interview_app.history:progress": {
    "doc": "How one application's interviews developed over time.",
-   "end_line": 240,
+   "end_line": 245,
    "externals": [
     "collections.Counter",
     "collections.Counter().most_common",
@@ -12997,7 +13300,7 @@
     "collections.defaultdict().items"
    ],
    "kind": "function",
-   "line": 175,
+   "line": 180,
    "module": "interview_app.history",
    "name": "progress",
    "qualname": "progress",
@@ -13597,6 +13900,7 @@
    "qualname": "active_session",
    "signature": "active_session(engine: Engine, user_id: int, settings: Settings | None=None) -> SessionView | None",
    "tested_by": [
+    "tests.test_app_ui",
     "tests.test_engine",
     "tests.test_lab"
    ]
@@ -13797,6 +14101,16 @@
    "qualname": "<module>",
    "signature": "module-level code"
   },
+  "interview_app.interview.persona:Channel": {
+   "doc": "How the interviewer's questions reach the candidate. Answers are always typed.",
+   "end_line": 89,
+   "kind": "class",
+   "line": 85,
+   "module": "interview_app.interview.persona",
+   "name": "Channel",
+   "qualname": "Channel",
+   "signature": "class Channel(StrEnum)"
+  },
   "interview_app.interview.persona:Difficulty": {
    "doc": "",
    "end_line": 37,
@@ -13809,9 +14123,9 @@
   },
   "interview_app.interview.persona:Focus": {
    "doc": "A weak-spot drill: what this session should target, taken from an earlier report.",
-   "end_line": 103,
+   "end_line": 135,
    "kind": "class",
-   "line": 97,
+   "line": 129,
    "module": "interview_app.interview.persona",
    "name": "Focus",
    "qualname": "Focus",
@@ -13833,9 +14147,9 @@
   },
   "interview_app.interview.persona:LLMSettings": {
    "doc": "Per-session model settings for the interviewer (developer options, course task M1).",
-   "end_line": 94,
+   "end_line": 126,
    "kind": "class",
-   "line": 83,
+   "line": 115,
    "module": "interview_app.interview.persona",
    "name": "LLMSettings",
    "qualname": "LLMSettings",
@@ -13844,6 +14158,16 @@
    "tested_by": [
     "tests.test_preferences"
    ]
+  },
+  "interview_app.interview.persona:Length": {
+   "doc": "How many main questions a session asks (breadth, not pressure: that is Difficulty).",
+   "end_line": 74,
+   "kind": "class",
+   "line": 64,
+   "module": "interview_app.interview.persona",
+   "name": "Length",
+   "qualname": "Length",
+   "signature": "class Length(StrEnum)"
   },
   "interview_app.interview.persona:Mode": {
    "doc": "",
@@ -13857,9 +14181,9 @@
   },
   "interview_app.interview.persona:Persona": {
    "doc": "",
-   "end_line": 127,
+   "end_line": 170,
    "kind": "class",
-   "line": 121,
+   "line": 164,
    "module": "interview_app.interview.persona",
    "name": "Persona",
    "qualname": "Persona",
@@ -13868,9 +14192,9 @@
   },
   "interview_app.interview.persona:PersonaOverride": {
    "doc": "",
-   "end_line": 80,
+   "end_line": 112,
    "kind": "class",
-   "line": 77,
+   "line": 109,
    "module": "interview_app.interview.persona",
    "name": "PersonaOverride",
    "qualname": "PersonaOverride",
@@ -13889,9 +14213,9 @@
   },
   "interview_app.interview.persona:SessionConfig": {
    "doc": "",
-   "end_line": 118,
+   "end_line": 156,
    "kind": "class",
-   "line": 106,
+   "line": 138,
    "module": "interview_app.interview.persona",
    "name": "SessionConfig",
    "qualname": "SessionConfig",
@@ -13904,6 +14228,7 @@
     "tests.test_evaluation",
     "tests.test_history",
     "tests.test_lab",
+    "tests.test_preferences",
     "tests.test_prompting"
    ]
   },
@@ -13913,9 +14238,9 @@
     "property"
    ],
    "doc": "",
-   "end_line": 118,
+   "end_line": 156,
    "kind": "property",
-   "line": 117,
+   "line": 155,
    "module": "interview_app.interview.persona",
    "name": "max_followups",
    "qualname": "SessionConfig.max_followups",
@@ -13923,9 +14248,9 @@
   },
   "interview_app.interview.persona:derive_persona": {
    "doc": "Type sets who the interviewer is; difficulty adjusts the tone; an override wins over both.",
-   "end_line": 202,
+   "end_line": 245,
    "kind": "function",
-   "line": 189,
+   "line": 232,
    "module": "interview_app.interview.persona",
    "name": "derive_persona",
    "qualname": "derive_persona",
@@ -13937,9 +14262,22 @@
    "unresolved": [
     {
      "candidates": [],
-     "line": 191,
+     "line": 234,
      "text": "_BASE[config.interview_type].model_copy"
     }
+   ]
+  },
+  "interview_app.interview.persona:length_channel_label": {
+   "doc": "'Quick · Voice': the session's Length and Channel in words, for badges and history rows.",
+   "end_line": 161,
+   "kind": "function",
+   "line": 159,
+   "module": "interview_app.interview.persona",
+   "name": "length_channel_label",
+   "qualname": "length_channel_label",
+   "signature": "length_channel_label(config: SessionConfig) -> str",
+   "tested_by": [
+    "tests.test_preferences"
    ]
   },
   "interview_app.interview.plan:make_plan": {
@@ -15528,9 +15866,9 @@
   },
   "interview_app.preferences:Preferences": {
    "doc": "",
-   "end_line": 45,
+   "end_line": 51,
    "kind": "class",
-   "line": 29,
+   "line": 31,
    "module": "interview_app.preferences",
    "name": "Preferences",
    "qualname": "Preferences",
@@ -15543,9 +15881,9 @@
   },
   "interview_app.preferences:judge_model": {
    "doc": "The model the final LLM judge should use for this user.",
-   "end_line": 98,
+   "end_line": 126,
    "kind": "function",
-   "line": 96,
+   "line": 124,
    "module": "interview_app.preferences",
    "name": "judge_model",
    "qualname": "judge_model",
@@ -15561,7 +15899,7 @@
     ]
    },
    "doc": "The user's saved preferences, or the defaults if nothing (usable) is saved.",
-   "end_line": 61,
+   "end_line": 67,
    "externals": [
     "Preferences.model_validate_json",
     "db.exec",
@@ -15571,13 +15909,26 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 48,
+   "line": 54,
    "module": "interview_app.preferences",
    "name": "load_preferences",
    "qualname": "load_preferences",
    "signature": "load_preferences(engine: Engine, user_id: int) -> Preferences",
    "tested_by": [
     "tests.test_app_ui",
+    "tests.test_preferences"
+   ]
+  },
+  "interview_app.preferences:preset_main_questions": {
+   "doc": "The question count of a preset Length; None for Custom (the slider decides).",
+   "end_line": 90,
+   "kind": "function",
+   "line": 82,
+   "module": "interview_app.preferences",
+   "name": "preset_main_questions",
+   "qualname": "preset_main_questions",
+   "signature": "preset_main_questions(length: Length, presets: LengthPresets, interview_type: InterviewType) -> int | None",
+   "tested_by": [
     "tests.test_preferences"
    ]
   },
@@ -15589,7 +15940,7 @@
     ]
    },
    "doc": "Insert or replace the user's one preferences row.",
-   "end_line": 73,
+   "end_line": 79,
    "externals": [
     "Preferences.model_dump_json",
     "db.add",
@@ -15599,7 +15950,7 @@
     "sqlmodel.select().where"
    ],
    "kind": "function",
-   "line": 64,
+   "line": 70,
    "module": "interview_app.preferences",
    "name": "save_preferences",
    "qualname": "save_preferences",
@@ -15611,16 +15962,16 @@
   },
   "interview_app.preferences:to_session_config": {
    "doc": "Build a SessionConfig from saved preferences; `overrides` are what the start form changed.",
-   "end_line": 93,
+   "end_line": 121,
    "externals": [
     "Preferences.interviewer.model_copy"
    ],
    "kind": "function",
-   "line": 76,
+   "line": 93,
    "module": "interview_app.preferences",
    "name": "to_session_config",
    "qualname": "to_session_config",
-   "signature": "to_session_config(prefs: Preferences, **overrides) -> SessionConfig",
+   "signature": "to_session_config(prefs: Preferences, presets: LengthPresets | None=None, **overrides) -> SessionConfig",
    "tested_by": [
     "tests.test_preferences"
    ]
@@ -16675,6 +17026,13 @@
  "test_only": [
   "interview_app.llm.pricing:PriceCatalog.models"
  ],
- "unread_config_fields": [],
+ "unread_config_fields": [
+  {
+   "class": "LengthPresets",
+   "comment": "",
+   "field": "quick_max_followups",
+   "line": 125
+  }
+ ],
  "unreferenced": []
 }

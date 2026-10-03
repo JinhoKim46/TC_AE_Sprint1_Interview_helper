@@ -108,6 +108,30 @@ class Limits(BaseModel):
         return self
 
 
+class LengthPresets(BaseModel):
+    """Main questions per interview Length (spec 2026-10-03-length-voice-design).
+
+    Quick and Standard take their question count from here. Full is "the real interview", so it keeps
+    each interview type's realistic count (persona.DEFAULT_MAIN_QUESTIONS: 4 for an ML case, 8 for a
+    final round); Custom uses the slider. No count is written into prompts.
+    Env example: `LENGTH_PRESETS__QUICK=4`. The bounds match SessionConfig.main_questions (2-15).
+    """
+
+    model_config = _STRICT
+
+    quick: int = Field(default=3, ge=2, le=15)  # a short practice on the core questions
+    standard: int = Field(default=5, ge=2, le=15)
+    # Quick also caps follow-ups per main question; the session uses min(difficulty cap, this).
+    quick_max_followups: int = Field(default=1, ge=0, le=3)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> Self:
+        # A "Quick" longer than "Standard" is a typo in .env, and the labels would then mislead the user.
+        if not self.quick <= self.standard:
+            raise ValueError("length presets must satisfy quick <= standard")
+        return self
+
+
 class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
@@ -175,6 +199,7 @@ class Settings(BaseSettings):
     # MODEL_CHOICES='[{"id": "openai/gpt-5-mini"}, {"id": "google/gemma-4-31b-it", "open_weight": true}]'
     model_choices: list[ModelChoice] = DEFAULT_MODEL_CHOICES
     limits: Limits = Limits()
+    length_presets: LengthPresets = LengthPresets()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
 
