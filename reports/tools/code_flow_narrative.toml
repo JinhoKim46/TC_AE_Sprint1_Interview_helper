@@ -8,10 +8,10 @@ lanes = [["user", "User"], ["ui", "Streamlit page"], ["engine", "Engine"], ["gua
 
 [agents.interviewer]
 title = "Interviewer"
-what = "Writes the next interviewer turn: a follow-up or the next main question, in the persona's voice. One call per turn, or two when it tries to close before inviting the candidate's questions (code forces a second call). In a weak-spot drill, _base.md adds a Focused practice block with the targets from SessionConfig.focus."
+what = "Writes the next interviewer turn: a follow-up or the next main question, in the persona's voice. One call per turn, or two when it tries to close before inviting the candidate's questions (code forces a second call). In a weak-spot drill, _base.md adds a Focused practice block with the targets from SessionConfig.focus. In a Quick session the directive changes (one-sentence intro, core questions only, a one-line skippable question offer; _quick_directive) and close_correction asks for that offer instead of a full candidate-questions stage; P4's planner gets QUICK_PLAN_NOTE."
 stored = "A Turn row (speaker interviewer) with stage, question_id, is_followup and is_final; P3/P5 private fields go to Turn.private_json and are never shown."
 settings_note = "Model, temperature, max tokens and reasoning effort come from the session's LLMSettings (Settings page, developer settings). A value of None is not sent at all, so the provider default applies."
-config_refs = [["LLMSettings", "reasoning_effort"], ["Limits", "max_turns"], ["Limits", "max_session_cost_usd"]]
+config_refs = [["LLMSettings", "reasoning_effort"], ["Limits", "max_turns"], ["Limits", "max_session_cost_usd"], ["LengthPresets", "quick"], ["LengthPresets", "standard"], ["LengthPresets", "quick_max_followups"]]
 [agents.interviewer.messages]
 system = "The long system prompt from interviewer_<variant>.md: persona, rules, the documents wrapped as <document> data, the output format. A second, short system message at the very end carries the live status from control.md."
 assistant = "Every earlier interviewer turn, re-sent in the same JSON shape it answered in (P3 notes and P5 draft/critique included)."
@@ -68,11 +68,19 @@ inputs = "state = role, company, interview_type, the documents and the full tran
 stored = "Not in the database: one CSV row per session in lab/results/ (committed since PR #36; fictional sample only), plus the printed markdown tables."
 settings_note = "Code applies the yes threshold (p >= 0.5) and the release gate."
 
+[agents.tts]
+title = "Interviewer voice (text-to-speech)"
+what = "Speaks one interviewer turn of a Voice session, once. The page calls voice.speak right after a new interviewer turn is stored (never inside the engine, so voice can't fail a turn); _speak checks the channel, reuses stored audio, skips when the session budget is used up, picks the session's voice and calls LLMClient.speech. The PCM reply (audio/pcm;rate=24000;channels=1) is wrapped into WAV by pcm_to_wav. Speech-to-text is not part of the app: answers are always typed."
+inputs = "The interviewer's own message (already on screen), cut at TTSSettings.max_chars, plus the voice id. No documents, no candidate text, no instructions."
+stored = "A WAV file under data/audio/<user_id>/<session_id>/<turn_idx>.wav (owner-only) and a TurnAudio row (session_id with ON DELETE CASCADE, turn_idx, relative path, voice, model, seconds). delete_session_audio removes the files when a session or application is deleted. The call is an LLMCall row with role tts."
+settings_note = "Model is Settings.tts.model (TTSSettings, its own settings group). The speech response has no usage, so the cost is ESTIMATED from catalog prices: input tokens = characters / 4, output tokens = audio seconds x audio_tokens_per_second. The voice comes from TTSSettings.voices by interview type, or the Settings page override (Preferences.voice), and is stored in SessionConfig.voice so it stays fixed. Any error becomes a short notice and the text is shown."
+config_refs = [["TTSSettings", "model"], ["TTSSettings", "default_voice"], ["TTSSettings", "audio_tokens_per_second"], ["TTSSettings", "max_chars"]]
+
 [[journey]]
 title = "The candidate types an answer"
 lane = "user"
 symbol = "app.views.interview:chat"
-text = "The Interview page re-reads the session from the database on every rerun. A header shows company, role and type, difficulty and mode badges, and progress_text writes \"Question n of N · Stage\" from the computed Progress. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
+text = "The Interview page re-reads the session from the database on every rerun. A header shows company, role and type, difficulty and mode badges plus the Length · Channel badge (session_badge), and progress_text writes \"Question n of N · Stage\" from the computed Progress. While the interview is active and the interviewer spoke last, it shows st.chat_input. The submitted text goes to submit(eng.answer, …)."
 payload = "\"I led the move of our detector to the phone: I quantised it to int8 and cut latency from 140 ms to 45 ms.\""
 
 [[journey]]
@@ -125,7 +133,7 @@ payload = "force_close = must_close(len(turns)=2, cost_usd=0.004, settings)  →
 title = "Code decides the phase"
 lane = "engine"
 symbol = "interview_app.interview.engine:next_directive"
-text = "compute_progress counts main questions and follow-ups from the stored turn metadata; next_directive turns that into one instruction (open, follow up or move on, invite questions, close). After the last main question one follow-up is still allowed (PR #30). The model decides the wording, code decides the phase. The follow-up cap is part of that instruction, not a hard check on the reply."
+text = "compute_progress counts main questions and follow-ups from the stored turn metadata; next_directive turns that into one instruction (open, follow up or move on, invite questions, close). After the last main question one follow-up is still allowed (PR #30). The model decides the wording, code decides the phase. The follow-up cap (followup_cap: the difficulty's cap, and for Quick at most LengthPresets.quick_max_followups) is part of that instruction, not a hard check on the reply. A Quick session gets _quick_directive instead: a one-sentence intro with no warm-up, the core questions (motivation, top must-have requirement, one type-specific question) and a one-line skippable \"any quick question for me?\" that counts as the candidate-questions stage (PR #46)."
 payload = '''
 Progress(main_asked=1, followups=0, candidate_turns=1, in_candidate_questions=False, last_speaker='candidate')
 → "Decide the single best next move: one follow-up on the last answer …"'''
@@ -195,6 +203,34 @@ symbol = "interview_app.interview.engine:get_session"
 text = "submit() calls st.rerun(). The page asks active_session → get_session for the stored transcript (superseded attempts excluded, live scores attached) and draws the chat again."
 payload = "SessionView(turns=[…3 turns…], progress=Progress(main_asked=1, followups=1, …), cost_usd=0.0062)"
 
+[[journey]]
+title = "Voice: the page asks for the spoken question"
+lane = "ui"
+symbol = "app.views.interview:interviewer_message"
+text = "In a Voice session each interviewer turn is drawn by interviewer_message. stored_audio looks for its WAV first; only the newest question of a running interview (or its closing words) is generated, once, through voice.speak. The newest question auto-plays once per browser session, every turn has a player, and the text sits behind a Show text toggle. Without audio the text shows with a notice. Text sessions skip all of this."
+payload = "speak(engine, settings, make_llm, user_id, session_id=12, turn_idx=2)  → SpeechOutcome(status='ready', path=…/12/2.wav)"
+
+[[journey]]
+title = "voice.speak decides whether to call TTS"
+lane = "engine"
+symbol = "interview_app.voice:_speak"
+text = "speak wraps _speak so any exception becomes a notice (logged without the text). _speak loads the turn for this user, returns early for a Text session or already stored audio, skips TTS when the session cost has reached the budget, and takes the voice from session_voice (the stored SessionConfig.voice, else the override, else the interview type's voice)."
+payload = "session_voice(config, settings)  → \"Charon\"  ·  check_budget(0.011, limits).allowed → True"
+
+[[journey]]
+title = "LLMClient.speech: one logged TTS call"
+lane = "gateway"
+symbol = "interview_app.llm.client:LLMClient.speech"
+text = "speech posts to OpenRouter's /audio/speech through the openai SDK (with_raw_response, response_format pcm). The response has no usage, so _speech_tokens estimates tokens from the characters and the audio length, and the price catalog turns them into an estimated cost. The CallRecord becomes an LLMCall row with role tts."
+payload = "LLMCall(role=\"tts\", model=\"google/gemini-3.8-flash-lite-tts\", cost_usd≈0.003 (estimated), latency_s=…)"
+
+[[journey]]
+title = "The audio is stored once"
+lane = "db"
+symbol = "interview_app.db:TurnAudio"
+text = "pcm_to_wav adds a WAV header to the 16-bit mono 24 kHz PCM, the file is written owner-only under data/audio/<user>/<session>/, and a TurnAudio row records it (unique per session and turn). Replays and later views read the file and cost nothing."
+payload = "TurnAudio(session_id=12, turn_idx=2, path='audio/1/12/2.wav', voice='Charon', model='google/gemini-3.8-flash-lite-tts', seconds=15.4)"
+
 [[lifecycles]]
 name = "Documents"
 stages = [
@@ -255,6 +291,7 @@ name = "Call log and cost"
 stages = [
   ["born", "CallRecord per chat call", "interview_app.llm.client:LLMClient.chat"],
   ["born", "CallRecord per Jev call", "interview_app.llm.decide:DecisionClient.decide"],
+  ["born", "CallRecord per TTS call, cost estimated (no usage in the speech response)", "interview_app.llm.client:LLMClient.speech"],
   ["store", "LLMCall row", "interview_app.llm.calllog:make_db_recorder.record"],
   ["read", "Cost so far + session budget", "interview_app.interview.engine:session_cost"],
   ["read", "Settings page totals by role and model", "interview_app.usage:usage_summary"],
@@ -265,7 +302,7 @@ stages = [
 name = "Weak-spot drill focus"
 stages = [
   ["born", "Picked in code from a stored Report", "interview_app.interview.drill:focus_from_report"],
-  ["transform", "Same type, difficulty, models; length from the targets", "interview_app.interview.drill:drill_config"],
+  ["transform", "Same type, difficulty, models; stored as Length Custom with a question count from the targets", "interview_app.interview.drill:drill_config"],
   ["store", "SessionConfig.focus inside InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
   ["read", "Focused practice block in _base.md (every variant)", "interview_app.interview.prompting:interviewer_system_prompt"],
   ["read", "Probes built around the targets (plan.md)", "interview_app.interview.prompting:plan_messages"],
@@ -277,7 +314,8 @@ name = "Next step and score summary (Home, History)"
 stages = [
   ["born", "History rows for the user", "interview_app.history:list_sessions"],
   ["transform", "One next action: add, start, resume, get feedback or practise", "interview_app.journey:next_step"],
-  ["transform", "Count, latest score with its change, best score", "interview_app.journey:score_summary"],
+  ["transform", "Only Standard and Full count towards latest and best", "interview_app.history:counts_towards_scores"],
+  ["transform", "Count, latest score with its change, best score; practice sessions counted apart", "interview_app.journey:score_summary"],
   ["read", "Home: step cards and the Next step card", "app.views.home:<module>"],
   ["read", "History: score metrics", "app.views.history:score_metrics"],
 ]
@@ -287,9 +325,46 @@ name = "Preferences"
 stages = [
   ["born", "Settings page form", "app.views.settings:<module>"],
   ["store", "UserPreferences.prefs_json", "interview_app.preferences:save_preferences"],
-  ["read", "Pre-fills the start form (length slider range from Limits)", "interview_app.preferences:load_preferences"],
+  ["read", "Pre-fills the start form: default length, channel and voice (Custom slider range from Limits)", "interview_app.preferences:load_preferences"],
   ["transform", "Becomes the SessionConfig", "interview_app.preferences:to_session_config"],
   ["store", "InterviewSession.config_json", "interview_app.interview.engine:start_interview"],
+]
+
+[[lifecycles]]
+name = "Length"
+stages = [
+  ["born", "Length segmented control on the start form (Custom shows the slider)", "app.views.interview:start_form"],
+  ["transform", "Preset count from LengthPresets (Full: the type's realistic count; Custom: the slider)", "interview_app.preferences:preset_main_questions"],
+  ["transform", "Becomes SessionConfig.length and main_questions", "interview_app.preferences:to_session_config"],
+  ["store", "InterviewSession.config_json (old rows load as Full + Text)", "interview_app.interview.engine:start_interview"],
+  ["read", "Follow-up cap: min(difficulty cap, Quick cap) for Quick", "interview_app.interview.engine:followup_cap"],
+  ["read", "Quick directive: one-sentence intro, core questions, one-line offer", "interview_app.interview.engine:_quick_directive"],
+  ["read", "Early-close correction asks for the one-line offer in Quick", "interview_app.interview.engine:close_correction"],
+  ["read", "Lab runs Full only", "interview_app.lab.runner:run_session"],
+  ["read", "Latest and best ignore Quick and Custom", "interview_app.history:counts_towards_scores"],
+  ["read", "Length · Channel badge (interview, History, report)", "app.report_view:session_badge"],
+]
+
+[[lifecycles]]
+name = "Spoken questions (Voice)"
+stages = [
+  ["born", "Newest interviewer turn of a Voice session, asked for by the page", "app.views.interview:interviewer_message"],
+  ["transform", "Voice for the session (stored, override, or by interview type)", "interview_app.voice:session_voice"],
+  ["transform", "TTS call with an estimated cost (role tts)", "interview_app.llm.client:LLMClient.speech"],
+  ["transform", "Raw PCM wrapped into WAV", "interview_app.voice:pcm_to_wav"],
+  ["store", "data/audio/<user>/<session>/<turn>.wav + TurnAudio row", "interview_app.voice:_speak"],
+  ["read", "Replays and later views read the stored file", "interview_app.voice:stored_audio"],
+  ["read", "Files removed with the session or application", "interview_app.voice:delete_session_audio"],
+]
+
+[[lifecycles]]
+name = "Styles (design system)"
+stages = [
+  ["born", "app/styles/app.css: static, no placeholders, no user or model text", "app.ui_common:load_styles"],
+  ["read", "Injected on every run from main.py", "app.main:<module>"],
+  ["read", "Equal-height card rows with pinned footers", "app.ui_common:card_row"],
+  ["read", "Panels and aligned form grids", "app.ui_common:form_row"],
+  ["read", "Button rows of matching size", "app.ui_common:button_row"],
 ]
 
 [[sequences]]
@@ -362,9 +437,10 @@ sequenceDiagram
   participant L as LLMClient
   participant O as OpenRouter
   participant D as SQLite
-  U->>P: pick application, type, difficulty, length, mode, then Start
+  U->>P: pick application, type, difficulty, length, channel, mode, then Start
   P->>D: load_preferences (UserPreferences)
-  P->>P: to_session_config(prefs, form values)
+  P->>P: to_session_config(prefs, presets, form values)
+  Note over P: Quick/Standard count from LengthPresets, Full from the interview type, Custom from the slider; a Voice session stores its voice
   P->>P: st.status "Preparing your interview…" (about 30 s)
   P->>E: start_interview(deps, user, application, config)
   E->>D: get_application (Application + Documents)
@@ -600,6 +676,56 @@ sequenceDiagram
 '''
 
 [[sequences]]
+id = "voice"
+title = "Hear a question (Voice channel)"
+symbols = [
+  "app.views.interview:interviewer_message",
+  "interview_app.voice:stored_audio",
+  "interview_app.voice:speak",
+  "interview_app.voice:_speak",
+  "interview_app.voice:session_voice",
+  "interview_app.llm.client:LLMClient.speech",
+  "interview_app.voice:pcm_to_wav",
+  "interview_app.db:TurnAudio",
+]
+mermaid = '''
+sequenceDiagram
+  actor U as User
+  participant P as Interview page
+  participant V as voice
+  participant L as LLMClient
+  participant O as OpenRouter
+  participant D as SQLite + data/audio
+  Note over P: a new interviewer turn was just stored by the engine
+  P->>V: stored_audio(session, turn)
+  alt audio already stored
+    V-->>P: WAV path (no call, no cost)
+  else newest turn, not tried yet
+    P->>V: speak(...)
+    V->>D: load the turn and SessionConfig for this user
+    alt Text session
+      V-->>P: text_session (nothing to do)
+    else session cost at the budget
+      V-->>P: budget notice, text shown
+    else
+      V->>V: session_voice (stored voice, override, or by interview type)
+      V->>L: speech("tts", text, model, voice)
+      L->>O: POST /audio/speech (response_format pcm)
+      O-->>L: raw PCM (audio/pcm;rate=24000;channels=1), no usage
+      L->>D: LLMCall row (role tts, estimated cost)
+      V->>V: pcm_to_wav
+      V->>D: write the WAV (owner-only) + INSERT TurnAudio
+      V-->>P: ready + path
+    end
+  end
+  alt there is a path
+    P-->>U: player (autoplay once for the newest), text behind Show text
+  else any failure
+    P-->>U: the text with a short notice
+  end
+'''
+
+[[sequences]]
 id = "lab"
 title = "Run the prompt lab"
 symbols = [
@@ -628,7 +754,7 @@ sequenceDiagram
   CLI->>C: run_arms(variants x personas x repeats, budget)
   loop every arm, persona and repeat
     C->>D: spend_since (stop cleanly at the budget)
-    C->>R: run_session
+    C->>R: run_session (refuses any length but Full)
     R->>E: start_interview
     loop until is_final or the turn cap
       R->>Sim: simulate_answer: chat("candidate_sim")
