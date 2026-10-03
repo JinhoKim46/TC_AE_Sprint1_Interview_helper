@@ -4,10 +4,10 @@
 
 **Blocked by:** 02, 03, 04
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Start form fields in an aligned grid with matching sizes; button rows match
-- [ ] Interview screen, report, History and Settings use the shared helpers; no one-off sizes
-- [ ] Audit findings fixed, or listed with a reason in the PR
-- [ ] No dynamic content in CSS; no `unsafe_allow_html`; all untrusted text through `safe_md`
-- [ ] AppTest suite and ruff green; before/after screenshots; the app exercised once
+- [x] Start form fields in an aligned grid with matching sizes; button rows match
+- [x] Interview screen, report, History and Settings use the shared helpers; no one-off sizes
+- [x] Audit findings fixed, or listed with a reason in the PR
+- [x] No dynamic content in CSS; no `unsafe_allow_html`; all untrusted text through `safe_md`
+- [x] AppTest suite and ruff green; before/after screenshots; the app exercised once
