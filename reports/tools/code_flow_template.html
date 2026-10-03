@@ -501,7 +501,7 @@ function schemaTable(clsId) {
     const dl = h("dl", {});
     const row = (label, ...content) => dl.append(h("dt", { text: label }), h("dd", {}, ...content));
     if (note.what) row("Does", h("span", { text: note.what }));
-    row("Model", h("span", {}, h("code", { text: a.default_model || "?" })), h("span", { class: "note" }, "Settings.models." + (a.models_field || "?") + (a.model_comment ? " · " + a.model_comment : "")));
+    row("Model", h("span", {}, h("code", { text: a.default_model || "?" })), h("span", { class: "note" }, (a.config_path || "Settings.models." + (a.models_field || "?")) + (a.model_comment ? " · " + a.model_comment : "")));
     const sites = a.sites.map((st) => h("div", {}, symLink(st.site), " ", h("span", { class: "loc", text: "line " + st.line }), st.model_expr ? h("div", { class: "loc", text: "model=" + st.model_expr }) : null));
     row("Called in", ...sites);
     if (a.callers.length) row("By", h("div", { class: "chips" }, a.callers.map((c) => h("span", { class: "chip mono", onclick: () => openInGraph(c), text: symLabel(c) }))));

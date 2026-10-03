@@ -1347,6 +1347,13 @@ def signature(node: ast.AST) -> str:
 AGENT_ORDER = ["interviewer", "planner", "judge", "candidate_sim", "guard", "live_score", "lab_judge", "tts"]
 
 
+def config_path(models_field: str | None) -> str | None:
+    """`Settings.models.<x>` for the RoleModels fields, `Settings.tts.model` for the TTS group."""
+    if models_field is None:
+        return None
+    return "Settings.tts.model" if models_field == "tts" else f"Settings.models.{models_field}"
+
+
 def build_agents(cm: CodeMap, edges: list[dict], config: dict) -> list[dict]:
     defaults = {f["name"]: f for f in config.get("RoleModels", {}).get("fields", [])}
     # TTSSettings.model is the "tts" role's default (see models_field).
@@ -1381,6 +1388,8 @@ def build_agents(cm: CodeMap, edges: list[dict], config: dict) -> list[dict]:
                 "role": role,
                 "api": sorted({s["api"] for s in sites}),
                 "models_field": field_,
+                # The real settings path for the page label: TTS has its own group, the rest use RoleModels.
+                "config_path": config_path(field_),
                 "default_model": (defaults.get(field_) or {}).get("default", "").strip("'\"")
                 if field_
                 else None,

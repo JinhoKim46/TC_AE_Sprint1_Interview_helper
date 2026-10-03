@@ -67,6 +67,8 @@ def test_agents(code_map):
     # Text-to-speech (voice channel): one speech call site, model from TTSSettings.
     assert agents["tts"]["api"] == ["speech"]
     assert agents["tts"]["default_model"] == "google/gemini-3.8-flash-lite-tts"
+    assert agents["tts"]["config_path"] == "Settings.tts.model"  # its own group, not RoleModels
+    assert agents["judge"]["config_path"] == "Settings.models.judge"
 
 
 def test_database_access(code_map):

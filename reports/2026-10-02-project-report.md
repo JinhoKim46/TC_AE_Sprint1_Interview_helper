@@ -1,15 +1,15 @@
 # Interview Helper — Project Report
 
-2 October 2026 · Jinho · [Live version (Claude Docs)](https://claude.ai/code/artifact/cde878a6-a389-40ac-a2d5-710e4ed8578b)
+2 October 2026, updated 3 October 2026 · Jinho · [Live version (Claude Docs)](https://claude.ai/code/artifact/cde878a6-a389-40ac-a2d5-710e4ed8578b)
 
 ## Executive summary
 
-The project is feature-complete for grading one week ahead of the Friday 9 October review: every mandatory requirement and well over the bonus threshold of optional tasks are built, tested and merged, and so is Phase 2 (History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service). An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a light and dark theme and clearer interview and report screens.
+The project is feature-complete for grading one week ahead of the Friday 9 October review: every mandatory requirement and well over the bonus threshold of optional tasks are built, tested and merged, and so is Phase 2 (History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service). An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a light and dark theme and clearer interview and report screens. On 3 October (PRs #43–#48) every interview gained a **Length** (Quick, Standard, Full or Custom) and a **Channel** (Text, or Voice, where the interviewer speaks each question through text-to-speech), and a small design system aligned every page and brought it to WCAG AA contrast.
 
 - **What it is:** a local Streamlit app that rehearses an interview for **one specific job application**. The user uploads a job description and CV (cover letter optional); an LLM interviewer grounded in those documents runs a realistic multi-turn interview; an LLM judge then scores the transcript against a weighted rubric and writes evidence-backed feedback.
 - **Status against the grading scheme:** all five mandatory requirements (R1–R5) met; 13 optional tasks delivered (E3, E4, E7, E8, M1, M2, M3, M6, M7, M9, H1, H4, H5) against a bonus threshold of 2 medium and 1 hard.
-- **Delivery:** 40 pull requests merged through CI, 421 automated tests (no network); the MFA work was dropped and stays in a closed PR (#4) for reference.
-- **Evidence:** live runs on real models show about 25 s to start an interview, about 3 s per interviewer turn, about $0.015 per interview and about $0.10 per report (three judge runs, median). The 15-session prompt comparison plus the setting sweep cost $0.52.
+- **Delivery:** 47 pull requests merged through CI, 504 automated tests (no network); the MFA work was dropped and stays in a closed PR (#4) for reference.
+- **Evidence:** live runs on real models show about 25 s to start an interview, about 3 s per interviewer turn, about $0.015 per interview and about $0.10 per report (three judge runs, median). A two-turn Quick · Voice session cost about $0.014, text-to-speech included (an estimate, see Risks). The 15-session prompt comparison plus the setting sweep cost $0.52.
 - **Honest caveats:** judge scores vary between runs (the median of three reduces this); the prompt comparison is small (one session per persona), cannot separate the three best prompts and was run on prompts that later PRs changed; question stacking is reduced, not eliminated.
 
 **Recommendation:** freeze features for grading now. Spend the remaining days on review rehearsal and one end-to-end run with real documents, then resume the secondary roadmap after the review.
@@ -48,8 +48,11 @@ Scope was set in two passes: a broad design from the owner's brainstorm, then a 
 | Live per-answer scoring (Jev) and Coaching mode | Delivered after the graded scope (PR #21) | Not graded; Jev already used for the guard and the lab judge |
 | Weak-spot drill, median-of-3 judging, Docker service | Delivered after the graded scope (PRs #23, #24, #26) | Long-term use and score stability |
 | UX pass: guided Home with a next step, theme, clearer interview, report and History screens | Delivered after the audit (PRs #40, #41) | A tool the owner keeps using should say what to do next |
+| Interview Length (Quick / Standard / Full / Custom) and History counting | Delivered (PRs #44, #46) | A ten-minute practice before a call, without distorting progress |
+| Voice channel: text-to-speech for the interviewer's questions | Delivered (PR #45) | Practise listening; answers stay typed |
+| Design system and accessibility pass on every page | Delivered (PRs #47, #48) | Aligned, AA-contrast pages for a tool the owner keeps using |
+| Speech-to-text answers | Dropped (spec of PR #43) | Typed answers keep the guard, the transcript and the judge's quote checks exact; STT added cost and a second failure point |
 | Interviewer avatars (image generation, M8) | Deferred | Bonus already exceeded |
-| Voice (speech-to-text, text-to-speech) | Deferred | Highest effort and risk for a demo |
 | JD import from URL | Deferred | Fragile (sites block scraping); paste covers it |
 
 Two items in the original brainstorm were changed rather than deferred. **Flask + HTML/CSS** became Streamlit, because the brief requires Streamlit or Next.js and the reviewer checks it. **Supabase** became local SQLite, because the app has one user on one machine and real CVs should stay local.
@@ -62,7 +65,9 @@ The app has three layers: a thin Streamlit UI, a Python core that holds all logi
 
 **How a session flows.** The Applications page turns PDFs or pasted text into clean documents, flags anything that looks like an instruction to an AI, and stores one copy per application. Only one interview runs at a time. Starting one snapshots those documents, makes a plan (for P4), and asks for the opening turn. Each answer passes the length and injection guards before the engine builds the messages; the engine checks whose turn it is, code counts questions and follow-ups and decides the phase, and the model writes the next turn as validated JSON. When the interview ends, code splits the transcript into exchanges and computes metrics, three parallel judge runs score it with cited evidence, code verifies every quote and turns each run's scores into a report using the weights in `rubric.json`, and the median run becomes the report.
 
-**Why this shape.** The core can be tested without a browser, so most of the 421 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
+**Length and Voice.** Before an interview the candidate picks a Length and a Channel, stored in the session config. Quick and Standard take their main-question count from `LengthPresets` in `config.py` (3 and 5), Full keeps each interview type's realistic count, and Custom uses the slider. In a Quick session code changes the directive (`_quick_directive`): a one-sentence intro with no warm-up, the core questions (motivation, the job's top must-have requirement, one type-specific question), follow-ups capped at min(difficulty cap, Quick cap) and a one-line skippable "any quick question for me?" that counts as the candidate-questions stage. History's latest and best scores count only Standard and Full sessions; Quick and Custom (every weak-spot drill) are practice points on the trend. In a Voice session the page asks `voice.speak` for each new interviewer turn right after it is stored; `LLMClient.speech` calls OpenRouter's `/audio/speech`, the raw PCM is saved once as a WAV file with a `TurnAudio` row, the newest question auto-plays and its text sits behind "Show text". Any TTS failure shows the text with a notice.
+
+**Why this shape.** The core can be tested without a browser, so most of the 504 tests run on plain functions with scripted model replies. The single gateway means every call's tokens, cost and latency are logged in one place, which powers the cost display and keeps provider changes to one setting.
 
 ## Technology stack
 
@@ -72,6 +77,8 @@ The stack is deliberately small: one language, one UI library, one database file
 | --- | --- | --- |
 | Language and tooling | Python 3.12, uv, ruff, pytest | One language end to end; uv gives a locked, reproducible environment |
 | User interface | Streamlit (multi-page, `st.navigation`, pages in `app/views/`) | Required by the brief (or Next.js); fastest path to a working chat UI; `.streamlit/config.toml` binds it to 127.0.0.1 and sets one indigo theme for light and dark mode |
+| Design system | One static stylesheet `app/styles/app.css`, loaded by `ui_common.load_styles()`, plus layout helpers (`card_row`, `panel`, `form_row`, `button_row`) | Equal-height cards, aligned forms and matching buttons on every page; the loader takes no arguments, so no user or model text can reach the CSS; AA contrast and visible focus in light and dark |
+| Text-to-speech | OpenRouter `/audio/speech` through the same OpenAI SDK gateway; WAV written with the standard-library `wave` module | Every spoken question is logged like any other call; no audio dependency |
 | Core logic | Plain Python package `interview_app`, no UI imports | Testable without a browser; the UI could be replaced later |
 | Data models and validation | pydantic, pydantic-settings | Every model response and every setting is validated against a typed schema; settings have bounds, and a misspelt key in a settings group fails at start |
 | Storage | SQLite via SQLModel | Single user, local data; moving to Postgres later is a connection-string change |
@@ -91,8 +98,9 @@ The stack is deliberately small: one language, one UI library, one database file
 | Simulated candidate (lab only) | `google/gemini-2.5-flash` | A third family, so neither side grades its own style |
 | Injection guard, live scorer, lab judge | Jev (`typesafe/jev-1.13-20260917`) | Typed probabilities; code sets the threshold |
 | Open-weight options (H4) | `google/gemma-4-31b-it`, `minimax/minimax-m2.7` | Passed a live check against the account's guardrail |
+| Voice / text-to-speech (role `tts`) | `google/gemini-3.8-flash-lite-tts` (`Settings.tts.model`) | The only TTS model the account's guardrail allows; the cost is estimated from catalog prices, because the speech response has no usage |
 
-The account's OpenRouter guardrail blocks `openai/gpt-5`, DeepSeek and `z-ai/glm-5.2`; each picker entry was confirmed with a real call.
+The account's OpenRouter guardrail blocks `openai/gpt-5`, DeepSeek and `z-ai/glm-5.2`, and every TTS model except `google/gemini-3.8-flash-lite-tts`; each picker entry was confirmed with a real call.
 
 ## Key decisions
 
@@ -101,7 +109,7 @@ One principle runs through every decision below: **the model judges, code comput
 | Decision | Alternatives considered | Rationale | Consequence |
 | --- | --- | --- | --- |
 | Grading criteria and core flow first; extras after the review | Build everything before Friday | The extras are not graded; each one adds explanation burden at the review | Graded scope finished on day one; MFA, voice and dashboard deferred |
-| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 421 tests, most of them on pure functions |
+| Core package without Streamlit, UI as a thin layer | Logic inside the Streamlit pages | Tests run without a browser; the UI is replaceable | 504 tests, most of them on pure functions |
 | One OpenAI-compatible gateway for all chat models | LiteLLM; LangChain | Fewest moving parts; raw API parameters stay visible for the review | Switching provider = a base URL and a key; every call logged with tokens, cost and latency |
 | Each of the five prompts = the zero-shot baseline plus exactly one technique | Five independently written prompts | A comparison then isolates what each technique adds | Clean R4 story; only P4 receives the separately generated plan |
 | Structured JSON for every interviewer turn, no streaming | Stream plain text | The app needs stage, question id and end-of-interview metadata reliably | 2–5 s spinner per turn instead of streamed words |
@@ -112,6 +120,9 @@ One principle runs through every decision below: **the model judges, code comput
 | Three parallel judge runs per session, median, from a different model family | One run; one call per exchange; the interviewer's own model | One transcript scored 56.6 and 71.5 on two single runs; parallel runs cost no extra time; a different family avoids self-preference bias | About 60 s and $0.10 per report; all three scores are shown |
 | Judge must quote the candidate; code verifies the quote | Trust cited turn ids | A real run credited CV facts never said in the interview | Requirement credit and strengths need a verified quote (in order, at least two words); an unverified positive rating scores 0 |
 | Local SQLite, single local user, MFA dropped | Supabase; full login now | Data stays on the owner's machine, served on localhost only; login is not graded | `user_id` kept on every owned table (application, interview and history queries filter on it), so accounts can be added without migration |
+| Length as breadth (Quick / Standard / Full / Custom), separate from difficulty; Quick and Custom kept out of latest and best | Full interviews only; one trend for every session | A short practice is useful, but three questions and a skippable question offer are not comparable to a full interview | Counts in `config.py`, behaviour in code, no counts in prompts; the lab runs Full only, so R4 stays like-for-like |
+| Voice speaks the questions; speech-to-text dropped | Full voice with recorded, transcribed answers | Typed answers keep the guard, the transcript and the quote checks exact; STT adds cost and a second failure point | TTS once per question, stored as WAV; estimated cost in the call log; any failure shows the text |
+| One static stylesheet for the design system | CSS built per page; `unsafe_allow_html` | A stylesheet built from data could carry user or model text into the page | Aligned pages and AA contrast with no new injection path |
 | Public repository with a privacy-first `.gitignore` | Private repository | Reviewer access without extra setup | Real applications and design screenshots never committed; a fictional sample application ships instead |
 
 ## Mapping to the grading scheme
@@ -160,20 +171,22 @@ Not attempted, by choice: E1, E2, E5, E6 (partly covered by the rubric), M4, M5 
 | Correct OpenRouter calls | One gateway, call log with tokens, cost and latency |
 | Uses a front-end library | Streamlit multi-page app |
 | Justifies technique and parameter choices | Lab results and the reasoning-effort sweep |
-| Understands potential problems | Judge variance, small comparison sample on older prompts, partial rubric, latency, what the audit found |
+| Understands potential problems | Judge variance, small comparison sample on older prompts, partial rubric, latency, an estimated TTS cost, what the audit found |
 | Suggests improvements | Re-run the lab on current prompts, larger evaluation set, calibrated live scores, code checks for stacking |
 
 ## Delivery process and quality
 
 The project was run like a small engineering team: every change went through its own branch, a pull request and automated checks before it reached `main`.
 
-**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format, the unit tests and a Docker build; the PR is squash-merged only when that is green, then the branch and worktree are removed. 40 PRs were merged this way; one (MFA, #4) was closed unmerged and is kept for reference.
+**Workflow.** Each change lives in its own git worktree (`.worktrees/<branch>`), is committed in small Conventional-Commit steps, pushed, and opened as a pull request with a summary and a test plan. GitHub Actions runs lint, format, the unit tests and a Docker build; the PR is squash-merged only when that is green, then the branch and worktree are removed. 47 PRs were merged this way; one (MFA, #4) was closed unmerged and is kept for reference.
 
 **Parallel work.** Independent modules were built by sub-agents in separate worktrees while the interview engine and evaluation, the parts the owner must explain, were built in the main line. Every sub-agent PR was reviewed, rebased and merged by the lead; two real bugs were caught in review (pricing retried the network on every lookup when offline; UI tests leaked a cached database between tests).
 
 **Audit before the review.** After the feature work, independent passes over the core logic, security, UI, infrastructure and documentation looked for what the tests missed, and a second round reviewed the fixes. Each confirmed finding was reproduced, fixed and covered by a regression test: interview-state bugs such as double submits and stuck starts (#30), two scoring rules that inflated the score (#30, #37), config validation and Docker/CI hardening (#32), five security issues including a ReDoS, Unicode bypasses, PDF bombs and second-order injection (#33, #38), markdown/HTML escaping and stale UI state (#31), a simplification pass (#35) and corrections to claims in the docs (#36). The full list is under Risks, limitations and open issues below.
 
 **UX pass.** A heuristic review of every page (hierarchy, onboarding, empty states, feedback during slow steps, error recovery, accessibility) led to PR #40. Home now shows three step cards marked Done, Next or Later (icon and word, never colour alone) and one Next step card whose action is picked in code by the new `journey.py` (`next_step`, `score_summary`). The start form has numbered sections with plain-language help, and the slider range comes from `Limits.min_main_questions` / `max_main_questions`. `st.status` boxes explain the ~30 s start and the ~1 min report and show a clear failed state. The interview screen shows type, difficulty and mode badges and "Question n of N · Stage", live score chips carry an icon per level, and the report opens with a verdict card. History shows the interview count, the latest score with its change and the best score. "Practise this application" preselects an application on the start form. PR #41 renamed `app/pages/` to `app/views/` because Streamlit fell back to its legacy file-list navigation on a deep link right after a server start.
+
+**Length, Voice and design (3 October).** A grilling round with the owner produced a spec and six tickets (PR #43), built as a graph by parallel agents: Length and Channel settings (#44), the Voice channel (#45), Quick behaviour with History counting and drills stored as Custom (#46), the design system with Home and Applications (#47), and an alignment and accessibility pass on every page with screenshots at 1440 px and 420 px in light and dark (#48). The pass fixed accent text below 4.5:1 on dark, missing focus rings and light badges below AA.
 
 **Testing strategy.**
 
@@ -206,6 +219,8 @@ Zero-shot scored lowest on realism (3.69 vs 3.96–4.07, one session per persona
 | Feedback report (Claude Haiku judge, 3 runs, median) | about 60 s, about $0.10 |
 | Jev injection check | about 0.4 s per answer |
 | Full prompt comparison + setting sweep | $0.52 |
+| Quick session, core engine (P1, Tough, 3 main questions) | $0.0057 |
+| Quick · Voice session, 2 spoken turns (15.4 s and 8.4 s of audio) | about $0.014 in total; TTS about $0.0046 (estimated) |
 
 **Issues found by measuring, and fixed:**
 
@@ -233,6 +248,12 @@ None of the open issues blocks the review; two (judge variance and the small eva
 | Single local user, no login | Anyone who can reach the port can use the app | Bound to 127.0.0.1, locally and through Docker | Add a login only if the app is ever hosted for others |
 | Old CV-derived examples remain in git history of the public repo | Minor privacy exposure | Removed from all current files | Owner decision: rewrite history (force-push) or accept |
 | `openai/gpt-5` blocked by the account guardrail | The brief's high-capability option unavailable | gpt-5-mini is the recommended default | Optional: allow it in OpenRouter settings |
+| TTS cost is an estimate | Session cost and budget can be off for Voice sessions | Cost = catalog prices × (characters / 4 in, audio seconds × 32 out), a conservative rate; an old cached catalog can cost TTS at $0 for up to 24 h | Use the real cost once OpenRouter reports usage for speech |
+| The guardrail allows only one TTS model | No comparison of voice quality or price; voice stops if the model goes away | Any TTS error leaves the question readable as text | Check other TTS models again; `TTS__MODEL` switches it |
+| Quick scores are not comparable to Full | A short session would distort progress if it counted | Quick and Custom are excluded from latest and best and drawn as separate trend points; no score adjustment | Keep it so; a separate practice summary if wanted |
+| Refreshing the page re-autoplays the newest question | A surprise replay | Auto-play happens once per browser session; the audio is never generated twice | Remember played turns in the database |
+| The guideline's Quick paragraph is in every P4 prompt | Standard and Full P4 prompts carry an instruction that doesn't apply | The status message says when a session is Quick; Standard and Full directives are unchanged | Render the paragraph only for Quick sessions |
+| Data tables scroll sideways inside themselves on narrow screens | Harder to read in a phone-width window | The page itself never scrolls sideways | Fewer columns at narrow widths |
 
 **Resolved by the audit (PRs #30–#38) and the navigation fix (PR #41)**, each with a regression test:
 
@@ -263,13 +284,13 @@ The review is graded on explanation as much as on the build; these are the quest
 | System vs user vs assistant? | System = instructions and wrapped documents; user = the candidate's wrapped answer; assistant = earlier interviewer turns; a trailing system message carries live status | `interview/prompting.py` docstring |
 | What output types do you use? | Structured JSON validated against schemas, Jev's typed probabilities, free text inside JSON fields | `interview/schemas.py`, `evaluation/schemas.py` |
 | How is it secured? | Length/turn/spend limits; regex then Jev injection detection on canonical text; spotlighting so documents, answers and model-written text are data, never instructions; escaped UI output; PDF bounds; localhost binding | Paste "ignore all previous instructions" as an answer, live; the audit fixes |
-| What are the weaknesses? | Judge variance, small evaluation sample run on older prompts, stacking not fully solved, partial rubric, start-up latency | Risks table |
+| What are the weaknesses? | Judge variance, small evaluation sample run on older prompts, stacking not fully solved, partial rubric, start-up latency, an estimated TTS cost | Risks table |
 | What would you improve? | Re-run the lab on current prompts, larger evaluation set, calibrated live scores, code checks for stacking and the follow-up cap | Next steps |
 
 **Demo script (about 6 minutes):**
 
 1. Applications → Load sample application; open the JD and CV tabs.
-2. Interview → Hiring manager, standard difficulty, 4 main questions → Start.
+2. Interview → Hiring manager, standard difficulty, Length Custom with 4 main questions (or Quick for a shorter demo), Channel Text or Voice → Start.
 3. Give one strong answer, one vague answer (watch the ownership or evidence probe), and paste an injection attempt (watch it blocked).
 4. End the interview → Get my feedback report; point at a verified quote and the requirements table.
 5. Settings → toggle Developer settings; show the model picker with prices and the open-weight badge; show spend by role.
@@ -288,6 +309,7 @@ The next step is not more features: it is for the owner to use the app end to en
 - [ ] `make rebuild` after the audit fixes and open the database inside the container (the PR #38 check); on Docker Desktop, run `chmod 600 data/app.db` on the host once
 - [ ] Owner runs one full interview, report and weak-spot drill with a real application and a real CV PDF (documents stay local) and notes anything confusing
 - [ ] Try Coaching mode once (an answer, a retry, continue)
+- [ ] Run one Quick · Voice interview and check the History trend markers
 - [ ] Look at light and dark mode, and at the Home next-step card with your real data
 - [ ] Fix only what those runs reveal; feature freeze otherwise
 - [ ] Rehearse the demo script and the question table twice; read `README.md` and `docs/05-prompt-comparison.md` once
@@ -302,5 +324,5 @@ The next step is not more features: it is for the owner to use the app end to en
 3. Calibrate the live Jev scores against the final judge
 4. The rubric's red-flag checks (N-items) as Jev yes/no questions
 5. Code checks on each interviewer turn for the follow-up cap and question stacking
-6. Voice: speech-to-text answers and spoken questions
+6. Voice: play stored audio in History, remember auto-played questions across a refresh, and use the real TTS cost once OpenRouter reports it
 7. DOCX upload and JD import from a URL; interviewer avatars, if still wanted

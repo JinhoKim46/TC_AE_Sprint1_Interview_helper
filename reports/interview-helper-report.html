@@ -211,9 +211,9 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
 
 <main class="wrap" id="top">
   <header class="hero">
-    <div class="eyebrow">Turing College AE · Sprint 1 capstone · status 2 October 2026</div>
+    <div class="eyebrow">Turing College AE · Sprint 1 capstone · status 3 October 2026</div>
     <h1>An interview rehearsal built from one job description and one CV</h1>
-    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a theme for light and dark mode and clearer interview and report screens. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
+    <p class="lede">Everything graded is built, tested and merged one week before the 9 October review, and so is Phase 2: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging and a Docker service. An audit before the review (PRs #30–#38) then fixed interview-state, scoring, security and UI issues, and a UX pass (PRs #40, #41) added a guided Home page, a theme for light and dark mode and clearer interview and report screens. On 3 October (PRs #43–#48) every interview gained a Length (Quick, Standard, Full or Custom) and a Channel (Text, or Voice, where the interviewer speaks each question), and a small design system aligned every page to WCAG AA. This page shows how the parts connect, which part delivers which grade, and why each choice was made. Click anything on the map.</p>
     <div class="flowline" aria-label="Core flow">
       <span class="step">Upload JD + CV</span><span class="arrow">→</span>
       <span class="step">cover letter (optional)</span><span class="arrow">→</span>
@@ -223,8 +223,8 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="stats">
       <div class="stat"><b>5 / 5</b><span>mandatory requirements met</span></div>
       <div class="stat"><b>13</b><span>optional tasks (bonus needs 2 medium + 1 hard)</span></div>
-      <div class="stat"><b>40</b><span>pull requests merged through CI</span></div>
-      <div class="stat"><b>421</b><span>automated tests, no network</span></div>
+      <div class="stat"><b>47</b><span>pull requests merged through CI</span></div>
+      <div class="stat"><b>504</b><span>automated tests, no network</span></div>
     </div>
   </header>
 
@@ -299,7 +299,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
         <tbody id="modelRows"></tbody>
       </table>
     </div>
-    <p class="note">The account's OpenRouter guardrail blocks <code>openai/gpt-5</code>, DeepSeek and <code>z-ai/glm-5.2</code>. Each model in the picker was confirmed with a real call.</p>
+    <p class="note">The account's OpenRouter guardrail blocks <code>openai/gpt-5</code>, DeepSeek and <code>z-ai/glm-5.2</code>, and every TTS model except <code>google/gemini-3.8-flash-lite-tts</code>. Each model in the picker was confirmed with a real call.</p>
   </section>
 
   <section id="decisions">
@@ -368,14 +368,14 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     <div class="checklist" id="checklist"></div>
     <div class="checkgroup">
       <h3>After the review, in order of value for long-term use</h3>
-      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service, the audit fixes (PRs #30–#38) and the UX pass (PRs #40, #41). Login with MFA was dropped: the app has one user and is served on localhost only.</p>
+      <p class="note">Done since the first version of this page: History and progress, Coaching mode with live scores, the weak-spot drill, median-of-3 judging, the Docker service, the audit fixes (PRs #30–#38), the UX pass (PRs #40, #41), and Length, the Voice channel and the design system (PRs #43–#48). Login with MFA was dropped: the app has one user and is served on localhost only.</p>
       <ol class="roadmap">
         <li>Re-run the prompt lab on the current prompts: the published numbers predate PRs #26, #28 and #33</li>
         <li>A larger evaluation set (more applications, at least 3 sessions per persona, a few human-rated transcripts) to calibrate the judge and separate P2, P4 and P5</li>
         <li>Calibrate the live Jev scores against the final judge (they are indicative until then)</li>
         <li>The rubric's red-flag checks (N-items) as Jev yes/no questions</li>
         <li>Code checks on each interviewer turn for the follow-up cap and question stacking (today the cap is only an instruction)</li>
-        <li>Voice: spoken questions and speech-to-text answers</li>
+        <li>Voice: play stored audio in History, remember auto-played questions across a refresh, and use the real TTS cost when OpenRouter reports it</li>
         <li>DOCX upload and JD import from a URL (MarkItDown for those formats only; pypdf stays for PDFs)</li>
         <li>Interviewer avatars (image generation), if still wanted</li>
       </ol>
@@ -395,22 +395,22 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "home_page", layer: "ui", name: "Home", sub: "app/views", x: 100, y: 70,
       files: ["app/views/home.py", "app/main.py"],
       job: "The start of the journey: three step cards (add an application, practise, read feedback), each marked Done, Next or Later with an icon and a word, never colour alone. A Next step card offers one primary action, picked in code by journey.next_step: add an application, start, resume the running interview, get the missing report, or practise again. Application cards show the interview count and the latest score.",
-      facts: ["The sidebar follows the journey: Practise (Home, Applications, Interview, History), then Setup (Settings)", "Indigo theme for light and dark mode, checked for WCAG AA contrast"], grades: ["R2"] },
+      facts: ["The sidebar follows the journey: Practise (Home, Applications, Interview, History), then Setup (Settings)", "Indigo theme for light and dark mode, checked for WCAG AA contrast", "Design system (PRs #47, #48): one static stylesheet, app/styles/app.css, loaded by ui_common.load_styles(), and layout helpers (card_row, panel, form_row, button_row) for equal-height cards and aligned forms on every page"], grades: ["R2"] },
     { id: "applications_page", layer: "ui", name: "Applications", sub: "app/views", x: 290, y: 70,
       files: ["app/views/applications.py"],
       job: "Create an application from a job description and CV (required) plus an optional cover letter and company notes, by PDF upload or paste. Extracted text is editable before saving. New and edited documents pass the injection check; suspicious text is flagged for the user to confirm.",
       facts: ["Includes a Load sample application button with a fictional company and candidate", "Deleting an application says how many interviews go with it, and is locked while one of them runs", "Practise this application opens the start form with it preselected"], grades: ["M6", "R2", "E3"] },
     { id: "interview_page", layer: "ui", name: "Interview", sub: "app/views", x: 480, y: 70,
       files: ["app/views/interview.py", "app/report_view.py", "app/drill_ui.py"],
-      job: "Pick the application, interview type, difficulty, mode (Realistic or Coaching) and number of main questions in a numbered start form with plain-language help; chat with the interviewer under type, difficulty and mode badges and a \"Question n of N · Stage\" progress line; end the interview; read the feedback report (verdict card first, two-column breakdown, framed strengths and improvements) and start a weak-spot drill from it.",
-      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere", "st.status boxes explain the ~30 s start and the ~1 min report, with a clear failed state", "Live score chips carry an icon per level as well as a colour"], grades: ["H1", "R2", "E4"] },
+      job: "Pick the application, interview type, difficulty, length (Quick, Standard, Full, or Custom with a slider), channel (Text or Voice) and mode (Realistic or Coaching) in a numbered start form with plain-language help; chat with the interviewer under type, difficulty and mode badges and a \"Question n of N · Stage\" progress line; end the interview; read the feedback report (verdict card first, two-column breakdown, framed strengths and improvements) and start a weak-spot drill from it.",
+      facts: ["A refresh resumes the interview: every turn is already stored", "Coaching mode: score chips and a tip after each answer, then Retry or Continue", "A blocked answer comes back in an editable box", "Model and document text is markdown-escaped (safe_md); no raw HTML anywhere", "st.status boxes explain the ~30 s start and the ~1 min report, with a clear failed state", "Live score chips carry an icon per level as well as a colour", "Voice: the newest question auto-plays once, every interviewer turn has a player, and the text sits behind Show text; with no audio the text shows with a notice", "A badge such as Quick · Voice on the interview header, in History and on the report"], grades: ["H1", "R2", "E4"] },
     { id: "history_page", layer: "ui", name: "History", sub: "app/views", x: 670, y: 70,
       files: ["app/views/history.py"],
       job: "Past interviews with their transcripts and reports. Pick one application to see its progress: score trend, weakest rubric skills, job requirements over time and recurring advice. Each report offers a weak-spot drill.",
-      facts: ["Never calls the judge: it only reads stored reports", "Metrics: interview count, latest score with its change, best score", "An interview without a report links back to get one"], grades: ["R2"] },
+      facts: ["Never calls the judge: it only reads stored reports", "Metrics: interview count, latest score with its change, best score", "Latest and best count only Standard and Full; Quick and Custom (every drill) are separate points on the trend", "An interview without a report links back to get one"], grades: ["R2"] },
     { id: "settings_page", layer: "ui", name: "Settings", sub: "app/views", x: 860, y: 70,
       files: ["app/views/settings.py"],
-      job: "Interview defaults in plain language (type, difficulty, mode, length). Developer settings sit behind a toggle: prompt variant, interviewer and judge models with prices, temperature, max tokens, reasoning effort. Usage and cost by role and model.",
+      job: "Interview defaults in plain language (type, difficulty, default length, default channel, and a fixed interviewer voice). Developer settings sit behind a toggle: prompt variant, interviewer and judge models with prices, temperature, max tokens, reasoning effort. Usage and cost by role and model.",
       facts: ["Open-weight models carry a badge"], grades: ["M1", "M3", "M7", "M9", "H4"] },
 
     { id: "ingest", layer: "core", name: "Ingest", sub: "ingest.py", x: 90, y: 200,
@@ -424,7 +424,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { id: "engine", layer: "core", name: "Interview engine", sub: "interview/engine.py", x: 420, y: 200,
       files: ["interview/engine.py", "interview/persona.py", "interview/plan.py"],
       job: "A stateless loop over the database. Start: snapshot documents, plan (for P4), opening turn. Answer: run the guards, then get the next turn; in Coaching mode, score the answer live and wait for Retry or Continue. Code counts main questions and follow-ups, picks the phase, forces a close at limits, and makes sure the candidate is invited to ask questions.",
-      facts: ["About 25 s to start, about 3 s per interviewer turn (gpt-5-mini, low effort)", "Interview type + difficulty derive the persona", "Guard and live-score Jev calls are billed to the session", "One interview at a time; a start stuck in preparing for 15 minutes is marked failed", "answer and respond check whose turn it is, so a double click can't add two turns"], grades: ["H1", "E4", "E7", "R1"] },
+      facts: ["About 25 s to start, about 3 s per interviewer turn (gpt-5-mini, low effort)", "Interview type + difficulty derive the persona", "Guard and live-score Jev calls are billed to the session", "One interview at a time; a start stuck in preparing for 15 minutes is marked failed", "answer and respond check whose turn it is, so a double click can't add two turns", "Quick: a one-sentence intro, the core questions, follow-ups capped at min(difficulty cap, Quick cap) and a one-line skippable question offer, all decided in code (next_directive, followup_cap)"], grades: ["H1", "E4", "E7", "R1"] },
     { id: "prompts", layer: "core", name: "Prompts", sub: "prompts/*.md", x: 590, y: 200,
       files: ["src/interview_app/prompts/", "interview/prompting.py", "interview/schemas.py"],
       job: "Five interviewer variants, each the zero-shot baseline plus one technique, and the planner and judge templates. Assembles the system, user and assistant messages. Reasoning fields sit before the message in the JSON schema.",
@@ -438,34 +438,38 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       job: "Saved interview defaults and developer settings per user. Spend summaries by role and by model, computed from the call log.",
       facts: [], grades: ["M1", "M3"] },
 
-    { id: "lab", layer: "lab", name: "Prompt lab", sub: "lab/", x: 90, y: 340,
+    { id: "lab", layer: "lab", name: "Prompt lab", sub: "lab/", x: 75, y: 340,
       files: ["src/interview_app/lab/", "lab/compare_prompts.py", "lab/sweep_setting.py"],
       job: "A simulated candidate (Gemini 2.5 Flash playing strong, weak and evasive personas) drives the real engine. Jev judges interviewer quality on rubric §12. Also runs the reasoning-effort sweep.",
       facts: ["15 sessions + sweep cost $0.52", "Uses its own database, never the app's", "A failed run ends its session, so it can't block the later runs"], grades: ["R4", "H5", "E8"] },
-    { id: "decide", layer: "core", name: "Jev client", sub: "llm/decide.py", x: 250, y: 340,
+    { id: "decide", layer: "core", name: "Jev client", sub: "llm/decide.py", x: 215, y: 340,
       files: ["src/interview_app/llm/decide.py"],
       job: "Asks the Jev decision model typed questions (yes/no, score, choice) in one request and returns probabilities. Used by the injection guard, Coaching-mode live scores and the lab judge. Code sets every threshold.",
       facts: ["About 0.4 s per call", "Retries on rate limits and server errors"], grades: ["R5", "H5"] },
-    { id: "llm", layer: "core", name: "LLM gateway", sub: "llm/client.py", x: 470, y: 340,
+    { id: "llm", layer: "core", name: "LLM gateway", sub: "llm/client.py", x: 355, y: 340,
       files: ["src/interview_app/llm/client.py", "src/interview_app/llm/calllog.py"],
-      job: "The one gateway for chat models: OpenAI SDK pointed at OpenRouter, retries, optional settings sent only when set, reasoning effort, real cost from usage.cost. Every call is logged. chat_json validates against a schema and repairs once.",
+      job: "The one gateway for chat models: OpenAI SDK pointed at OpenRouter, retries, optional settings sent only when set, reasoning effort, real cost from usage.cost. Every call is logged. chat_json validates against a schema and repairs once. speech calls OpenRouter's /audio/speech for the Voice channel (role tts, estimated cost).",
       facts: ["Switching provider is a base URL and a key", "An empty reply, or one cut off at max tokens, fails with a clear error instead of crashing or a useless repair"], grades: ["R3", "M3"] },
-    { id: "drill", layer: "core", name: "Weak-spot drill", sub: "interview/drill.py", x: 620, y: 340,
+    { id: "voice", layer: "core", name: "Voice", sub: "voice.py", x: 495, y: 340,
+      files: ["src/interview_app/voice.py", "src/interview_app/db.py (TurnAudio)"],
+      job: "Turns one interviewer turn of a Voice session into speech, once: LLMClient.speech returns raw 24 kHz PCM, which voice.py wraps into a WAV file under data/audio/<user>/<session>/ and records in a TurnAudio row. Replays and later views read the stored file. The voice comes from the interview type (or a Settings override) and is fixed for the session.",
+      facts: ["Model google/gemini-3.8-flash-lite-tts, the only TTS model the account's guardrail allows", "Cost is an estimate (no usage in the speech response); a 2-turn Quick · Voice session cost about $0.014 in total", "Skipped when the session budget is used up; any error leaves the turn readable as text", "Deleting a session or application deletes its audio files"], grades: [] },
+    { id: "drill", layer: "core", name: "Weak-spot drill", sub: "interview/drill.py", x: 635, y: 340,
       files: ["src/interview_app/interview/drill.py", "app/drill_ui.py"],
-      job: "Turns a report into a focused interview for the same application: code picks the requirements not yet shown (must-haves first) and the lowest-scoring rubric skills; the targets reach every prompt variant and the planner, wrapped as data.",
+      job: "Turns a report into a focused interview for the same application: code picks the requirements not yet shown (must-haves first) and the lowest-scoring rubric skills; the targets reach every prompt variant and the planner, wrapped as data. A drill is stored as Length Custom (its own question count), so it is practice and stays out of latest and best.",
       facts: ["On a real report: 4 requirements + 3 skills, start 25 s, $0.009"], grades: [] },
-    { id: "history", layer: "core", name: "History", sub: "history.py", x: 900, y: 340,
+    { id: "history", layer: "core", name: "History", sub: "history.py", x: 915, y: 340,
       files: ["src/interview_app/history.py", "src/interview_app/journey.py"],
-      job: "Lists sessions with their scores and computes progress per application: trend, weakest skills, requirement history, recurring advice. journey.py turns the same rows into the Home page's next step and the score summary (count, latest with its change, best), so the UI does no counting.",
+      job: "Lists sessions with their scores and computes progress per application: trend, weakest skills, requirement history, recurring advice. journey.py turns the same rows into the Home page's next step and the score summary (count, latest with its change, best), so the UI does no counting. history.counts_towards_scores keeps Quick and Custom sessions out of latest and best.",
       facts: [], grades: [] },
-    { id: "pricing", layer: "core", name: "Pricing", sub: "llm/pricing.py", x: 780, y: 340,
+    { id: "pricing", layer: "core", name: "Pricing", sub: "llm/pricing.py", x: 775, y: 340,
       files: ["src/interview_app/llm/pricing.py"],
-      job: "Caches the OpenRouter model catalog for 24 hours: per-token prices for cost estimates when a provider reports none, and the data behind the model picker.",
+      job: "Caches the OpenRouter model catalog for 24 hours: per-token prices for cost estimates when a provider reports none (always for TTS, whose response has no usage), and the data behind the model picker.",
       facts: ["Backs off 10 minutes after a failed fetch, so offline use stays fast"], grades: ["M3", "M7"] },
 
     { id: "sqlite", layer: "svc", name: "SQLite", sub: "data/app.db", x: 120, y: 500,
       files: ["src/interview_app/db.py", "data/app.db (gitignored)"],
-      job: "Local database: users, applications, documents, interview sessions, turns (with live scores and retried attempts), evaluations, preferences and the call log. Upgrades itself when new columns are added. Every owned row has a user_id, so accounts can be added later without migration.",
+      job: "Local database: users, applications, documents, interview sessions, turns (with live scores and retried attempts), spoken turns (TurnAudio; the WAV files sit next to it in data/audio/), evaluations, preferences and the call log. Upgrades itself when new columns are added. Every owned row has a user_id, so accounts can be added later without migration.",
       facts: ["Real CVs never leave the machine except as model calls", "secure_delete overwrites deleted rows; the file is owner-only (mode 600) where the disk allows it"], grades: ["H1"] },
     { id: "jevapi", layer: "svc", name: "Jev decisions API", sub: "OpenRouter", x: 300, y: 500,
       files: ["POST /api/alpha/decisions"],
@@ -473,15 +477,15 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       facts: [], grades: [] },
     { id: "openrouter", layer: "svc", name: "OpenRouter chat", sub: "/api/v1", x: 480, y: 500,
       files: ["POST /api/v1/chat/completions"],
-      job: "OpenAI-compatible chat API. Interviewer and planner: gpt-5-mini. Judge: Claude Haiku 4.5 (3 runs, median). Lab candidate: Gemini 2.5 Flash. Open-weight options: Gemma 4 31B, MiniMax M2.7.",
-      facts: ["Reports the real cost of each call"], grades: ["R3", "H4"] },
+      job: "OpenAI-compatible chat API. Interviewer and planner: gpt-5-mini. Judge: Claude Haiku 4.5 (3 runs, median). Lab candidate: Gemini 2.5 Flash. Open-weight options: Gemma 4 31B, MiniMax M2.7. Voice: /audio/speech with Gemini 3.8 Flash Lite TTS.",
+      facts: ["Reports the real cost of each chat call; speech responses carry no usage, so TTS cost is estimated"], grades: ["R3", "H4"] },
     { id: "catalog", layer: "svc", name: "Model catalog", sub: "/api/v1/models", x: 660, y: 500,
       files: ["GET /api/v1/models"],
       job: "Per-token prices, modalities and structured-output support for several hundred models.",
       facts: [], grades: ["M3"] },
     { id: "docs", layer: "svc", name: "Rubric + guideline", sub: "docs/", x: 860, y: 500,
       files: ["docs/rubric.json", "docs/01-interviewer-guideline.md"],
-      job: "rubric.json is the single source of truth for rubric items, weights and bands. The interviewer guideline feeds the P4 prompt.",
+      job: "rubric.json is the single source of truth for rubric items, weights and bands. The interviewer guideline feeds the P4 prompt, including its Quick practice paragraph.",
       facts: [], grades: ["H5"] },
   ];
   const EDGES = [
@@ -517,6 +521,9 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["history_page", "drill", "practise weak spots"],
     ["interview_page", "drill", "practise weak spots"],
     ["drill", "engine", "focused interview"],
+    ["interview_page", "voice", "speak question"],
+    ["voice", "llm", "speech (tts)"],
+    ["voice", "sqlite", "TurnAudio + WAV"],
   ];
   const STEPS = [
     { title: "Open Home", nodes: ["home_page", "history", "sqlite"],
@@ -527,10 +534,13 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       text: "Upload or paste the job description and CV, optionally a cover letter and company notes. Ingest extracts and cleans the text; the guard checks every document with rules and Jev and flags anything that looks like an instruction to an AI. You confirm or edit, then one copy is stored per application." },
     { title: "Start the interview", nodes: ["interview_page", "engine", "prompts", "docs", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "prompts"], ["prompts", "docs"], ["engine", "llm"], ["llm", "openrouter"], ["engine", "sqlite"]],
-      text: "Only one interview runs at a time. The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
+      text: "Only one interview runs at a time. Length and Channel are stored in the session config; for Quick and Standard, code takes the question count from the presets in config.py (Full keeps the interview type's realistic count, Custom the slider). The engine snapshots the documents, so later edits never rewrite an old transcript. With P4 it first asks the planner for an interview plan (about 21 s), then renders the system prompt with the persona, the guideline, the plan and the documents wrapped as data, and gets the opening turn as JSON." },
     { title: "Answer a question", nodes: ["interview_page", "engine", "security", "decide", "prompts", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "engine"], ["engine", "security"], ["security", "decide"], ["engine", "prompts"], ["engine", "llm"], ["llm", "openrouter"], ["llm", "sqlite"], ["engine", "sqlite"]],
       text: "Your answer passes the length check and the injection guard first; a blocked answer is never stored or sent on to the interviewer or the judge (the guard itself sends the answer to Jev to check it), and it comes back to you for editing. Then code counts questions and follow-ups and writes the next instruction into a short status message, and the interviewer replies in about 3 s. The call is logged with tokens, cost and latency." },
+    { title: "Hear the question (Voice)", nodes: ["interview_page", "voice", "llm", "openrouter", "pricing", "sqlite"],
+      edges: [["interview_page", "voice"], ["voice", "llm"], ["llm", "openrouter"], ["llm", "pricing"], ["voice", "sqlite"]],
+      text: "In a Voice session the page asks voice.speak for the newest interviewer turn right after it is stored (never inside the engine, so voice can't fail a turn). LLMClient.speech calls /audio/speech, logs a tts call with an estimated cost, and the PCM is saved once as WAV. The question auto-plays, its text sits behind Show text, and a failure shows the text with a notice. Answers are always typed." },
     { title: "Get the feedback report", nodes: ["interview_page", "evaluation", "docs", "llm", "openrouter", "sqlite"],
       edges: [["interview_page", "evaluation"], ["evaluation", "docs"], ["evaluation", "llm"], ["llm", "openrouter"], ["evaluation", "sqlite"]],
       text: "Code splits the transcript into exchanges and computes word metrics. Three parallel judge runs (Claude Haiku 4.5, a different family from the interviewer) write rationale and evidence before each score. Code verifies the quotes (a rating without a verified quote earns nothing), scores each run with the weights in rubric.json, and keeps the median run, showing all three scores. Stored, so reopening is free." },
@@ -539,16 +549,16 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
       text: "The answer passes the guards, then one Jev request scores it on the three rubric items that weigh most for that kind of question (about 0.5 s). Code builds the tip from the rubric's next-level text. Retry replaces the attempt (the old one is kept but hidden from the interviewer and the judge); Continue asks the interviewer for the next turn." },
     { title: "Practise your weak spots", nodes: ["interview_page", "history_page", "drill", "engine", "prompts", "llm", "openrouter"],
       edges: [["interview_page", "drill"], ["history_page", "drill"], ["drill", "engine"], ["engine", "prompts"], ["engine", "llm"], ["llm", "openrouter"]],
-      text: "Under any report, code picks the requirements the report says you haven't shown and your lowest-scoring skills. A new interview for the same application starts with those targets in the planner and the interviewer prompt, wrapped as data." },
+      text: "Under any report, code picks the requirements the report says you haven't shown and your lowest-scoring skills. A new interview for the same application starts with those targets in the planner and the interviewer prompt, wrapped as data. The drill is stored as a Custom-length session." },
     { title: "Review progress", nodes: ["history_page", "history", "sqlite"],
       edges: [["history_page", "history"], ["history", "sqlite"]],
-      text: "History lists every interview with its score and cost, with the count, your latest score and its change, and your best score on top. Pick an application to see the score trend, the weakest rubric skills, how each job requirement was rated over time, and advice that keeps coming back." },
+      text: "History lists every interview with its score, cost and a Length · Channel badge, with the count, your latest score and its change, and your best score on top. Only Standard and Full interviews move latest and best; Quick and Custom practice sessions are drawn as separate points on the trend. Pick an application to see the score trend, the weakest rubric skills, how each job requirement was rated over time, and advice that keeps coming back." },
     { title: "Tune the settings", nodes: ["settings_page", "preferences", "pricing", "catalog", "sqlite"],
       edges: [["settings_page", "preferences"], ["settings_page", "pricing"], ["pricing", "catalog"], ["preferences", "sqlite"]],
-      text: "Choose the prompt variant and the models, with prices from the cached catalog, and set temperature, max tokens and reasoning effort. Saved preferences start every new interview. Usage and cost come from the call log." },
+      text: "Set the default length and channel and, if you like, one fixed interviewer voice. Choose the prompt variant and the models, with prices from the cached catalog, and set temperature, max tokens and reasoning effort. Saved preferences start every new interview. Usage and cost come from the call log." },
     { title: "Compare prompts (lab)", nodes: ["lab", "engine", "llm", "openrouter", "decide", "jevapi"],
       edges: [["lab", "engine"], ["lab", "llm"], ["llm", "openrouter"], ["lab", "decide"], ["decide", "jevapi"]],
-      text: "Offline, a simulated candidate answers through the same engine the app uses. Jev scores every transcript on the interviewer-quality items, and the results feed the prompt comparison below." },
+      text: "Offline, a simulated candidate answers through the same engine the app uses, always in a Full session (the runner refuses any other length, so R4 stays like-for-like). Jev scores every transcript on the interviewer-quality items, and the results feed the prompt comparison below." },
   ];
   const GRADES = [
     { id: "R1", lvl: "Mandatory", title: "Choose the interview-prep focus", how: "Application-specific mock interviews grounded in the JD, CV and optional cover letter, ending in a rubric report", nodes: ["applications_page", "engine", "evaluation"] },
@@ -582,17 +592,18 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["Project works", "A live interview with the sample application", "Demo: strong answer, vague answer, injection attempt, report"],
     ["Correct OpenRouter calls", "One gateway with a call log of tokens, cost and latency", "Settings → Usage and cost"],
     ["Security", "Limits, regex rules then Jev, spotlighting of documents, answers and model-written text; hardened by the audit (Unicode, ReDoS, PDF bombs, XSS)", "Paste an injection attempt live; the resolved table under Risks"],
-    ["Weaknesses", "Small evaluation sample run on older prompts, uncalibrated live scores, stacking not fully solved, partial rubric, latency", "Risks table"],
-    ["Improvements", "Larger evaluation set, calibrated live scores, red-flag checks, voice", "Next steps"],
+    ["Weaknesses", "Small evaluation sample run on older prompts, uncalibrated live scores, stacking not fully solved, partial rubric, latency, an estimated TTS cost", "Risks table"],
+    ["Improvements", "Larger evaluation set, calibrated live scores, red-flag checks, real TTS cost", "Next steps"],
   ];
   const STACK = [
     { t: "Python 3.12 + uv", s: "Language and tooling", why: "One language end to end; uv gives a locked, reproducible environment. ruff and pytest run in CI.", alt: "pip + requirements.txt (no lockfile)" },
-    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core. .streamlit/config.toml binds it to 127.0.0.1, caps uploads at 5 MB, turns telemetry off and sets one indigo theme for light and dark mode. Pages live in app/views/, not app/pages/, so Streamlit never switches to its legacy file-list navigation.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
-    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 421 tests run here.", alt: "Logic inside Streamlit pages" },
+    { t: "Streamlit", s: "User interface", why: "Required by the brief (or Next.js); the fastest path to a chat UI. A thin layer that only calls the core. .streamlit/config.toml binds it to 127.0.0.1, caps uploads at 5 MB, turns telemetry off and sets one indigo theme for light and dark mode. Pages live in app/views/, not app/pages/, so Streamlit never switches to its legacy file-list navigation. One static stylesheet (app/styles/app.css, loaded without any user or model text) and layout helpers in ui_common align every page; contrast is AA or better in light and dark.", alt: "Flask + HTML/CSS, the original idea, isn't Streamlit or Next.js, so the reviewer would mark it down" },
+    { t: "interview_app package", s: "Core logic, no UI imports", why: "Testable without a browser; the UI could be swapped later. Most of the 504 tests run here.", alt: "Logic inside Streamlit pages" },
     { t: "pydantic", s: "Schemas and settings", why: "Every model reply and every setting is validated against a typed schema; invalid JSON gets one repair attempt. Settings have bounds, and a misspelt key in a settings group fails at start instead of being ignored.", alt: "Parsing dicts by hand" },
     { t: "SQLite + SQLModel", s: "Storage", why: "One user, local data, zero setup. Moving to Postgres is a connection-string change.", alt: "Supabase (cloud; sends CVs to a third party)" },
     { t: "OpenAI SDK → OpenRouter", s: "Model access", why: "One OpenAI-compatible client reaches any provider; OpenRouter reports the real cost of every call.", alt: "LiteLLM or LangChain (more layers between you and the API parameters)" },
     { t: "Jev decision model", s: "Typed judgements", why: "Returns probabilities instead of text: about 0.4 s and cheap, with no sampling temperature. Used for the injection guard and the lab judge.", alt: "A second LLM classifier (slower, writes text that must be parsed)" },
+    { t: "OpenRouter text-to-speech", s: "Voice channel", why: "The same OpenAI SDK and gateway call /audio/speech, so a spoken question is logged like any other call. Gemini TTS returns raw PCM, which the standard-library wave module wraps into WAV; no audio dependency.", alt: "Browser speech synthesis (voice and quality vary by machine, nothing logged) or speech-to-text answers (dropped: typed answers keep the guard and quote checks exact)" },
     { t: "Jinja2 templates", s: "Prompts as files", why: "Prompts are readable documents, versioned and reviewed like code; a missing variable is an error, not empty text.", alt: "f-strings scattered through the code" },
     { t: "Docker + Makefile", s: "Local service", why: "make up builds and starts the app as a long-running service on http://localhost:8501, with data/ mounted so the database survives rebuilds; make lists every command. The base image is pinned, and the container drops every Linux capability and runs with no-new-privileges.", alt: "Typing docker compose commands, or running streamlit by hand" },
     { t: "GitHub + worktrees + CI", s: "Delivery", why: "Every change on its own branch, tested by GitHub Actions (lint, format, unit tests and a Docker build, with read-only permissions), squash-merged when green.", alt: "Committing straight to main" },
@@ -603,6 +614,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["Simulated candidate (lab)", "google/gemini-2.5-flash", "A third family, so neither side grades its own style"],
     ["Injection guard, live scorer, lab judge", "typesafe/jev-1.13-20260917", "Typed probabilities; code sets the threshold"],
     ["Open-weight options (H4)", "google/gemma-4-31b-it, minimax/minimax-m2.7", "Passed a live check against the account's guardrail"],
+    ["Voice / text-to-speech (role tts)", "google/gemini-3.8-flash-lite-tts", "The only TTS model the account's guardrail allows; cost is estimated from catalog prices because the speech response has no usage (about $0.014 for a 2-turn Quick · Voice session)"],
   ];
   const DECISIONS = [
     { t: "Grading criteria and the core flow first", s: "Extras wait until after the review", alt: "Build everything before Friday", why: "The extras aren't graded and each one adds explanation burden at the review.", res: "Graded scope finished on day one; MFA, voice and dashboard deferred." },
@@ -616,6 +628,9 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     { t: "The judge must quote; code checks the quote", s: "Grounding in the transcript", alt: "Trust the cited turn ids", why: "On a real run the judge credited CV facts never said in the interview.", res: "Requirement credit and strengths now need a verified quote." },
     { t: "Local SQLite, one user, no login", s: "Privacy and scope", alt: "Supabase; login with MFA", why: "Data stays on the owner's machine, and Docker serves it on localhost only, so a login would protect nothing.", res: "MFA dropped; user_id kept on every table, so accounts can be added without migration. The database file uses secure_delete and owner-only permissions." },
     { t: "Audit everything before the review", s: "Find what tests miss", alt: "Feature work until the deadline", why: "A tool the owner keeps using must be honest about its scores and safe with real CVs; an outside pass looks where the author does not.", res: "PRs #30–#38: interview-state bugs, two scoring rules that inflated the score, five security issues and the UI escaping fixed, each with a regression test; claims in the docs corrected." },
+    { t: "Length as breadth, Quick kept out of progress", s: "Short practice without distorting scores", alt: "Only full interviews; or one score trend for everything", why: "A ten-minute practice before a call is useful, but three questions and a skippable question offer are not comparable to a full interview.", res: "Quick, Standard, Full, Custom; counts in config.py, behaviour in code; latest and best use only Standard and Full; drills are Custom." },
+    { t: "Voice speaks the questions; speech-to-text dropped", s: "Practise listening, keep answers exact", alt: "Full voice with recorded, transcribed answers", why: "Typed answers keep the injection guard, the transcript and the judge's quote checks exact, and STT would add cost and a second failure point.", res: "TTS once per question, stored as WAV, estimated cost in the call log; any failure shows the text." },
+    { t: "One static stylesheet for the design system", s: "Aligned, accessible pages without HTML injection risk", alt: "Inline CSS built per page, or unsafe_allow_html", why: "A stylesheet built from data could carry user or model text into the page; a static file loaded by a no-argument helper cannot.", res: "Equal-height cards, aligned form grids and button rows on every page; AA contrast and visible focus in light and dark (PRs #47, #48)." },
     { t: "Public repo, privacy-first .gitignore", s: "Reviewer access, no personal data", alt: "A private repository", why: "The reviewer can open it without extra setup.", res: "Real applications never committed; a fictional sample ships instead." },
   ];
   const VARIANTS = [
@@ -646,6 +661,12 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["No login", "Anyone who can reach the port can use the app", "The app binds 127.0.0.1, both locally (.streamlit/config.toml) and through Docker", "Add a login only if the app is ever hosted for others"],
     ["Old CV-derived examples remain in public git history", "Minor privacy exposure", "Removed from all current files", "Owner decides: rewrite history or accept"],
     ["openai/gpt-5 blocked by the account guardrail", "The brief's high-capability option is unavailable", "gpt-5-mini is the recommended default", "Optional: allow it in OpenRouter"],
+    ["TTS cost is an estimate", "The session cost and budget can be off for Voice sessions", "Speech responses have no usage, so cost = catalog prices × (characters / 4 in, audio seconds × 32 out), a conservative rate; an old cached catalog can cost TTS at $0 for up to 24 h", "Use the real cost once OpenRouter reports it for speech"],
+    ["The guardrail allows one TTS model", "Voice quality and price can't be compared, and voice stops if that model goes away", "Any TTS error leaves the question readable as text", "Check other TTS models again; TTS__MODEL switches it"],
+    ["Quick scores are not comparable to Full", "A short session would distort progress if it counted", "Quick and Custom sessions are excluded from latest and best and drawn as separate trend points; no score adjustment", "Keep it so; show a separate practice summary if wanted"],
+    ["Refreshing the page re-autoplays the newest question", "A surprise replay", "Auto-play happens once per browser session; the audio itself is never generated twice", "Remember played turns in the database"],
+    ["The guideline's Quick paragraph is in every P4 prompt", "Standard and Full P4 prompts carry an instruction that doesn't apply", "The status message says when a session is Quick; Standard and Full directives are unchanged", "Render the paragraph only for Quick sessions"],
+    ["Data tables scroll sideways inside themselves on narrow screens", "Harder to read on a phone-width window", "The page itself never scrolls sideways", "Fewer columns at narrow widths"],
   ];
   const RESOLVED = [
     ["A start that crashed stayed in preparing and blocked the page; two interviews could run at once", "#30, #37", "Any start failure marks the session failed; a preparing session older than 15 minutes is marked failed; only one interview at a time"],
@@ -674,7 +695,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
   ];
   const CHECKS = [
     { group: "Decisions this week", items: ["Rewrite git history to remove old CV-derived examples, or accept them", "Allow openai/gpt-5 in the OpenRouter guardrail (optional)"] },
-    { group: "Before the review (3–8 October)", items: ["make rebuild after the audit fixes and open the database inside the container (PR #38 check)", "On Docker Desktop, run chmod 600 data/app.db on the host once", "make up, then run one real application end to end with a real CV PDF: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Look at light and dark mode, and at the Home next-step card with your real data", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
+    { group: "Before the review (3–8 October)", items: ["make rebuild after the audit fixes and open the database inside the container (PR #38 check)", "On Docker Desktop, run chmod 600 data/app.db on the host once", "make up, then run one real application end to end with a real CV PDF: interview, report, one weak-spot drill", "Try Coaching mode once (an answer, a retry, continue)", "Run one Quick · Voice interview and check the History trend markers", "Look at light and dark mode, and at the Home next-step card with your real data", "Fix only what those runs reveal; otherwise feature freeze", "Rehearse the demo script and the question table twice", "Submit the repository link and schedule the review"] },
     { group: "Review: Friday 9 October (hard deadline 12 October)", items: ["Explain techniques, settings, roles and output types using the map, the chart and the models table", "Raise the small evaluation sample before the reviewer does"] },
   ];
   const RUNS = [
@@ -687,13 +708,15 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); border-top: 1px
     ["Median-of-3 judge", "The median report on a real interview", "gpt-5-mini, low (your session)", "claude-haiku-4.5 × 3", "none", "1 report", "$0.099"],
     ["Live scoring", "Coaching scores for a strong vs a vague answer", "—", "none", "live scorer Jev 1.13", "2 answers", "about $0.0001"],
     ["Weak-spot drill", "Targets from a real report and a focused start", "gpt-5-mini, low / gpt-5-mini, low", "none", "none", "1 start", "$0.009"],
+    ["Quick session (core engine)", "Quick directive: one-sentence intro, follow-up cap, one-line offer", "gpt-5-mini, low / no planner (P1, Tough)", "none", "guard Jev 1.13", "1 session, sample application, 3 main questions", "$0.0057"],
+    ["Quick · Voice session", "TTS end to end: auto-play, stored WAV, estimated cost", "gpt-5-mini, low / gpt-5-mini, low", "none", "TTS gemini-3.8-flash-lite-tts; guard Jev 1.13", "1 session, 2 spoken turns (15.4 s and 8.4 s)", "about $0.014 (TTS about $0.0046, estimated)"],
   ];
 
   // ------------------------------------------------------------------ helpers
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
-  const W = 148, H = 52;
+  const W = 132, H = 52;
   const color = l => `var(--${l === "ui" ? "ui" : l === "core" ? "core" : l === "svc" ? "svc" : "lab"})`;
   const svgNS = "http://www.w3.org/2000/svg";
   const el = (tag, attrs = {}, text) => { const e = document.createElementNS(svgNS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };

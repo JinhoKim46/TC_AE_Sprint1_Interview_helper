@@ -18,10 +18,16 @@
 | 2026-10-02 | **Audit fixes, security (PR #33):** the guard's rules and spotlighting run on a canonical form of the text (NFKC, zero-width and other format characters removed, HTML-entity forms of our tags caught), so Unicode tricks no longer hide `</document>` or "ignore previous instructions"; a regex that was quadratic on newlines is linear; documents over `guard.max_document_chunks` (20) chunks are flagged instead of sent to Jev. PDF reading is bounded against decompression bombs (5 MB per stream, a text cap, a 20 s timeout). The P4 plan, the judge's requirement list and the interviewer turns in the judge transcript are wrapped as data (second-order injection). SQLite uses `secure_delete` and the DB file is owner-only (mode 600). | Security audit findings, each reproduced first |
 | 2026-10-02 | **Audit fixes, UI (PR #31):** all model and user text shown in the UI is markdown-escaped (`ui_common.safe_md`; no `unsafe_allow_html`), so a reply cannot render HTML, images, links or LaTeX; a blocked answer comes back in an editable box; deleting an application warns how many interviews go with it and is disabled while one is active; the drill offer links to a running interview instead of starting a second one; double submits are guarded. | Stored XSS / exfiltration via markdown; stale or duplicate UI state |
 | 2026-10-02 | **Claims check (this docs PR):** `docs/05` now says which commit its numbers come from and withdraws claims the re-run did not support; the lab judge's I7 and the rubric treat numbered multi-part questions as stacking, matching the interviewer prompts; the lab judge leaves out superseded (retried) answers like the engine; lab CSVs are committed; `pytest -m live` fails instead of skipping when the API key is missing. | Documentation should only claim what the data and code show |
+| 2026-10-03 | **Spec for Length, Voice and an aligned design (PR #43):** `docs/specs/2026-10-03-length-voice-design/` with six tickets. **Speech-to-text is dropped, not deferred:** answers are always typed, and the Voice channel only speaks the interviewer's questions. | Typed answers keep the guard, the judge's quote checks and the transcript exact; STT added cost and a second failure point for little practice value |
+| 2026-10-03 | **Length and Channel settings (PR #44):** `SessionConfig.length` (quick/standard/full/custom) and `.channel` (text/voice); old sessions load as Full + Text. Presets in `config.LengthPresets` (Quick 3, Standard 5 main questions, Quick follow-up cap 1); Full keeps each interview type's realistic count, Custom uses the slider. Defaults (Standard, Voice) are saved in Settings; badges on the interview header, History and the report. | A quick practice before a call; no counts in prompts |
+| 2026-10-03 | **Voice channel with TTS (PR #45):** `voice.speak` turns each interviewer turn into a WAV once, through `LLMClient.speech` (OpenRouter `/audio/speech`, role `tts`, model `google/gemini-3.8-flash-lite-tts`, the only TTS model this account's guardrail allows). Stored under `data/audio/<user>/<session>/` and in a new `TurnAudio` table; deleted with the session or application. The cost is an **estimate** (the speech response has no usage). Skipped over budget; any error shows the text with a notice. The newest question auto-plays and its text sits behind "Show text". Voice per interview type, overridable in Settings, fixed per session. | Practise listening; voice never blocks the interview |
+| 2026-10-03 | **Quick behaviour, History counting, drills as Custom (PR #46):** Quick gets a one-sentence intro, the core questions (motivation, top must-have requirement, one type-specific question), follow-ups capped at min(difficulty cap, Quick cap) and a one-line skippable "any quick question for me?" that counts as the candidate-questions stage. A skipped offer leaves S4 empty. Latest and best scores count only Standard and Full; Quick and Custom (every weak-spot drill) are drawn as separate trend points. The lab refuses non-Full sessions. | Short sessions must stay short, and must not distort progress or the R4 comparison |
+| 2026-10-03 | **Design system (PR #47):** one static stylesheet `app/styles/app.css` loaded by `ui_common.load_styles()` (no user or model text can reach it), layout helpers (`card_row`, `card_footer`, `panel`, `form_row`, `button_row`), Home and Applications aligned. Dark accent `#5D5AEF` for 5.0:1 button text; captions and placeholders above 6:1; visible focus outlines. | The UI looked unfinished; AA contrast in light and dark |
+| 2026-10-03 | **Alignment and accessibility pass (PR #48):** the helpers on every page (start form 2 x 2 grid, interview, report, History, Settings); selected segmented options marked by weight, ring and tint instead of accent text; a 2 px focus ring on every focusable control; light badges raised to 5.8–7.0:1. Data tables still scroll inside themselves on narrow screens (Streamlit's grid). | Consistent layout; keyboard and screen-reader use |
 
 ## Context
 Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the user keeps using it for real job applications → a clean, tested, readable personal tool rather than a throwaway demo. Existing inputs:
-`docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md`, `rubric.json` (the source of truth for scoring), `docs/applications/**` (real example cases, mostly PDFs), and `references/app_design/` (Attio, Plain). Dates: build Fri 10/2 → Thu 10/8, **review Fri 2026-10-09**, hard submission deadline Mon 10/12. Scope: **everything, including Jev and voice**, before the review. Voice sits behind a feature flag.
+`docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md`, `rubric.json` (the source of truth for scoring), `docs/applications/**` (real example cases, mostly PDFs), and `references/app_design/` (Attio, Plain). Dates: build Fri 10/2 → Thu 10/8, **review Fri 2026-10-09**, hard submission deadline Mon 10/12. Scope: **everything, including Jev and voice**, before the review. Voice is a per-session channel (Text or Voice; see the 2026-10-03 changes).
 
 ## Decisions (from the grilling)
 | Topic | Decision |
@@ -33,7 +39,7 @@ Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the 
 | Providers | One OpenAI-compatible client; provider profiles in config. OpenRouter only for now (no local model beats it on 16 GB VRAM); an Ollama profile can be added later |
 | Models (defaults, all changeable) | Interviewer `openai/gpt-5-mini` (R3); final judge from another family (Claude Haiku 4.5 / Gemini Flash); candidate simulator from a third family; live scoring + guard = **Jev**; avatar `google/gemini-2.5-flash-image`; open-weight options in the picker for H4 (Gemma 4 31B, DeepSeek V4, GLM 5.2, MiniMax M2.7) |
 | Inputs | JD + CV required; cover letter and company notes optional. Formats: PDF, pasted text, JD from URL. Each application owns its own copies |
-| Interview | Type (recruiter_screen, hiring_manager, technical_deep_dive, ml_case/system_design, behavioral, final_round) + difficulty (friendly/standard/tough) → derived persona; "Advanced" override. Target number of main questions + follow-up cap + elapsed-time display |
+| Interview | Type (recruiter_screen, hiring_manager, technical_deep_dive, ml_case/system_design, behavioral, final_round) + difficulty (friendly/standard/tough) → derived persona; "Advanced" override. Length (Quick / Standard / Full / Custom) sets the number of main questions; follow-up cap + elapsed-time display |
 | Modes | Realistic (live scores hidden, report at the end) and Coaching (live score chips + tip + retry; the last attempt is scored and the session is marked "coached") |
 | Input/output channel | Text, or Voice (TTS speaks the questions; answers are always typed, speech-to-text was dropped) via OpenRouter's `/audio/speech`; chosen per session (spec `docs/specs/2026-10-03-length-voice-design/`) |
 | Turn format | Structured JSON per interviewer turn `{stage, question_id, message, is_final}`, no streaming |
@@ -57,7 +63,7 @@ Optional tasks covered: E3 E4 E7 (E8 via the Lab reasoning-effort sweep, `lab/sw
 6. **Code-enforced limits**: question count, follow-up cap, turn cap, spend cap per session. When a limit is hit, code forces the closing stage.
 7. **Missing cover letter**: the prompt and rubric skip items that depend on the cover letter.
 8. **Data deletion**: delete an application together with its sessions, calls and audio.
-9. **Failure handling**: retry with backoff, then a friendly error, and state is kept. Invalid JSON → one repair retry. Jev down → skip live scores (the final LLM judge still runs). STT failure → fall back to text input for that answer.
+9. **Failure handling**: retry with backoff, then a friendly error, and state is kept. Invalid JSON → one repair retry. Jev down → skip live scores (the final LLM judge still runs). TTS failure → the question is shown as text with a short notice.
 
 ## Architecture
 ```
@@ -91,7 +97,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 ## Core flows
 - **Auth (dropped, not built):** first run → register (password + TOTP enrolment by QR code + recovery codes shown once) → afterwards login = password → 6-digit code (or a recovery code) → session in `st.session_state`, expires when idle.
 - **Import:** upload/paste/URL → validate → injection scan (warnings shown) → text preview/edit → save the Application.
-- **Interview turn:** answer (typed, or audio → STT) → limits + guard → **Jev live scores + follow-up signal (in parallel)** → engine builds messages (system = variant + persona + plan + spotlighted docs + routing hint; then history) → `chat_json` → validate → save Turn + LiveScore → show (TTS in voice mode; score chips + tip in Coaching mode) → repeat until `is_final` or a limit.
+- **Interview turn:** answer (typed) → limits + guard → **Jev live scores + follow-up signal (in parallel)** → engine builds messages (system = variant + persona + plan + spotlighted docs + routing hint; then history) → `chat_json` → validate → save Turn + LiveScore → show (TTS in voice mode; score chips + tip in Coaching mode) → repeat until `is_final` or a limit.
 - **Finish:** metrics (code) → LLM judge (full rubric) → aggregate (§7 weights, §6 caps, bands) → report → History/Dashboard (including Jev-vs-LLM agreement).
 - **Guard outcome:** blocked answer → not sent, "please rephrase", logged. Flagged document → the user must confirm or edit it.
 
@@ -122,7 +128,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 | 13–14 ∥ | feat/jd-url, feat/avatar | JD from URL · M8 avatar |
 | 15 | feat/lab | candidate simulator, `compare_prompts.py`, `tune_guard.py`, results doc |
 | 16 | feat/dashboard-help | Dashboard (trend, radar, cost, judge agreement) + Help |
-| 17 | feat/voice | STT/TTS behind a flag |
+| 17 | feat/voice | TTS for the interviewer's questions (Voice channel; speech-to-text was dropped on 2026-10-03) |
 | 18 | docs/readme-final | README, review notes (prompt choice, settings, problems, improvements) |
 
 ## Build order (cut line = what must work for the review)
@@ -134,7 +140,7 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 | Tue 10/6 | Settings (Developer section, cost), P1/P2/P3/P5 variants, open-weight models (H4), JD from URL, avatar (M8) |
 | Wed 10/7 | Candidate simulator + `compare_prompts.py` + `tune_guard.py` runs + write-up, Dashboard, Help |
 | **── cut line: review-complete without voice ──** | |
-| Thu 10/8 | Voice (st.audio_input → STT; TTS playback), behind a flag. Then README (run, architecture, prompt/settings choices, known problems, improvements) and a demo rehearsal |
+| Thu 10/8 | Voice (TTS playback of the interviewer's questions). Then README (run, architecture, prompt/settings choices, known problems, improvements) and a demo rehearsal |
 | Fri 10/9 | Review. Mon 10/12 buffer for fixes before the hard deadline |
 
 ## Next step after approval
@@ -149,10 +155,10 @@ Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and 
 - Guard: `lab/tune_guard.py` reports the catch rate and false-positive rate; injection text in a CV and in an answer gets blocked or flagged.
 - `uv run python lab/compare_prompts.py --sessions 3` produces the 5-variant table; the winner is named in the README.
 - The same interview runs with an open-weight model (H4).
-- Voice: a recorded answer is transcribed into the transcript and the next question plays as audio; with the flag off, the app works in text mode.
+- Voice: each interviewer question plays as audio with its text behind Show text; a TTS failure shows the text; Text sessions work as before.
 
 ## Known risks
-- **Scope:** voice gets one day (Thu); the flag keeps the demo safe if it slips.
+- **Scope:** voice gets one day (Thu); the Text channel keeps the demo safe if it slips.
 - Jev's per-item thresholds need calibration; until then live scores are labelled "indicative".
 - Some open-weight models don't support strict JSON schemas → JSON mode + pydantic validation + one repair retry.
-- The exact OpenRouter STT/TTS and decisions request shapes get checked at implementation time (openrouter-stt/tts/decisions skills).
+- The exact OpenRouter TTS and decisions request shapes get checked at implementation time (openrouter-tts/decisions skills).

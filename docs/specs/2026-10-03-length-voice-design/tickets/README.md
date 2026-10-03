@@ -19,4 +19,4 @@ graph LR
 | 03 | Length behaviour | 01 | done |
 | 04 | Voice channel (TTS) | 01 | done |
 | 05 | Alignment + accessibility pass on all pages | 02, 03, 04 | done |
-| 06 | Docs + reports | 05 | ready-for-agent |
+| 06 | Docs + reports | 05 | done |

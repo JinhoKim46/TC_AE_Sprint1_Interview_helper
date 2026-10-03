@@ -17,12 +17,34 @@ To keep it running as a local service in Docker instead: `cp .env.example .env`,
 The **Home** page shows where you are (add an application → practise an interview → read your feedback) and one **Next step** button: add an application, start or resume an interview, get the missing report of your last interview, or practise again.
 
 1. **Applications** → upload a JD and a CV as PDF or paste them (cover letter and company notes optional), or click **Load sample application** for a fictional one. **Practise this application** on any saved one opens the start form with it selected.
-2. **Interview** → pick the application, the interview type, the difficulty, the length (Quick, Standard, Full, or Custom with your own question count), the channel (Text or Voice: in Voice the interviewer speaks each question, the newest one plays automatically, every question has a player and its text sits behind **Show text**; answers are always typed) and the feedback style (realistic or coaching), then **Start interview** (about 30 seconds to prepare). Quick is a short practice: a one-sentence intro with no warm-up, three core questions (your motivation, the job's top must-have requirement, one question typical of the interview type), at most one follow-up each, and a one-line, skippable "any quick question for me?" at the end. The screen shows the question count and the current stage, e.g. "Question 3 of 7 · Experience (follow-up)".
+2. **Interview** → pick the application, the interview type, the difficulty, the **length**, the **channel** and the feedback style (realistic or coaching), then **Start interview** (about 30 seconds to prepare). The screen shows the question count and the current stage, e.g. "Question 3 of 7 · Experience (follow-up)", and a badge such as "Quick · Voice" (also in History and on the report).
+   - **Length** (breadth, separate from difficulty): **Quick** is a short practice: a one-sentence intro with no warm-up, three core questions (your motivation, the job's top must-have requirement, one question typical of the interview type), at most one follow-up each (or fewer if the difficulty allows fewer), and a one-line, skippable "any quick question for me?" at the end. **Standard** asks five main questions. **Full** is the real interview: each interview type's realistic count (e.g. 4 for an ML case, 8 for a final round) with the full flow. **Custom** shows a slider for your own question count. The counts are computed in code (`LENGTH_PRESETS__*`), never written into prompts.
+   - **Channel**: **Text**, or **Voice**: the interviewer speaks each question (text-to-speech). The newest question plays automatically once, every interviewer turn has a player to replay it, and its text sits behind a **Show text** toggle (off by default) so you practise listening. If the audio can't be made (an error, or the session budget is used up), the text shows on its own with a short notice; the interview never fails because of voice. Answers are always typed (there is no speech-to-text). Each interview type has its own voice, kept for the whole session; you can force one voice in Settings. Coaching tips and scores are never spoken.
 3. Answer in the chat. When it ends (or you click **End interview** in the sidebar), click **Get my feedback report** (about a minute). The report opens with the overall score, the hiring signal and the judge's summary, then the score breakdown, what went well and what to improve (with quotes), the job requirements and every answer's scores.
-4. **History** → your latest score (with the change against the previous report), best score, and past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice). An interview without a report offers **Open it to get feedback**. Latest and best count only Standard and Full interviews: Quick and Custom sessions (every weak-spot drill is stored as Custom, with its own focused question count) are practice, so they are drawn as separate points on the trend but never move the progress numbers. A skipped Quick question offer is not scored (S4 stays empty).
-5. **Settings** → interview defaults (including a fixed interviewer voice for Voice interviews), plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
+4. **History** → your latest score (with the change against the previous report), best score, and past interviews with their transcripts and reports; pick one application to see its progress (score trend, weakest rubric skills, job requirements over time, recurring advice). An interview without a report offers **Open it to get feedback**.
+   - **What counts:** latest, best and the change count only **Standard and Full** interviews. Quick and Custom sessions are practice: they are drawn on the trend as separate points (their own shape and colour) but never move the progress numbers. Every weak-spot drill is stored as **Custom**, because it has its own focused question count, so drills are practice too. A skipped Quick question offer is not scored (S4 stays empty).
+5. **Settings** → interview defaults (default length, default channel, and a fixed interviewer voice for Voice interviews), plus developer settings: prompt variant, models, temperature, max tokens, reasoning effort, judge model; and usage and cost.
 
 The theme (one indigo accent, light and dark) is set in `.streamlit/config.toml`; switch light/dark from the app menu (top right).
+
+**Design system:** one static stylesheet, `app/styles/app.css`, is loaded on every page by `ui_common.load_styles()`. The loader takes no arguments and passes only the file's path, so no user, document or model text can ever reach the CSS (and no page uses `unsafe_allow_html`). Layout helpers in `app/ui_common.py` (`card_row`, `card_footer`, `panel`, `form_row`, `button_row`) give every page equal-height cards, aligned form grids and matching button sizes. Text contrast is WCAG AA or better in light and dark (measured in the browser), every focusable control gets a 2 px focus ring, and selected options and the current step are marked by more than colour.
+
+### Settings in `.env`
+
+All settings live in `src/interview_app/config.py` and can be changed in `.env` (nested groups use `__`; a typo in a nested key fails at start-up). The ones added for Length and Voice:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `LENGTH_PRESETS__QUICK` | 3 | Main questions in a Quick session (2–15, at most Standard) |
+| `LENGTH_PRESETS__STANDARD` | 5 | Main questions in a Standard session (2–15) |
+| `LENGTH_PRESETS__QUICK_MAX_FOLLOWUPS` | 1 | Follow-up cap per main question in Quick; the session uses min(difficulty cap, this) |
+| `TTS__MODEL` | `google/gemini-3.8-flash-lite-tts` | The text-to-speech model (returns raw PCM, wrapped into WAV) |
+| `TTS__VOICES` | one voice per interview type | JSON map of interview type → voice, e.g. `'{"hiring_manager": "Puck"}'` |
+| `TTS__DEFAULT_VOICE` | `Charon` | Voice for an interview type missing from `TTS__VOICES` |
+| `TTS__AUDIO_TOKENS_PER_SECOND` | 32 | Audio tokens per second used for the TTS cost estimate |
+| `TTS__MAX_CHARS` | 2000 | A longer question is cut before speaking (OWASP LLM10) |
+
+**TTS cost:** OpenRouter's speech response carries no usage, so a `tts` call's cost is **estimated** from the catalog prices: input tokens ≈ characters / 4, output tokens = audio seconds × `TTS__AUDIO_TOKENS_PER_SECOND` (deliberately conservative). The estimate is logged as an `LLMCall` row with role `tts` and counts towards the session cost and budget. In testing, a two-turn Quick · Voice session cost about $0.014 in total (the two spoken questions about $0.003 and $0.0016). Only `google/gemini-3.8-flash-lite-tts` is allowed by this account's OpenRouter guardrail (checked 2026-10-03; other TTS models return 404). Audio is generated once per question and stored under `data/audio/<user>/<session>/`, so replays and later views cost nothing; deleting a session or its application deletes the files.
 
 Everything runs locally: a SQLite database in `data/`, model calls through OpenRouter.
 
@@ -35,6 +57,7 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
                    each answer ──► guards (length, injection rules → Jev) ──► interviewer turn (JSON)
                                     code counts questions/follow-ups, enforces limits, decides the phase
                    end ──► exchanges + metrics (code) ──► LLM judge (rubric JSON) ──► aggregation (code) ──► report
+                   Voice channel: each new question ──► voice.speak → LLMClient.speech (TTS) ──► WAV + TurnAudio, played in the page
 ```
 
 | Module | Responsibility |
@@ -49,7 +72,8 @@ Interview page ──► start: [planning call → InterviewPlan JSON] ──►
 | `src/interview_app/interview/` | Personas, prompt rendering, the planning call, the interview engine |
 | `src/interview_app/prompts/` | Jinja2 templates: 5 interviewer variants, planner, judge |
 | `src/interview_app/evaluation/` | Exchanges, metrics, LLM judge, rubric aggregation, report storage |
-| `src/interview_app/history.py` | Past sessions and per-application progress, computed in code from stored reports (no model calls) |
+| `src/interview_app/history.py`, `journey.py` | Past sessions and per-application progress, computed in code from stored reports (no model calls); which lengths count towards latest/best |
+| `app/styles/app.css`, `app/ui_common.py` | The static stylesheet and the layout helpers of the design system |
 | `docs/rubric.json` | The single source of truth for rubric items, weights and bands |
 
 Design rule throughout: **the model judges, code computes.** Models decide what to ask and how good an answer is. Code counts, enforces limits, weights, normalises and decides bands.
@@ -159,13 +183,21 @@ Untrusted text (JD, CV, cover letter, notes, answers) goes through guards before
 - **Latency:** starting an interview takes about 25 s (a ~21 s planning call, then the opening turn), and a report about a minute.
 - **Single user, local only:** MFA is designed and specified as tests (PR #4, closed without merging) but not built. Owned rows carry a `user_id` and the application, interview and history queries filter on it, but with one built-in user that separation is untested in real use.
 - **One interview at a time:** a second interview can't start while one is active; a start that hangs in "preparing" is marked failed after `limits.start_timeout_minutes` (15 min), and a start that was ended meanwhile says so.
-- **Lab numbers predate later prompt edits:** the prompt comparison ran on the prompts of PRs #16/#17; later PRs changed them again without a re-run (see `docs/05`).
+- **Lab numbers predate later prompt edits:** the prompt comparison ran on the prompts of PRs #16/#17; later PRs changed them again without a re-run (see `docs/05`). The lab runs Full sessions only.
+- **TTS cost is an estimate:** the speech response has no usage and OpenRouter's generation lookup returned 404 for TTS ids, so the `tts` cost comes from catalog prices and an assumed audio token rate. An older cached model catalog (`data/cache/models.json`, up to 24 h) can lack the TTS model, so its calls are costed at $0 until it refreshes.
+- **One TTS model:** this account's guardrail allows only `google/gemini-3.8-flash-lite-tts`, so voice quality and price can't be compared across providers.
+- **Refresh re-autoplays:** "already played" is kept in the browser session, so reloading the page plays the newest question again. History doesn't play audio back.
+- **Quick scores aren't comparable to Full:** fewer questions and a skippable question offer, so Quick (and Custom) scores are left out of latest/best on purpose, with no adjustment.
+- **The Quick paragraph is in every P4 prompt:** the interviewer guideline §3 has a Quick exception paragraph, and P4 includes the guideline, so Standard and Full P4 prompts carry it too (the status message says when a session is Quick).
+- **Narrow screens:** data tables (e.g. History) scroll sideways inside themselves; the page itself never does. Long names in closed select boxes are cut off at about 420 px.
 
 ## Next improvements
 
 - The N-item red-flag checks with Jev.
 - Calibrate the live Jev scores against the LLM judge (they are indicative until then).
 - JD import from URL.
+- Play a session's stored audio in History, and remember auto-played questions across a page refresh.
+- Real TTS cost once OpenRouter reports usage for speech, and a second TTS model if the guardrail allows one.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.
 
 ## Development
