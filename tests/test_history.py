@@ -23,7 +23,7 @@ from interview_app.evaluation.schemas import (
     RequirementEvidence,
 )
 from interview_app.history import delete_session, list_sessions, load_report, progress
-from interview_app.interview.persona import Difficulty, InterviewType, SessionConfig
+from interview_app.interview.persona import Channel, Difficulty, InterviewType, Length, SessionConfig
 
 RUBRIC_PATH = Settings(_env_file=None).rubric_path
 T0 = datetime(2026, 9, 1, 10, 0, tzinfo=UTC)
@@ -164,7 +164,12 @@ def app_id(engine, user_id) -> int:
 
 def test_sessions_are_listed_newest_first_with_their_numbers(engine, user_id, app_id):
     old = add_session(engine, user_id, app_id, started=T0, report=make_report(55.0), cost=0.01)
-    config = SessionConfig(interview_type=InterviewType.BEHAVIORAL, difficulty=Difficulty.TOUGH)
+    config = SessionConfig(
+        interview_type=InterviewType.BEHAVIORAL,
+        difficulty=Difficulty.TOUGH,
+        length=Length.QUICK,
+        channel=Channel.VOICE,
+    )
     new = add_session(engine, user_id, app_id, started=T0 + timedelta(days=2), config=config)
 
     sessions = list_sessions(engine, user_id)
@@ -175,6 +180,8 @@ def test_sessions_are_listed_newest_first_with_their_numbers(engine, user_id, ap
     assert first.has_report and first.overall == 55.0 and first.band == "lean_no"
     assert first.cost_usd == pytest.approx(0.01)
     assert first.main_questions_asked == 2  # the follow-up does not count as a main question
+    assert (latest.length, latest.channel) == (Length.QUICK, Channel.VOICE)
+    assert (first.length, first.channel) == (Length.FULL, Channel.TEXT)  # stored before the choice existed
 
 
 def test_preparing_and_failed_sessions_are_hidden(engine, user_id, app_id):

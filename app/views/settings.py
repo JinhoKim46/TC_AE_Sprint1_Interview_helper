@@ -11,17 +11,21 @@ from ui_common import current_user_id, get_engine, get_price_catalog, kept_widge
 
 from interview_app.config import get_settings
 from interview_app.interview.persona import (
+    CHANNEL_LABELS,
     DEFAULT_MAIN_QUESTIONS,
+    LENGTH_LABELS,
     TYPE_LABELS,
     VARIANT_LABELS,
+    Channel,
     Difficulty,
     InterviewType,
+    Length,
     LLMSettings,
     Mode,
     PromptVariant,
 )
 from interview_app.llm.pricing import ModelOption, model_options
-from interview_app.preferences import judge_model, load_preferences, save_preferences
+from interview_app.preferences import judge_model, load_preferences, preset_main_questions, save_preferences
 from interview_app.usage import usage_summary
 
 engine = get_engine()
@@ -80,18 +84,35 @@ mode = st.radio(
     horizontal=True,
     key="pref_mode",
 )
-# Fixed label and help text on purpose: Streamlit identifies a widget by its parameters, so text that
-# changed with the interview type would make a "new" checkbox on every type change and lose its state.
-usual_length = st.checkbox(
-    "Use the usual length for the interview type",
-    value=prefs.main_questions is None,
-    help="Each interview type has a typical number of main questions (e.g. fewer for a case interview).",
-    key="pref_usual_length",
+col3, col4 = st.columns(2)
+length = Length(
+    col3.segmented_control(
+        "Default length",
+        options=[v.value for v in Length],
+        default=prefs.length.value,
+        format_func=lambda v: LENGTH_LABELS[Length(v)],
+        help="Quick: a short practice on the core questions. Full: the real interview. "
+        "Custom: pick the number of questions yourself.",
+        key="pref_length",
+    )
+    # Clicking the selected segment again deselects it; keep the saved value then.
+    or prefs.length
 )
-if usual_length:
-    st.caption(f"{TYPE_LABELS[interview_type]}: {DEFAULT_MAIN_QUESTIONS[interview_type]} main questions.")
-main_questions = None
-if not usual_length:
+channel = Channel(
+    col4.segmented_control(
+        "Default channel",
+        options=[c.value for c in Channel],
+        default=prefs.channel.value,
+        format_func=lambda v: CHANNEL_LABELS[Channel(v)],
+        help="Voice: the interviewer speaks each question. Text: you read them. Answers are always typed.",
+        key="pref_channel",
+    )
+    or prefs.channel
+)
+# Custom keeps the saved count; a preset length leaves it untouched, so switching back to Custom later
+# brings the old number back.
+main_questions = prefs.main_questions
+if length == Length.CUSTOM:
     main_questions = st.slider(
         "Main questions (follow-ups come on top)",
         cfg.limits.min_main_questions,
@@ -99,6 +120,9 @@ if not usual_length:
         slider_start(prefs.main_questions or DEFAULT_MAIN_QUESTIONS[interview_type]),
         key="pref_main_questions",
     )
+else:
+    count = preset_main_questions(length, cfg.length_presets)
+    st.caption(f"{LENGTH_LABELS[length]}: {count} main questions, follow-ups come on top.")
 
 # --- Developer settings (hidden by default, course task M9) -------------------------------------
 
@@ -252,6 +276,8 @@ if st.button(
                 "interview_type": interview_type,
                 "difficulty": Difficulty(difficulty or Difficulty.STANDARD),
                 "mode": Mode(mode),
+                "length": length,
+                "channel": channel,
                 "main_questions": main_questions,
                 "prompt_variant": variant,
                 "interviewer": llm,

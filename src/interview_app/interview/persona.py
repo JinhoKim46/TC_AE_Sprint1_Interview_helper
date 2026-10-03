@@ -60,6 +60,38 @@ VARIANT_LABELS: dict[PromptVariant, str] = {
     PromptVariant.P5_SELF_CRITIQUE: "P5 · Self-critique",
 }
 
+
+class Length(StrEnum):
+    """How many main questions a session asks (breadth, not pressure: that is Difficulty).
+
+    The counts for quick / standard / full live in config (`Settings.length_presets`); custom uses the
+    question-count slider. Quick also skips the warm-up and caps follow-ups (interview behaviour).
+    """
+
+    QUICK = "quick"
+    STANDARD = "standard"
+    FULL = "full"
+    CUSTOM = "custom"
+
+
+LENGTH_LABELS: dict[Length, str] = {
+    Length.QUICK: "Quick",
+    Length.STANDARD: "Standard",
+    Length.FULL: "Full",
+    Length.CUSTOM: "Custom",
+}
+
+
+class Channel(StrEnum):
+    """How the interviewer's questions reach the candidate. Answers are always typed."""
+
+    TEXT = "text"
+    VOICE = "voice"  # questions are spoken (text-to-speech); the text stays available
+
+
+CHANNEL_LABELS: dict[Channel, str] = {Channel.TEXT: "Text", Channel.VOICE: "Voice"}
+
+
 # Main questions (not counting follow-ups) that fit a realistic slot for each type.
 DEFAULT_MAIN_QUESTIONS: dict[InterviewType, int] = {
     InterviewType.RECRUITER_SCREEN: 6,
@@ -112,10 +144,21 @@ class SessionConfig(BaseModel):
     override: PersonaOverride = PersonaOverride()
     llm: LLMSettings = LLMSettings()
     focus: Focus | None = None  # set for a weak-spot drill; None = a normal interview
+    # The defaults describe sessions stored before Length and Channel existed: those were full-length
+    # text interviews, so their stored JSON (without these keys) must load as exactly that. New
+    # sessions always set both explicitly (preferences.to_session_config). `main_questions` above is
+    # the resolved count; for a preset length it was taken from config when the session started.
+    length: Length = Length.FULL
+    channel: Channel = Channel.TEXT
 
     @property
     def max_followups(self) -> int:
         return MAX_FOLLOWUPS[self.difficulty]
+
+
+def length_channel_label(config: SessionConfig) -> str:
+    """'Quick · Voice': the session's Length and Channel in words, for badges and history rows."""
+    return f"{LENGTH_LABELS[config.length]} · {CHANNEL_LABELS[config.channel]}"
 
 
 class Persona(BaseModel):

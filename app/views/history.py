@@ -6,7 +6,7 @@ nothing. A report that doesn't exist yet is generated from the Interview page.
 
 import streamlit as st
 from drill_ui import drill_offer
-from report_view import BAND_LABELS, LEVEL_LABELS, render_report
+from report_view import BAND_LABELS, LEVEL_LABELS, render_report, session_badge
 from ui_common import (
     CANDIDATE_AVATAR,
     INTERVIEWER_AVATAR,
@@ -21,7 +21,7 @@ from interview_app.applications import list_applications
 from interview_app.config import get_settings
 from interview_app.history import SessionSummary, delete_session, list_sessions, load_report, progress
 from interview_app.interview.engine import get_session
-from interview_app.interview.persona import TYPE_LABELS, InterviewType
+from interview_app.interview.persona import TYPE_LABELS, InterviewType, SessionConfig, length_channel_label
 from interview_app.journey import score_summary
 
 engine = get_engine()
@@ -36,7 +36,12 @@ STATUS_LABELS = {"active": "In progress", "finished": "Finished", "ended_early":
 def session_label(s: SessionSummary) -> str:
     score = f"{s.overall:.0f}/100" if s.overall is not None else "no score"
     kind = TYPE_LABELS[InterviewType(s.interview_type)]
-    return f"{s.started_at:%Y-%m-%d %H:%M} · {s.company} — {kind} · {score}"
+    return f"{s.started_at:%Y-%m-%d %H:%M} · {s.company} — {kind} · {_length_channel(s)} · {score}"
+
+
+def _length_channel(s: SessionSummary) -> str:
+    """'Quick · Voice' for a summary row (a dataframe cell can't hold a badge, so it is plain text)."""
+    return length_channel_label(SessionConfig(length=s.length, channel=s.channel))
 
 
 def sessions_table(sessions: list[SessionSummary]) -> None:
@@ -52,6 +57,7 @@ def sessions_table(sessions: list[SessionSummary]) -> None:
                 "Date": s.started_at,
                 "Application": f"{s.company} — {s.role}",
                 "Type": TYPE_LABELS[InterviewType(s.interview_type)],
+                "Session": _length_channel(s),
                 "Difficulty": s.difficulty.capitalize(),
                 "Mode": s.mode.capitalize(),
                 "Score": s.overall,
@@ -147,6 +153,7 @@ def session_detail(summary: SessionSummary) -> None:
     kind = TYPE_LABELS[InterviewType(summary.interview_type)]
     score = f" · {summary.overall:.0f}/100" if summary.overall is not None else ""
     st.subheader(f"{safe_md(summary.company, inline=True)} — {kind}{score}")
+    st.markdown(session_badge(view.config))
     st.caption(
         f"{summary.started_at:%Y-%m-%d %H:%M} UTC · {STATUS_LABELS.get(view.status, view.status)} · "
         f"{summary.main_questions_asked} main question(s) · {summary.difficulty} · {summary.mode} · "
@@ -171,7 +178,7 @@ def session_detail(summary: SessionSummary) -> None:
     with report_tab:
         report = load_report(engine, user_id, summary.session_id)
         if report is not None:
-            render_report(report, get_settings().rubric_path)
+            render_report(report, get_settings().rubric_path, view.config)
             drill_offer(view, report, key=f"drill-history-{summary.session_id}", go_to_interview=True)
         elif view.status == "active":
             st.info("This interview is still in progress. Finish it on the Interview page.")

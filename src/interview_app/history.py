@@ -18,7 +18,7 @@ from interview_app.db import Evaluation, InterviewSession, LLMCall, Turn, sessio
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.evaluation.schemas import Report
 from interview_app.interview.engine import TurnView, compute_progress
-from interview_app.interview.persona import SessionConfig
+from interview_app.interview.persona import Channel, Length, SessionConfig
 
 # A session that never got going (still preparing, or the plan call failed) has no transcript worth
 # showing, so History hides it. "active" stays visible: it is a real, resumable interview.
@@ -40,6 +40,9 @@ class SessionSummary(BaseModel):
     difficulty: str
     mode: str
     prompt_variant: str
+    # Same defaults as SessionConfig: sessions stored before Length/Channel existed read as full + text.
+    length: Length = Length.FULL
+    channel: Channel = Channel.TEXT
     main_questions_asked: int
     cost_usd: float
     overall: float | None
@@ -136,6 +139,8 @@ def list_sessions(engine: Engine, user_id: int, application_id: int | None = Non
                 difficulty=config.difficulty.value,
                 mode=config.mode.value,
                 prompt_variant=config.prompt_variant.value,
+                length=config.length,
+                channel=config.channel,
                 # Same counting rule as the live interview, so the numbers match what the user saw.
                 main_questions_asked=compute_progress(turns[row.id]).main_asked,
                 cost_usd=float(costs.get(row.id) or 0.0),
