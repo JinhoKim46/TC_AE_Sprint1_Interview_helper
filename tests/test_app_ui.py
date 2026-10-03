@@ -1282,7 +1282,9 @@ def test_home_lists_applications_with_their_latest_score():
     at.run()
     assert not at.exception, at.exception
     assert "Practise again" in " ".join(m.value for m in at.markdown)
-    assert any("latest score **64**" in m.value and "Hire signal" in m.value for m in at.markdown)
+    # The footer is always two lines (count, then score), so footers in a row line up.
+    assert any("Latest score **64**" in m.value and "Hire signal" in m.value for m in at.markdown)
+    assert "1 interview" in [c.value for c in at.caption]
 
 
 def test_history_shows_latest_best_and_change():

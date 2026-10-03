@@ -121,10 +121,12 @@ if apps:
                 f"**{safe_md(short(app.company, 60), inline=True)}**  \n"
                 f"{safe_md(short(app.role, 80), inline=True)}"
             )
+            # Always two lines (the count, then the score or "No score yet"): when the count, score and badge
+            # shared one line, the badge wrapped in narrow cards and the footers of a row no longer lined up.
             with card_footer(key=f"app-{app.id}"):
                 n = len(app_sessions)
-                count = f"{n} interview{'' if n == 1 else 's'}" if n else "No interviews yet"
+                st.caption(f"{n} interview{'' if n == 1 else 's'}" if n else "No interviews yet")
                 if latest is not None:
-                    st.markdown(f"{count} · latest score **{latest.overall:.0f}** {band_badge(latest.band)}")
+                    st.markdown(f"Latest score **{latest.overall:.0f}** {band_badge(latest.band)}")
                 else:
-                    st.caption(count)
+                    st.markdown("No score yet")
