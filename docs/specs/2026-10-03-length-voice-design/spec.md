@@ -1,6 +1,6 @@
 # Spec: interview Length, Voice channel, and an aligned design
 
-Status: ready-for-agent · Date: 2026-10-03 · Route: Large (grill-with-docs → to-spec → to-tickets → parallel build)
+Status: done · Date: 2026-10-03 · Route: Large (grill-with-docs → to-spec → to-tickets → parallel build)
 
 ## Problem Statement
 

@@ -4,9 +4,9 @@
 
 **Blocked by:** 05
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] No STT in docs or plans
-- [ ] README, docs/04 and all three reports updated with real counts (tests, merged PRs)
-- [ ] Code map regenerated; `tests/test_code_map.py` green; no missing narrative symbols
-- [ ] All tickets in `tickets/README.md` marked done
+- [x] No STT in docs or plans
+- [x] README, docs/04 and all three reports updated with real counts (tests, merged PRs)
+- [x] Code map regenerated; `tests/test_code_map.py` green; no missing narrative symbols
+- [x] All tickets in `tickets/README.md` marked done
