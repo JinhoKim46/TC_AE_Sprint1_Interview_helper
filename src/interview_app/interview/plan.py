@@ -25,7 +25,7 @@ def make_plan(
         model=settings.models.planner,
         # Measured on the sample application: "low" took ~21 s and $0.006 for the same plan structure
         # (7 requirements, 7 probes) that "medium" produced in ~36 s for $0.012. The user waits for
-        # this call before the interview starts, so latency wins.
-        reasoning_effort="low",
+        # this call before the interview starts, so latency wins (default "low", see config.py).
+        reasoning_effort=effort if (effort := settings.planner_reasoning_effort) != "default" else None,
     )
     return plan

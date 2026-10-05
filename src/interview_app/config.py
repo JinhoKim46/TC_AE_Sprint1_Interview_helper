@@ -10,7 +10,7 @@ Every value is validated at startup: out-of-range numbers and misspelled nested 
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -269,6 +269,13 @@ class Settings(BaseSettings):
     # Output budget for one judge call. The report for a long interview is big structured JSON, and a
     # reasoning model spends part of the budget on thinking, so too small a value truncates the JSON.
     judge_max_tokens: int = Field(default=16000, ge=1000, le=64000)
+    # How many of the user's recent reports (with the chosen judge) the report button's wait estimate is based
+    # on (evaluation.service.report_wait_seconds). Few, so a change of judge settings shows up quickly.
+    report_wait_history: int = Field(default=5, ge=1, le=50)
+    # Reasoning effort for the planning call (interview/plan.py), sent as OpenRouter's `reasoning.effort`;
+    # "default" sends nothing, so the provider's default applies (medium for gpt-5-mini). The candidate waits
+    # for this call before the interview starts, so it trades plan depth for start-up time.
+    planner_reasoning_effort: Literal["default", "minimal", "low", "medium", "high"] = "low"
     request_timeout_s: float = Field(default=60.0, gt=0, le=600)
     max_retries: int = Field(default=3, ge=0, le=10)
 

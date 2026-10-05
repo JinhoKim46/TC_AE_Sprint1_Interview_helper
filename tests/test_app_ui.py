@@ -1738,3 +1738,151 @@ def test_a_voice_interview_draws_the_real_mic_widget(monkeypatch):
     next(b for b in at.button if b.label == "Start interview").click().run()
     assert not at.exception, at.exception
     assert len(at.get("audio_input")) == 1
+
+
+def through_main(page: str, timeout: float = 60) -> AppTest:
+    """Run the app through main.py (real navigation) and switch to one page."""
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=timeout)
+    at.run()
+    at.switch_page(page).run()
+    assert not at.exception, at.exception
+    return at
+
+
+def test_ended_interview_stays_until_the_page_is_left_then_the_start_form_shows():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "My running answer.", status="active")
+    at = through_main("views/interview.py")
+    next(b for b in at.button if b.label == "End interview").click().run()
+    assert not at.exception, at.exception
+    assert any("Interview ended." in s.value for s in at.success)
+    # Reruns on the same page (e.g. asking for the report) keep the ended interview on screen.
+    at.run()
+    assert any("Interview ended." in s.value for s in at.success)
+    assert any(b.label == "Open in History" for b in at.button)
+    assert not any(b.label == "Start interview" for b in at.button)
+
+    # Leaving for another page and coming back shows the start form, with a link to that interview.
+    at.switch_page("views/home.py").run()
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Start interview" for b in at.button)
+    assert not any("Interview ended." in s.value for s in at.success)
+    assert any("Your last interview" in c.value for c in at.caption)
+
+
+def test_open_in_history_preselects_the_finished_interview():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="active")
+    at = through_main("views/interview.py")
+    next(b for b in at.button if b.label == "End interview").click().run()
+    next(b for b in at.button if b.label == "Open in History").click().run()
+    assert not at.exception, at.exception
+    assert at.selectbox(key="history_open").value == sid
+
+
+def test_running_interview_is_resumed_whatever_page_came_before():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "Still talking.", status="active")
+    at = through_main("views/history.py")
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any(b.label == "End interview" for b in at.button)
+    assert not any(b.label == "Start interview" for b in at.button)
+
+
+def test_a_session_handed_over_by_another_page_is_opened():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "Done.", status="ended_early")
+    at = through_main("views/home.py")
+    # Home's "Get feedback on the last interview" hands the session over before switching pages.
+    at.session_state["open_session"] = sid
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any("Interview ended." in s.value for s in at.success)
+    assert any(b.label == "Get my feedback report" for b in at.button)
+
+
+# --- Waits that move (spec 2026-10-05, ticket 02) ---------------------------------------------------
+
+
+def test_step_progress_ticks_off_finished_steps_and_marks_the_current_one():
+    def page():
+        from wait_ui import StepProgress
+
+        from interview_app.interview.engine import PrepStep
+
+        progress = StepProgress([PrepStep.DOCUMENTS, PrepStep.PLAN, PrepStep.OPENING, PrepStep.VOICE])
+        progress.finished(PrepStep.DOCUMENTS)
+
+    at = AppTest.from_function(page, default_timeout=30)
+    at.run()
+    assert not at.exception, at.exception
+    lines = [m.value for m in at.markdown]
+    assert lines[0].startswith(":material/check_circle:") and "Reading your documents" in lines[0]
+    assert "Planning the questions" in lines[1] and "(now)" in lines[1]
+    assert all("(now)" not in line for line in lines[2:]) and "Recording the voice" in lines[3]
+    assert at.get("progress")[0].proto.text == "Planning the questions… (step 2 of 4)"
+
+
+def test_voice_start_records_the_opening_voice_inside_the_preparing_wait(monkeypatch):
+    import ui_common
+
+    from interview_app.interview import engine as eng
+
+    speech = voice_deps(monkeypatch, [interviewer_reply("Hi, walk me through your background.")])
+    sample_with_p1()
+    order = []
+    real_start = eng.start_interview
+
+    def start(*args, on_step=None, **kwargs):
+        sid = real_start(*args, on_step=lambda step: (order.append(step), on_step(step)), **kwargs)
+        order.append(f"speech calls after start: {len(speech)}")
+        return sid
+
+    monkeypatch.setattr(eng, "start_interview", start)
+    at = run_page("interview.py")
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+    # The audio was generated after the engine's steps, in the same click (before the page reran).
+    assert order == [eng.PrepStep.DOCUMENTS, eng.PrepStep.OPENING, "speech calls after start: 0"]
+    assert len(speech) == 1 and len(at.get("audio")) == 1
+    assert ui_common  # imported so voice_deps' patch target is loaded
+
+
+def test_report_button_shows_the_wait_estimate_from_recent_judge_calls():
+    from datetime import UTC, datetime
+
+    from interview_app.db import LLMCall, session_scope
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="ended_early")
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
+    at.session_state["viewing_session"] = sid  # the interview that just ended, as after "End interview"
+    at.run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Get my feedback report" for b in at.button)
+    assert any("one to two minutes" in c.value for c in at.caption)  # no history yet: the fallback
+
+    with session_scope(engine) as s:
+        for latency in (41.0, 68.0, 52.0):  # one earlier report with three runs: the slowest decides
+            s.add(
+                LLMCall(
+                    user_id=uid,
+                    session_id=sid + 100,
+                    role="judge",
+                    model="anthropic/claude-haiku-4.5",
+                    latency_s=latency,
+                )
+            )
+    at.run()
+    assert not at.exception, at.exception
+    assert any("about 70 seconds" in c.value for c in at.caption)

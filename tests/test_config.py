@@ -184,3 +184,11 @@ def test_stt_defaults_and_env(monkeypatch):
 def test_stt_limits_are_bounded(field, value):
     with pytest.raises(ValidationError):
         STTSettings(**{field: value})
+
+
+def test_planner_reasoning_effort_defaults_to_low_and_is_validated(monkeypatch):
+    assert Settings(_env_file=None).planner_reasoning_effort == "low"
+    monkeypatch.setenv("PLANNER_REASONING_EFFORT", "minimal")
+    assert Settings(_env_file=None).planner_reasoning_effort == "minimal"
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, planner_reasoning_effort="fast")

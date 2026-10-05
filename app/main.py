@@ -30,4 +30,10 @@ pages = {
     ],
     "Setup": [st.Page("views/settings.py", title="Settings", icon=":material/settings:")],
 }
-st.navigation(pages).run()
+page = st.navigation(pages)
+# Remember the page the previous run showed, so a page can tell "entered from another page" from a rerun of
+# itself: the Interview page shows a finished interview right after it ends, but the start form when the
+# candidate comes back later.
+st.session_state.page_entered = st.session_state.get("current_page") != page.url_path
+st.session_state.current_page = page.url_path
+page.run()

@@ -100,10 +100,14 @@ def go_button(
     key: str | None = None,
     primary: bool = True,
     state: dict | None = None,
+    link: bool = False,
 ) -> None:
     """A button that opens another page, for a call to action that must stand out (a page link looks
-    like plain navigation). `state` is written to session_state first, e.g. which interview to open."""
-    if st.button(label, icon=icon, key=key, type="primary" if primary else "secondary"):
+    like plain navigation). `state` is written to session_state first, e.g. which interview to open.
+    `link=True` draws it borderless like a link, for a pointer inside a line of text that needs `state`
+    (st.page_link can't set any)."""
+    kind = "tertiary" if link else "primary" if primary else "secondary"
+    if st.button(label, icon=icon, key=key, type=kind):
         for name, value in (state or {}).items():
             st.session_state[name] = value
         try:
