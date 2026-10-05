@@ -183,6 +183,31 @@ class TTSSettings(BaseModel):
         return self.voices.get(interview_type, self.default_voice)
 
 
+class STTSettings(BaseModel):
+    """Speech-to-text for spoken answers in Voice interviews (spec 2026-10-05, voice.transcribe).
+
+    Env example: `STT__MAX_SECONDS=120`.
+    """
+
+    model_config = _STRICT
+
+    # The only one of the 24 listed transcription models this account's OpenRouter guardrail allows
+    # (checked 2026-10-05 with a 4 s clip: HTTP 200, 0.34 s, $0.00011); the others 404.
+    model: str = "openai/whisper-large-v3-turbo"
+    # A language hint: without it Whisper guesses the language from the first seconds, and a short or
+    # accented answer is sometimes "translated" into the wrong language.
+    language: str = "en"
+    # Longer recordings are refused before any model call (OWASP LLM10). Three minutes is a long answer;
+    # the transcript of one still fits limits.max_answer_chars.
+    max_seconds: float = Field(default=180.0, gt=0, le=600)
+    # The mic records 16 kHz mono 16-bit WAV = 32,000 bytes per second, so 180 s is about 5.8 MB. The size
+    # cap also covers a WAV whose header lies about its length.
+    max_bytes: int = Field(default=6_000_000, gt=0, le=50_000_000)
+    # Sample rate asked from the browser's recorder: 16 kHz is what Whisper works at, so a higher rate
+    # would only make the upload bigger.
+    sample_rate: int = Field(default=16_000, ge=8_000, le=48_000)
+
+
 class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
@@ -254,6 +279,7 @@ class Settings(BaseSettings):
     limits: Limits = Limits()
     length_presets: LengthPresets = LengthPresets()
     tts: TTSSettings = TTSSettings()
+    stt: STTSettings = STTSettings()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
 
