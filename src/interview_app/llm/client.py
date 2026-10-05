@@ -1,4 +1,4 @@
-"""The one gateway for chat-model calls (and text-to-speech).
+"""The one gateway for chat-model calls (and text-to-speech and speech-to-text).
 
 Why one gateway: every call must be logged (cost, tokens, latency) and must use the same
 retry/timeout/error rules. If modules called the SDK directly, cost tracking would leak.
@@ -7,6 +7,7 @@ Provider-agnostic: OpenRouter, OpenAI, Ollama and vLLM all speak the OpenAI chat
 only provider-specific values are `base_url` and the API key in `Settings`.
 """
 
+import base64
 import json
 import logging
 import math
@@ -16,6 +17,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, TypeVar
 
+import httpx
 from openai import OpenAI
 from pydantic import BaseModel, ValidationError
 
@@ -59,6 +61,14 @@ class SpeechResult:
     generation_id: str | None = None  # OpenRouter's X-Generation-Id, for looking the call up later
 
 
+@dataclass
+class TranscriptionResult:
+    """Text from the speech-to-text endpoint, exactly as the model returned it (may be empty)."""
+
+    text: str
+    record: CallRecord
+
+
 _PCM_RATE = re.compile(r"rate=(\d+)")
 _PCM_CHANNELS = re.compile(r"channels=(\d+)")
 
@@ -90,6 +100,37 @@ class LLMError(Exception):
 
 Recorder = Callable[[CallRecord], None]
 
+# Rate limits and server hiccups are worth retrying; other 4xx errors mean our request is wrong (or the
+# model is blocked by the account's guardrail), and sending it again would fail the same way.
+RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+
+
+def post_json_with_retries(
+    http: httpx.Client, url: str, payload: dict, settings: Settings, backoff_base_s: float
+) -> dict:
+    """POST JSON to an OpenRouter endpoint the OpenAI SDK doesn't cover, with the SDK's retry rules.
+
+    Retries network errors and 429/5xx `settings.max_retries` times, waiting backoff_base_s * 2**attempt
+    between tries. Used for the Jev decisions API (decide.py) and for speech-to-text.
+    """
+    headers = {"Authorization": f"Bearer {settings.openrouter_api_key.get_secret_value()}"}
+    attempts = settings.max_retries + 1  # max_retries counts *re*-tries, like the OpenAI SDK
+    for attempt in range(attempts):
+        last_try = attempt == attempts - 1
+        try:
+            response = http.post(url, json=payload, headers=headers, timeout=settings.request_timeout_s)
+        except httpx.TransportError:  # timeouts, connection resets, DNS failures
+            if last_try:
+                raise
+        else:
+            if response.is_success:
+                return response.json()
+            if response.status_code not in RETRYABLE_STATUS or last_try:
+                # The body holds the API's reason (e.g. a schema error); it never contains our key.
+                raise RuntimeError(f"HTTP {response.status_code}: {response.text[:500]}")
+        time.sleep(backoff_base_s * 2**attempt)
+    raise AssertionError("unreachable")
+
 
 def _strip_code_fence(text: str) -> str:
     # Many models wrap JSON in ```json ... ``` even when told not to.
@@ -101,6 +142,9 @@ def _strip_code_fence(text: str) -> str:
 
 
 class LLMClient:
+    # Waits between plain-HTTP retries (transcribe) are backoff_base_s * 2**attempt. Tests set it to 0.
+    backoff_base_s: float = 0.5
+
     def __init__(
         self,
         settings: Settings,
@@ -108,9 +152,13 @@ class LLMClient:
         sdk: Any = None,
         *,
         pricing: PriceCatalog | None = None,
+        http: httpx.Client | None = None,
     ):
         self.settings = settings
         self.recorder = recorder or (lambda _record: None)
+        # Plain HTTP for the endpoint the OpenAI SDK can't call (speech-to-text). Made on first use: the UI
+        # builds a client per model call, and most never transcribe. Tests inject an httpx.MockTransport.
+        self._http = http
         # Only used when the provider doesn't report the charged cost itself (see _cost).
         self.pricing = pricing
         # The SDK already retries 429/5xx with exponential backoff; we only set how often.
@@ -293,3 +341,57 @@ class LLMClient:
         seconds = pcm_seconds(audio, content_type)
         completion_tokens = math.ceil(seconds * self.settings.tts.audio_tokens_per_second)
         return prompt_tokens, completion_tokens
+
+    def transcribe(self, role: str, audio: bytes, *, model: str, language: str) -> TranscriptionResult:
+        """Speech-to-text via OpenRouter's `/audio/transcriptions`, recorded like a chat call.
+
+        API quirk: this endpoint is NOT OpenAI-compatible. It takes JSON with the audio as plain base64 (no
+        `data:` prefix) under `input_audio`, not the multipart upload the OpenAI SDK sends, so it is a plain
+        HTTP call. The response reports the real charged cost in `usage.cost`.
+        The transcript is never logged: it is the candidate's answer, i.e. personal data.
+        """
+        payload = {
+            "model": model,
+            "input_audio": {"data": base64.b64encode(audio).decode("ascii"), "format": "wav"},
+            "language": language,
+        }
+        if self._http is None:
+            self._http = httpx.Client(timeout=self.settings.request_timeout_s)
+        url = f"{self.settings.openrouter_base_url.rstrip('/')}/audio/transcriptions"
+        start = time.perf_counter()
+        try:
+            body = post_json_with_retries(self._http, url, payload, self.settings, self.backoff_base_s)
+        except Exception as e:
+            record = CallRecord(role, model, latency_s=time.perf_counter() - start, ok=False, error=repr(e))
+            self.recorder(record)
+            log.warning("Transcription failed: role=%s model=%s error=%r", role, model, e)
+            raise LLMError("The recording could not be transcribed.") from e
+
+        body = body if isinstance(body, dict) else {}
+        usage = body.get("usage") if isinstance(body.get("usage"), dict) else {}
+        text = body.get("text")
+        ok = isinstance(text, str)
+        record = CallRecord(
+            role=role,
+            model=model,
+            prompt_tokens=int(usage.get("input_tokens") or usage.get("prompt_tokens") or 0),
+            completion_tokens=int(usage.get("output_tokens") or usage.get("completion_tokens") or 0),
+            cost_usd=float(usage.get("cost") or 0.0),
+            latency_s=time.perf_counter() - start,
+            ok=ok,
+            error=None if ok else "no text in the response",
+        )
+        # Recorded even when unusable: a 200 response may still have been billed.
+        self.recorder(record)
+        log.info(
+            "Transcription: role=%s model=%s bytes=%d chars=%d cost=%.6f latency=%.2fs",
+            role,
+            model,
+            len(audio),
+            len(text) if ok else 0,
+            record.cost_usd,
+            record.latency_s,
+        )
+        if not ok:
+            raise LLMError("The transcription model returned no text.")
+        return TranscriptionResult(text=text, record=record)
