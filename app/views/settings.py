@@ -105,8 +105,8 @@ with panel(key="defaults"):
             options=[c.value for c in Channel],
             default=prefs.channel.value,
             format_func=lambda v: CHANNEL_LABELS[Channel(v)],
-            help="Voice: the interviewer speaks each question. Text: you read them. "
-            "Answers are always typed.",
+            help="Voice: the interviewer speaks each question and you can answer by speaking (or typing). "
+            "Text: you read the questions and type your answers.",
             key="pref_channel",
         )
         or prefs.channel

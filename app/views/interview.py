@@ -4,6 +4,8 @@ The page holds no interview state of its own: the engine stores every turn in th
 page re-reads it on each rerun, so refreshing the browser resumes the interview where it was.
 """
 
+import hashlib
+
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import render_report, session_badge
@@ -15,17 +17,25 @@ from ui_common import (
     engine_deps,
     form_row,
     get_engine,
+    go_button,
     kept_widget,
+    mic_recording,
     page_link,
     panel,
     safe_md,
     slider_start,
 )
+from wait_ui import StepProgress, moving_bar
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
-from interview_app.evaluation.service import EvaluationError, evaluate_session
-from interview_app.history import load_report
+from interview_app.evaluation.service import (
+    EvaluationError,
+    evaluate_session,
+    report_wait_seconds,
+    report_wait_text,
+)
+from interview_app.history import list_sessions, load_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
     CHANNEL_LABELS,
@@ -45,7 +55,7 @@ from interview_app.preferences import (
     preset_main_questions,
     to_session_config,
 )
-from interview_app.voice import speak, stored_audio
+from interview_app.voice import speak, stored_audio, transcribe
 
 engine = get_engine()
 user_id = current_user_id()
@@ -68,7 +78,10 @@ LENGTH_HELP = (
     "Quick: a short practice on the core questions. Full: the real interview. "
     "Custom: pick the number of questions yourself."
 )
-CHANNEL_HELP = "Voice: the interviewer speaks each question. Text: you read them. Answers are always typed."
+CHANNEL_HELP = (
+    "Voice: the interviewer speaks each question and you can answer by speaking (or typing). "
+    "Text: you read the questions and type your answers."
+)
 DIFFICULTY_HELP = "Friendly: supportive, one follow-up per topic. Tough: probes gaps and assumptions harder."
 
 MODE_LABELS = {Mode.REALISTIC.value: "Realistic", Mode.COACHING.value: "Coaching"}
@@ -76,6 +89,28 @@ MODE_CAPTIONS = {
     Mode.REALISTIC.value: "Like the real thing: feedback at the end.",
     Mode.COACHING.value: "Feedback after every answer, with retries.",
 }
+
+
+def last_interview_note() -> None:
+    """One line pointing to the newest interview in History: the page shows the start form when the
+    candidate comes back, so the last report must stay one click away."""
+    sessions = list_sessions(engine, user_id)
+    if not sessions:
+        return
+    last = sessions[0]
+    with st.container(horizontal=True, vertical_alignment="center", key="last-interview"):
+        st.caption(
+            f"Your last interview: {safe_md(last.company, inline=True)} — {safe_md(last.role, inline=True)}, "
+            f"{last.started_at:%d %b %Y}."
+        )
+        go_button(
+            "views/history.py",
+            "Open it in History",
+            icon=":material/history:",
+            key="last-interview-open",
+            link=True,
+            state={"history_open": last.session_id},
+        )
 
 
 def start_form() -> None:
@@ -89,6 +124,7 @@ def start_form() -> None:
     # settings) is not shown here at all and flows into the session through to_session_config.
     prefs = load_preferences(engine, user_id)
 
+    last_interview_note()
     st.caption("Set up a mock interview for one of your applications. Your saved defaults are pre-filled.")
     labels = {a.id: f"{a.company} — {a.role}" for a in apps}
     # "Practise this application" on the Applications page pre-selects it here (read once).
@@ -191,23 +227,41 @@ def start_form() -> None:
             main_questions=main_questions,
             mode=Mode(mode),
         )
-        # st.status rather than a bare spinner: the start is the slowest wait in the app, so it says
-        # what is happening and keeps a visible end state (done or failed).
+        # st.status rather than a bare spinner: the start is the slowest wait in the app, so it shows each
+        # step as it really finishes (the engine's on_step) and keeps a visible end state (done or failed).
         with st.status("Preparing your interview…", expanded=True) as status:
-            st.write(
-                "The interviewer is reading your documents, planning the questions and writing the "
-                "opening one. This takes about 30 seconds."
-            )
+            progress = StepProgress(eng.preparation_steps(config))
+            deps = engine_deps()
             try:
-                eng.start_interview(engine_deps(), user_id, app_id, config)
+                session_id = eng.start_interview(deps, user_id, app_id, config, on_step=progress.finished)
             except eng.InterviewError as e:
+                progress.stop()
                 status.update(label="The interview could not start", state="error")
                 st.error(str(e))
                 return
+            if config.channel == Channel.VOICE:
+                prepare_opening_voice(deps, session_id)
+                progress.finished(eng.PrepStep.VOICE)
             status.update(label="Interview ready", state="complete")
         st.rerun()
     else:
         st.caption("Preparing takes about 30 seconds. You can end the interview at any time.")
+
+
+def prepare_opening_voice(deps: eng.EngineDeps, session_id: int) -> None:
+    """Voice sessions: generate the opening question's audio inside the preparing wait (one wait, not two).
+
+    Called here, after the start, not inside the engine: voice is a UI-side extra, so a TTS failure can't
+    fail the start. A failure is remembered like in interviewer_message, so the page shows the text with
+    the notice and a rerun doesn't pay for a second attempt.
+    """
+    view = eng.get_session(engine, user_id, session_id)
+    opening = next((t for t in view.turns if t.speaker == "interviewer"), None) if view else None
+    if opening is None:
+        return
+    outcome = speak(engine, get_settings(), deps.make_llm, user_id, session_id, opening.idx)
+    if outcome.path is None:
+        st.session_state.setdefault("voice_notices", {})[f"{session_id}-{opening.idx}"] = outcome.notice
 
 
 def live_chips(live) -> None:
@@ -293,6 +347,72 @@ def blocked_answer_editor(view: eng.SessionView) -> bool:
     return True
 
 
+def _spoken_memo(view: eng.SessionView, context: str) -> dict:
+    """The transcript-draft memo of one answer box ("answer", or "retry" in Coaching mode).
+
+    It lives in session_state only: a draft is never stored and never reaches a model until it is sent.
+    `nonce` is part of the mic's widget key; `digest` is the hash of the recording already transcribed.
+    """
+    memos = st.session_state.setdefault("spoken_answer", {})
+    memo = memos.get(context)
+    if memo is None or memo["session"] != view.id:
+        nonce = memo["nonce"] + 1 if memo else 0  # a fresh mic for the new session, too
+        memo = {"session": view.id, "nonce": nonce, "digest": None, "draft": None, "notice": None}
+        memos[context] = memo
+    return memo
+
+
+def clear_spoken(view: eng.SessionView, context: str) -> None:
+    """Forget the draft and empty the mic. The mic gets a new widget key: a keyed st.audio_input keeps its
+    recording across reruns, which would bring the old answer straight back."""
+    memo = _spoken_memo(view, context)
+    memo.update(nonce=memo["nonce"] + 1, digest=None, draft=None, notice=None)
+
+
+def spoken_answer(view: eng.SessionView, context: str, label: str) -> str | None:
+    """Voice sessions: the mic, then the transcript draft with Send and Re-record (speak-then-confirm).
+
+    Returns the confirmed text when Send is pressed, else None. The caller sends it through the normal
+    answer path (eng.answer / eng.retry), so the guard, storage and judging see exactly what a typed answer
+    gets. Text sessions show no mic.
+    """
+    if view.config.channel != Channel.VOICE:
+        return None
+    cfg = get_settings()
+    memo = _spoken_memo(view, context)
+    audio = mic_recording(
+        label,
+        key=f"mic-{context}-{view.id}-{memo['nonce']}",
+        sample_rate=cfg.stt.sample_rate,
+        help="Record, stop, then check the transcript before sending. Recordings are not kept.",
+    )
+    # Every click reruns the page with the same recording still in the widget: transcribe each recording
+    # once (by its hash), or each rerun would pay for it again and overwrite the candidate's edits.
+    if audio is not None and (digest := hashlib.sha256(audio).hexdigest()) != memo["digest"]:
+        with st.spinner("Transcribing your answer…"):
+            outcome = transcribe(engine, cfg, engine_deps().make_llm, user_id, view.id, audio)
+        memo.update(digest=digest, draft=outcome.text, notice=outcome.notice)
+    if memo["notice"]:
+        st.caption(f":material/mic_off: {memo['notice']}")
+    if memo["draft"] is None:
+        return None
+    text = st.text_area(
+        "Your spoken answer (check it, fix any misheard words, then send)",
+        value=memo["draft"],
+        key=f"draft-{context}-{view.id}-{memo['nonce']}",
+    )
+    with button_row(key=f"spoken-{context}"):
+        send = st.button("Send", type="primary", icon=":material/send:", key=f"spoken-send-{context}")
+        again = st.button("Re-record", icon=":material/mic:", key=f"spoken-again-{context}")
+    if again:
+        clear_spoken(view, context)
+        st.rerun()
+    if send:
+        clear_spoken(view, context)
+        return text
+    return None
+
+
 def coaching_choice(view: eng.SessionView) -> None:
     """Coaching mode, after an answer: retry it (up to the limit) or continue to the next question."""
     left = get_settings().limits.max_retries_per_answer - view.retries_used
@@ -303,9 +423,14 @@ def coaching_choice(view: eng.SessionView) -> None:
             keep = st.button("Keep my answer", icon=":material/undo:")
         if keep:
             st.session_state.pop("retrying", None)
+            clear_spoken(view, "retry")
             st.rerun()
+        if (spoken := spoken_answer(view, "retry", "Record your new answer")) is not None:
+            st.session_state.pop("retrying", None)
+            submit(eng.retry, view, spoken)
         if text := st.chat_input("Your new answer"):
             st.session_state.pop("retrying", None)
+            clear_spoken(view, "retry")
             submit(eng.retry, view, text)
         return
     with panel(key="coach"):
@@ -456,13 +581,18 @@ def chat(view: eng.SessionView) -> None:
                         st.error(str(e))
                         return
                 st.rerun()
-        elif text := st.chat_input(
-            "Your answer (ask your own questions here too)"
-            if progress.in_candidate_questions
-            else "Your answer",
-            max_chars=get_settings().limits.max_answer_chars,
-        ):
-            submit(eng.answer, view, text)
+        else:
+            # Voice: the mic first, the chat box still below it (a noisy room, or a mic that won't work).
+            if (spoken := spoken_answer(view, "answer", "Record your answer")) is not None:
+                submit(eng.answer, view, spoken)
+            if text := st.chat_input(
+                "Your answer (ask your own questions here too)"
+                if progress.in_candidate_questions
+                else "Your answer",
+                max_chars=get_settings().limits.max_answer_chars,
+            ):
+                clear_spoken(view, "answer")  # a typed answer replaces any unsent transcript draft
+                submit(eng.answer, view, text)
 
         if notice := st.session_state.pop("guard_notice", None):
             st.warning(notice, icon=":material/shield:")
@@ -489,6 +619,13 @@ def chat(view: eng.SessionView) -> None:
         st.divider()
         with button_row(key="new"):
             new_clicked = st.button("Start a new interview", type="primary", icon=":material/add:")
+            go_button(
+                "views/history.py",
+                "Open in History",
+                icon=":material/history:",
+                primary=False,
+                state={"history_open": view.id},
+            )
         if new_clicked:
             st.session_state.pop("viewing_session", None)
             st.rerun()
@@ -509,33 +646,49 @@ def feedback(view: eng.SessionView) -> None:
             "A judge model scores every answer against the interview rubric and writes what went well, "
             "what to improve and a stronger version of your weakest answer."
         )
+        # The estimate is computed from this user's recent reports with the same judge (a DB read, no model
+        # call), so it stays honest when the judge model changes in Settings.
+        model = judge_model(load_preferences(engine, user_id), get_settings())
+        wait = report_wait_text(report_wait_seconds(engine, user_id, model, get_settings()))
         with button_row(key="get-report"):
             get_report = st.button("Get my feedback report", type="primary", icon=":material/assessment:")
         if not get_report:
+            st.caption(f":material/schedule: {wait}")
             return
         with st.status("Writing your feedback report…", expanded=True) as status:
             st.write(
                 "The judge reads the whole transcript several times independently and the report uses the "
-                "median, so one unlucky run can't swing your score. This takes about a minute."
+                f"median, so one unlucky run can't swing your score. {wait}"
             )
+            bar = st.empty()
+            moving_bar(bar, "report")
             try:
-                prefs = load_preferences(engine, user_id)
-                report = evaluate_session(
-                    engine_deps(), user_id, view.id, judge_model=judge_model(prefs, get_settings())
-                )
+                report = evaluate_session(engine_deps(), user_id, view.id, judge_model=model)
             except EvaluationError as e:
+                bar.empty()
                 status.update(label="The report could not be written", state="error")
                 st.error(str(e))
                 st.caption("Your interview is saved: press the button again to retry.")
                 return
+            bar.empty()
             status.update(label="Report ready", state="complete", expanded=False)
     render_report(report, get_settings().rubric_path, view.config)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")
     drill_offer(view, report, key="drill-interview")
 
 
+# A finished interview stays on screen while the candidate is on this page (reruns, the report). Coming
+# back from another page starts fresh with the start form, unless that page handed a session over
+# (`open_session`, e.g. Home's "Get feedback on the last interview"). page_entered is set by main.py; a page
+# run on its own (tests) never has it, so it keeps what viewing_session says.
+handed_over = st.session_state.pop("open_session", None)
+if st.session_state.get("page_entered"):
+    st.session_state.pop("viewing_session", None)
+if handed_over is not None:
+    st.session_state.viewing_session = handed_over
+
 active = eng.active_session(engine, user_id)
-if active is not None:
+if active is not None:  # a running interview is always resumed, whatever page came before
     st.session_state.viewing_session = active.id
     chat(active)
 elif (

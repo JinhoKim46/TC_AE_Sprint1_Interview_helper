@@ -10,7 +10,7 @@ Every value is validated at startup: out-of-range numbers and misspelled nested 
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -183,6 +183,31 @@ class TTSSettings(BaseModel):
         return self.voices.get(interview_type, self.default_voice)
 
 
+class STTSettings(BaseModel):
+    """Speech-to-text for spoken answers in Voice interviews (spec 2026-10-05, voice.transcribe).
+
+    Env example: `STT__MAX_SECONDS=120`.
+    """
+
+    model_config = _STRICT
+
+    # The only one of the 24 listed transcription models this account's OpenRouter guardrail allows
+    # (checked 2026-10-05 with a 4 s clip: HTTP 200, 0.34 s, $0.00011); the others 404.
+    model: str = "openai/whisper-large-v3-turbo"
+    # A language hint: without it Whisper guesses the language from the first seconds, and a short or
+    # accented answer is sometimes "translated" into the wrong language.
+    language: str = "en"
+    # Longer recordings are refused before any model call (OWASP LLM10). Three minutes is a long answer;
+    # the transcript of one still fits limits.max_answer_chars.
+    max_seconds: float = Field(default=180.0, gt=0, le=600)
+    # The mic records 16 kHz mono 16-bit WAV = 32,000 bytes per second, so 180 s is about 5.8 MB. The size
+    # cap also covers a WAV whose header lies about its length.
+    max_bytes: int = Field(default=6_000_000, gt=0, le=50_000_000)
+    # Sample rate asked from the browser's recorder: 16 kHz is what Whisper works at, so a higher rate
+    # would only make the upload bigger.
+    sample_rate: int = Field(default=16_000, ge=8_000, le=48_000)
+
+
 class GuardSettings(BaseModel):
     """Prompt-injection guard (OWASP LLM01), see security/injection.py."""
 
@@ -244,6 +269,13 @@ class Settings(BaseSettings):
     # Output budget for one judge call. The report for a long interview is big structured JSON, and a
     # reasoning model spends part of the budget on thinking, so too small a value truncates the JSON.
     judge_max_tokens: int = Field(default=16000, ge=1000, le=64000)
+    # How many of the user's recent reports (with the chosen judge) the report button's wait estimate is based
+    # on (evaluation.service.report_wait_seconds). Few, so a change of judge settings shows up quickly.
+    report_wait_history: int = Field(default=5, ge=1, le=50)
+    # Reasoning effort for the planning call (interview/plan.py), sent as OpenRouter's `reasoning.effort`;
+    # "default" sends nothing, so the provider's default applies (medium for gpt-5-mini). The candidate waits
+    # for this call before the interview starts, so it trades plan depth for start-up time.
+    planner_reasoning_effort: Literal["default", "minimal", "low", "medium", "high"] = "low"
     request_timeout_s: float = Field(default=60.0, gt=0, le=600)
     max_retries: int = Field(default=3, ge=0, le=10)
 
@@ -254,6 +286,7 @@ class Settings(BaseSettings):
     limits: Limits = Limits()
     length_presets: LengthPresets = LengthPresets()
     tts: TTSSettings = TTSSettings()
+    stt: STTSettings = STTSettings()
     guard: GuardSettings = GuardSettings()
     features: Features = Features()
 

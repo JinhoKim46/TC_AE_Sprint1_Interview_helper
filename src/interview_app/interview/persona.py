@@ -83,10 +83,12 @@ LENGTH_LABELS: dict[Length, str] = {
 
 
 class Channel(StrEnum):
-    """How the interviewer's questions reach the candidate. Answers are always typed."""
+    """How the interview is held. Typing an answer works in both channels."""
 
     TEXT = "text"
-    VOICE = "voice"  # questions are spoken (text-to-speech); the text stays available
+    # Questions are spoken (text-to-speech) and answers may be spoken (speech-to-text, confirmed before
+    # sending); the text of both stays available.
+    VOICE = "voice"
 
 
 CHANNEL_LABELS: dict[Channel, str] = {Channel.TEXT: "Text", Channel.VOICE: "Voice"}
