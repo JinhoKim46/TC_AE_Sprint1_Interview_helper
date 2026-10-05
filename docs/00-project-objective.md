@@ -212,7 +212,7 @@ Do these after the core works. The list is sorted by difficulty. **Caution from 
 
 ### Optional — Easy
 
-- [ ] E1 ChatGPT critique (usability, security, prompt engineering)
+- [x] E1 ChatGPT critique (usability, security, prompt engineering) — [review and response](../reports/2026-10-05-E1-chatgpt-critique.md)
 - [ ] E2 Domain-specific prompts
 - [ ] E3 More security constraints (input + system-prompt validation, possibly LLM-checked)
 - [ ] E4 Difficulty levels (easy / medium / hard)

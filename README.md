@@ -91,6 +91,7 @@ Design rule throughout: **the model judges, code computes.** Models decide what 
 | R3 Allowed model | Interviewer `openai/gpt-5-mini` (default, configurable) |
 | R4 Five system prompts, compared | `src/interview_app/prompts/interviewer_p1..p5_*.md`; compared in `lab/` → [`docs/05-prompt-comparison.md`](docs/05-prompt-comparison.md) |
 | R5 Security guard | `src/interview_app/security/` (see *Security* below) |
+| E1 ChatGPT critique | [Usability, security and prompt-engineering review, changes and follow-ups](reports/2026-10-05-E1-chatgpt-critique.md) |
 | E3 More security constraints | Input validation, LLM-based (Jev) injection check, document flags |
 | E4 Difficulty levels / E7 Personas | Interview type + difficulty → interviewer persona (`interview/persona.py`) |
 | E8 Tune a setting | `lab/sweep_setting.py` (reasoning effort), results in `docs/05-prompt-comparison.md` |
