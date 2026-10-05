@@ -51,6 +51,15 @@ def run_page(name: str, timeout: float = 30) -> AppTest:
     return at
 
 
+def exit_choice(at: AppTest, choice: str) -> AppTest:
+    """Open the "Exit interview" dialog on the Interview page and click one of its buttons."""
+    next(b for b in at.button if b.label == "Exit interview").click().run()
+    assert not at.exception, at.exception
+    next(b for b in at.button if b.label == choice).click().run()
+    assert not at.exception, at.exception
+    return at
+
+
 def test_home_prompts_to_add_an_application():
     # Through main.py, so st.navigation is set up (home uses st.page_link).
     at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=30)
@@ -342,7 +351,7 @@ def test_interview_form_starts_from_saved_preferences():
 
 
 def test_feedback_report_after_ending_the_interview(monkeypatch):
-    """End an interview from the sidebar, request feedback, and see the rendered report."""
+    """End an interview from the Exit interview dialog, request feedback, and see the rendered report."""
     import json
     from types import SimpleNamespace
 
@@ -414,7 +423,7 @@ def test_feedback_report_after_ending_the_interview(monkeypatch):
     at.run()
     next(b for b in at.button if b.label == "Start interview").click().run()
     at.chat_input[0].set_value("I improved mIoU from 0.61 to 0.74 on the field set.").run()
-    next(b for b in at.button if b.label == "End interview").click().run()
+    exit_choice(at, "End & get feedback")
     next(b for b in at.button if b.label == "Get my feedback report").click().run()
     assert not at.exception, at.exception
     assert any("A focused first answer." in m.value for m in at.markdown)
@@ -662,7 +671,7 @@ def test_weak_spot_drill_starts_a_focused_interview(monkeypatch):
     at.run()
     next(b for b in at.button if b.label == "Start interview").click().run()
     at.chat_input[0].set_value("I worked on many things with my team.").run()
-    next(b for b in at.button if b.label == "End interview").click().run()
+    exit_choice(at, "End & get feedback")
     next(b for b in at.button if b.label == "Get my feedback report").click().run()
     # The offer lists the weak requirement (escaped: it is model text).
     assert any(r"Production C\+\+" in m.value for m in at.markdown)
@@ -1822,7 +1831,7 @@ def test_ended_interview_stays_until_the_page_is_left_then_the_start_form_shows(
     engine, uid, app_id = sample_with_p1()
     seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "My running answer.", status="active")
     at = through_main("views/interview.py")
-    next(b for b in at.button if b.label == "End interview").click().run()
+    exit_choice(at, "End & get feedback")
     assert not at.exception, at.exception
     assert any("Interview ended." in s.value for s in at.success)
     # Reruns on the same page (e.g. asking for the report) keep the ended interview on screen.
@@ -1846,7 +1855,7 @@ def test_open_in_history_preselects_the_finished_interview():
     engine, uid, app_id = sample_with_p1()
     sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="active")
     at = through_main("views/interview.py")
-    next(b for b in at.button if b.label == "End interview").click().run()
+    exit_choice(at, "End & get feedback")
     next(b for b in at.button if b.label == "Open in History").click().run()
     assert not at.exception, at.exception
     assert at.selectbox(key="history_open").value == sid
@@ -1860,7 +1869,7 @@ def test_running_interview_is_resumed_whatever_page_came_before():
     at = through_main("views/history.py")
     at.switch_page("views/interview.py").run()
     assert not at.exception, at.exception
-    assert any(b.label == "End interview" for b in at.button)
+    assert any(b.label == "Exit interview" for b in at.button)
     assert not any(b.label == "Start interview" for b in at.button)
 
 
@@ -1933,7 +1942,7 @@ def test_report_button_shows_the_wait_estimate_from_recent_judge_calls():
     engine, uid, app_id = sample_with_p1()
     sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="ended_early")
     at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
-    at.session_state["viewing_session"] = sid  # the interview that just ended, as after "End interview"
+    at.session_state["viewing_session"] = sid  # the interview that just ended, as after "End & get feedback"
     at.run()
     assert not at.exception, at.exception
     assert any(b.label == "Get my feedback report" for b in at.button)
@@ -1953,3 +1962,148 @@ def test_report_button_shows_the_wait_estimate_from_recent_judge_calls():
     at.run()
     assert not at.exception, at.exception
     assert any("about 70 seconds" in c.value for c in at.caption)
+
+
+# --- Exit interview dialog (ticket 06) ---------------------------------------------------------------
+
+
+def running_interview() -> tuple:
+    """The sample application with one active interview stored straight in the DB. Returns ids."""
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    answer = "My running answer."
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, answer, status="active")
+    return engine, uid, sid
+
+
+def dialog_open(at: AppTest) -> bool:
+    return any(b.label == "Save & exit" for b in at.button)
+
+
+def test_exit_dialog_cancel_changes_nothing():
+    from interview_app.interview.engine import get_session
+
+    engine, uid, sid = running_interview()
+    at = through_main("views/interview.py")
+    assert any(b.label == "Exit interview" for b in at.button)
+    assert not dialog_open(at)
+    exit_choice(at, "Cancel")
+    assert not dialog_open(at)
+    assert get_session(engine, uid, sid).status == "active"
+    assert any(b.label == "Exit interview" for b in at.button)
+
+
+def test_exit_dialog_save_and_exit_keeps_the_interview_and_resumes_it():
+    from interview_app.interview.engine import get_session
+
+    engine, uid, sid = running_interview()
+    at = through_main("views/interview.py")
+    exit_choice(at, "Save & exit")
+    assert get_session(engine, uid, sid).status == "active"
+    # Home, which offers to resume it.
+    assert not any(b.label == "Exit interview" for b in at.button)
+    assert any(b.label == "Resume the interview" for b in at.button)
+    next(b for b in at.button if b.label == "Resume the interview").click().run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Exit interview" for b in at.button)
+    assert any("My running answer." in m.value for m in at.markdown)
+
+
+def test_exit_dialog_end_and_get_feedback():
+    from interview_app.interview.engine import get_session
+
+    engine, uid, sid = running_interview()
+    at = through_main("views/interview.py")
+    exit_choice(at, "End & get feedback")
+    assert get_session(engine, uid, sid).status == "ended_early"
+    assert any("Interview ended." in s.value for s in at.success)
+    assert any(b.label == "Get my feedback report" for b in at.button)
+    assert not dialog_open(at)
+
+
+def test_exit_dialog_discard_asks_first_then_deletes_the_interview():
+    from sqlmodel import select
+
+    from interview_app.db import Turn, session_scope
+    from interview_app.interview.engine import get_session
+
+    engine, uid, sid = running_interview()
+    at = through_main("views/interview.py")
+    exit_choice(at, "Discard…")
+    # Nothing is deleted until the confirmation; Back returns to the four choices.
+    assert any("can't be undone" in w.value for w in at.warning)
+    assert get_session(engine, uid, sid) is not None
+    next(b for b in at.button if b.label == "Back").click().run()
+    assert dialog_open(at)
+    next(b for b in at.button if b.label == "Discard…").click().run()
+    next(b for b in at.button if b.label == "Delete the interview").click().run()
+    assert not at.exception, at.exception
+    assert get_session(engine, uid, sid) is None
+    with session_scope(engine) as s:
+        assert s.exec(select(Turn).where(Turn.session_id == sid)).all() == []
+    assert any(b.label == "Start interview" for b in at.button)
+    assert any("deleted" in s.value for s in at.success)
+    assert not dialog_open(at)
+
+
+def running_interview_for_existing_sample() -> tuple:
+    """An active interview for the sample application already loaded by sample_with_p1()."""
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.applications import list_applications
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = list_applications(engine, uid)[0].id
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "Still talking.", status="active")
+    return engine, uid, sid
+
+
+def test_navigation_is_hidden_while_an_interview_runs(monkeypatch):
+    positions: list[str] = []
+    real = st.navigation
+
+    def recording_navigation(pages, **kwargs):
+        positions.append(kwargs.get("position", "sidebar"))
+        return real(pages, **kwargs)
+
+    monkeypatch.setattr(st, "navigation", recording_navigation)
+    sample_with_p1()
+    at = through_main("views/home.py")
+    assert positions[-1] == "sidebar"  # no interview: the normal sidebar
+
+    running_interview_for_existing_sample()
+    at.switch_page("views/interview.py").run()
+    assert positions[-1] == "hidden"
+    exit_choice(at, "Save & exit")
+    assert positions[-1] == "sidebar"  # saved and left: the candidate can go anywhere
+    next(b for b in at.button if b.label == "Resume the interview").click().run()
+    assert positions[-1] == "hidden"  # resumed: hidden again (the page reruns once to hide it)
+    exit_choice(at, "End & get feedback")
+    assert positions[-1] == "sidebar"
+
+
+def test_another_page_reached_mid_interview_links_back_to_it():
+    running_interview()
+    at = through_main("views/history.py")
+    assert any("interview in progress" in m.value for m in at.markdown)
+    next(b for b in at.button if b.label == "Back to the interview").click().run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Exit interview" for b in at.button)
+
+
+def leave_guards(at: AppTest) -> list:
+    return [h for h in at.get("html") if "beforeunload" in h.proto.body]
+
+
+def test_leave_site_prompt_is_only_drawn_during_an_active_interview():
+    engine, uid, sid = running_interview()
+    at = through_main("views/interview.py")
+    assert len(leave_guards(at)) == 1
+    exit_choice(at, "End & get feedback")
+    assert leave_guards(at) == []
+    at.switch_page("views/home.py").run()
+    assert leave_guards(at) == []

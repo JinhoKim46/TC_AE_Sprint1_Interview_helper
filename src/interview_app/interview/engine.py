@@ -429,6 +429,22 @@ def active_session(engine: Engine, user_id: int, settings: Settings | None = Non
     return get_session(engine, user_id, live[0]) if live else None
 
 
+def active_session_id(engine: Engine, user_id: int, settings: Settings | None = None) -> int | None:
+    """The id of the user's running (or freshly preparing) interview, or None.
+
+    A cheap check for the app shell, which runs it on every page view to decide whether to hide the page
+    navigation: one small query, no turns loaded. It only reads; active_session() marks stale starts failed.
+    """
+    settings = settings or get_settings()
+    with session_scope(engine) as s:
+        rows = s.exec(
+            select(InterviewSession)
+            .where(InterviewSession.user_id == user_id, col(InterviewSession.status).in_(ACTIVE_STATUSES))
+            .order_by(col(InterviewSession.id).desc())
+        ).all()
+        return next((r.id for r in rows if not _is_stale_start(r, settings)), None)
+
+
 def _add_turn(
     engine: Engine, row: InterviewSession, idx: int, speaker: str, text: str, turn: AnyTurn | None = None
 ):
