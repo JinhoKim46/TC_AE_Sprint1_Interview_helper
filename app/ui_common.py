@@ -245,6 +245,16 @@ def button_row(*, key: str, align: Literal["start", "end"] = "start") -> DeltaGe
     return st.container(horizontal=True, key=f"{prefix}-{key}")
 
 
+def mic_recording(label: str, *, key: str, sample_rate: int, help: str | None = None) -> bytes | None:
+    """The browser mic as WAV bytes (None until something is recorded).
+
+    A thin wrapper on purpose: AppTest can't drive st.audio_input, so UI tests replace this one function
+    with a fake recorder. The bytes stay in memory only (spoken answers are never stored).
+    """
+    recording = st.audio_input(label, sample_rate=sample_rate, key=key, help=help)
+    return recording.getvalue() if recording is not None else None
+
+
 # --- Model clients ---------------------------------------------------------------------------------
 
 

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from interview_app.config import PROJECT_ROOT, GuardSettings, LengthPresets, Limits, Settings
+from interview_app.config import PROJECT_ROOT, GuardSettings, LengthPresets, Limits, Settings, STTSettings
 
 
 def test_defaults_follow_course_requirements():
@@ -163,6 +163,27 @@ def test_length_presets_bounds(values):
 def test_length_presets_must_grow_from_quick_to_standard():
     with pytest.raises(ValidationError, match="quick <= standard"):
         LengthPresets(quick=6, standard=5)
+
+
+# --- Speech-to-text -------------------------------------------------------------------------------
+
+
+def test_stt_defaults_and_env(monkeypatch):
+    s = Settings(_env_file=None)
+    # The only transcription model this account's guardrail allows (checked 2026-10-05).
+    assert s.stt.model == "openai/whisper-large-v3-turbo"
+    assert s.stt.language == "en"
+    assert s.stt.max_seconds > 0 and s.stt.max_bytes > 0
+    monkeypatch.setenv("STT__MAX_SECONDS", "90")
+    monkeypatch.setenv("STT__LANGUAGE", "de")
+    s = Settings(_env_file=None)
+    assert (s.stt.max_seconds, s.stt.language) == (90, "de")
+
+
+@pytest.mark.parametrize("field, value", [("max_seconds", 0), ("max_seconds", 10_000), ("max_bytes", 0)])
+def test_stt_limits_are_bounded(field, value):
+    with pytest.raises(ValidationError):
+        STTSettings(**{field: value})
 
 
 def test_planner_reasoning_effort_defaults_to_low_and_is_validated(monkeypatch):
