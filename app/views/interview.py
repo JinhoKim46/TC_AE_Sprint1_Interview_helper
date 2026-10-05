@@ -15,6 +15,7 @@ from ui_common import (
     engine_deps,
     form_row,
     get_engine,
+    go_button,
     kept_widget,
     page_link,
     panel,
@@ -25,7 +26,7 @@ from ui_common import (
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
 from interview_app.evaluation.service import EvaluationError, evaluate_session
-from interview_app.history import load_report
+from interview_app.history import list_sessions, load_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
     CHANNEL_LABELS,
@@ -78,6 +79,28 @@ MODE_CAPTIONS = {
 }
 
 
+def last_interview_note() -> None:
+    """One line pointing to the newest interview in History: the page shows the start form when the
+    candidate comes back, so the last report must stay one click away."""
+    sessions = list_sessions(engine, user_id)
+    if not sessions:
+        return
+    last = sessions[0]
+    with st.container(horizontal=True, vertical_alignment="center", key="last-interview"):
+        st.caption(
+            f"Your last interview: {safe_md(last.company, inline=True)} — {safe_md(last.role, inline=True)}, "
+            f"{last.started_at:%d %b %Y}."
+        )
+        go_button(
+            "views/history.py",
+            "Open it in History",
+            icon=":material/history:",
+            key="last-interview-open",
+            link=True,
+            state={"history_open": last.session_id},
+        )
+
+
 def start_form() -> None:
     apps = list_applications(engine, user_id)
     if not apps:
@@ -89,6 +112,7 @@ def start_form() -> None:
     # settings) is not shown here at all and flows into the session through to_session_config.
     prefs = load_preferences(engine, user_id)
 
+    last_interview_note()
     st.caption("Set up a mock interview for one of your applications. Your saved defaults are pre-filled.")
     labels = {a.id: f"{a.company} — {a.role}" for a in apps}
     # "Practise this application" on the Applications page pre-selects it here (read once).
@@ -489,6 +513,13 @@ def chat(view: eng.SessionView) -> None:
         st.divider()
         with button_row(key="new"):
             new_clicked = st.button("Start a new interview", type="primary", icon=":material/add:")
+            go_button(
+                "views/history.py",
+                "Open in History",
+                icon=":material/history:",
+                primary=False,
+                state={"history_open": view.id},
+            )
         if new_clicked:
             st.session_state.pop("viewing_session", None)
             st.rerun()
@@ -534,8 +565,18 @@ def feedback(view: eng.SessionView) -> None:
     drill_offer(view, report, key="drill-interview")
 
 
+# A finished interview stays on screen while the candidate is on this page (reruns, the report). Coming
+# back from another page starts fresh with the start form, unless that page handed a session over
+# (`open_session`, e.g. Home's "Get feedback on the last interview"). page_entered is set by main.py; a page
+# run on its own (tests) never has it, so it keeps what viewing_session says.
+handed_over = st.session_state.pop("open_session", None)
+if st.session_state.get("page_entered"):
+    st.session_state.pop("viewing_session", None)
+if handed_over is not None:
+    st.session_state.viewing_session = handed_over
+
 active = eng.active_session(engine, user_id)
-if active is not None:
+if active is not None:  # a running interview is always resumed, whatever page came before
     st.session_state.viewing_session = active.id
     chat(active)
 elif (
