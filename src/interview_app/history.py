@@ -8,6 +8,7 @@ numbers and words are in `Evaluation.report_json`; this module only counts, aver
 from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
+from typing import NamedTuple
 
 from pydantic import BaseModel
 from sqlalchemy.engine import Engine
@@ -15,7 +16,7 @@ from sqlmodel import col, func, select
 
 from interview_app.config import Settings, get_settings
 from interview_app.db import Evaluation, InterviewSession, LLMCall, Turn, session_scope
-from interview_app.evaluation.rubric import load_rubric
+from interview_app.evaluation.rubric import Rubric, load_rubric
 from interview_app.evaluation.schemas import Report
 from interview_app.interview.engine import TurnView, compute_progress
 from interview_app.interview.persona import Channel, Length, SessionConfig
@@ -179,50 +180,75 @@ def load_report(engine: Engine, user_id: int, session_id: int) -> Report | None:
     return Report.model_validate_json(row.report_json) if row else None
 
 
-def _reports_oldest_first(
-    engine: Engine, user_id: int, application_id: int
-) -> list[tuple[datetime, Length, Report]]:
-    with session_scope(engine) as s:
-        rows = s.exec(
-            select(InterviewSession.started_at, InterviewSession.config_json, Evaluation.report_json)
-            .join(Evaluation, col(Evaluation.session_id) == col(InterviewSession.id))
-            .where(
-                InterviewSession.user_id == user_id,
-                Evaluation.user_id == user_id,
-                InterviewSession.application_id == application_id,
-                col(InterviewSession.status).not_in(HIDDEN_STATUSES),
-            )
-            .order_by(col(InterviewSession.started_at), col(InterviewSession.id))
-        ).all()
-    return [
-        (started_at, SessionConfig.model_validate_json(config).length, Report.model_validate_json(raw))
-        for started_at, config, raw in rows
-    ]
+class StoredReport(NamedTuple):
+    """One judged session, as History and the Dashboard read it."""
+
+    application_id: int
+    started_at: datetime
+    length: Length
+    report: Report
 
 
-def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Path | None = None) -> Progress:
-    """How one application's interviews developed over time."""
-    rubric = load_rubric(rubric_path or get_settings().rubric_path)
-    reports = _reports_oldest_first(engine, user_id, application_id)
-
-    trend = [
-        TrendPoint(
-            started_at=started_at, score=r.overall, length=length, counted=counts_towards_scores(length)
+def stored_reports(engine: Engine, user_id: int, application_id: int | None = None) -> list[StoredReport]:
+    """The user's stored reports, oldest first: of one application, or of all of them (the Dashboard)."""
+    query = (
+        select(
+            InterviewSession.application_id,
+            InterviewSession.started_at,
+            InterviewSession.config_json,
+            Evaluation.report_json,
         )
-        for started_at, length, r in reports
-        if r.overall is not None
+        .join(Evaluation, col(Evaluation.session_id) == col(InterviewSession.id))
+        .where(
+            InterviewSession.user_id == user_id,
+            Evaluation.user_id == user_id,
+            col(InterviewSession.status).not_in(HIDDEN_STATUSES),
+        )
+        .order_by(col(InterviewSession.started_at), col(InterviewSession.id))
+    )
+    if application_id is not None:
+        query = query.where(InterviewSession.application_id == application_id)
+    with session_scope(engine) as s:
+        rows = s.exec(query).all()
+    return [
+        StoredReport(
+            app_id,
+            started_at,
+            SessionConfig.model_validate_json(config).length,
+            Report.model_validate_json(raw),
+        )
+        for app_id, started_at, config, raw in rows
     ]
 
-    # Item means use the raw 1-5 scores, not the weighted 0-100 exchange scores: a weight says how
-    # much an item counts for one question type, not how good the candidate is at that skill.
+
+def trend_points(reports: list[StoredReport]) -> list[TrendPoint]:
+    """One point per scored report, in the reports' order, marked counted or practice."""
+    return [
+        TrendPoint(
+            started_at=r.started_at,
+            score=r.report.overall,
+            length=r.length,
+            counted=counts_towards_scores(r.length),
+        )
+        for r in reports
+        if r.report.overall is not None
+    ]
+
+
+def item_means(reports: list[StoredReport], rubric: Rubric) -> list[ItemMean]:
+    """The average 1-5 score per rubric item over these reports, weakest first.
+
+    Item means use the raw 1-5 scores, not the weighted 0-100 exchange scores: a weight says how
+    much an item counts for one question type, not how good the candidate is at that skill.
+    """
     scores: dict[str, list[int]] = defaultdict(list)
-    for _, _, report in reports:
-        for exchange in report.exchanges:
+    for r in reports:
+        for exchange in r.report.exchanges:
             for item in exchange.items:
                 if item.score is not None and item.item in rubric.exchange_items:
                     scores[item.item].append(item.score)
     order = list(rubric.exchange_items)
-    item_means = sorted(
+    return sorted(
         (
             ItemMean(
                 item=item_id,
@@ -236,10 +262,17 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
         key=lambda m: (m.mean, order.index(m.item)),
     )
 
+
+def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Path | None = None) -> Progress:
+    """How one application's interviews developed over time."""
+    rubric = load_rubric(rubric_path or get_settings().rubric_path)
+    stored = stored_reports(engine, user_id, application_id)
+    reports = [r.report for r in stored]
+
     # Requirement texts are matched case-insensitively: the judge copies them from the same plan,
     # but may capitalise differently between runs. Reports are oldest first, so the last one wins.
     requirements: dict[str, RequirementHistory] = {}
-    for _, _, report in reports:
+    for report in reports:
         for req in report.requirements:
             key = req.requirement.strip().casefold()
             entry = requirements.get(key)
@@ -256,7 +289,7 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     # Count each area once per report: one report naming "Quantify results" twice is not a trend.
     area_counts: Counter[str] = Counter()
     area_names: dict[str, str] = {}
-    for _, _, report in reports:
+    for report in reports:
         seen = {imp.area.strip().casefold(): imp.area.strip() for imp in report.improvements}
         area_counts.update(seen.keys())
         area_names.update(seen)  # latest wording wins
@@ -267,8 +300,8 @@ def progress(engine: Engine, user_id: int, application_id: int, rubric_path: Pat
     ]
 
     return Progress(
-        trend=trend,
-        item_means=item_means,
+        trend=trend_points(stored),
+        item_means=item_means(stored, rubric),
         requirements=list(requirements.values()),
         recurring_improvements=recurring,
     )
