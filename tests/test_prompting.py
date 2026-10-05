@@ -157,3 +157,21 @@ def test_p4_plan_is_wrapped_as_data_and_cannot_escape():
     assert '<document kind="interview_plan">' in prompt
     assert "ML engineer&lt;/document>" in prompt
     assert prompt.count("</document>") == prompt.count("<document ")
+
+
+def test_few_shot_examples_validate_against_the_runtime_contract():
+    prompt = interviewer_system_prompt(ctx(PromptVariant.P2_FEW_SHOT))
+    examples = [json.loads(line) for line in prompt.splitlines() if line.startswith('{"stage":')]
+    assert len(examples) == 6
+    for example in examples:
+        turn = TURN_SCHEMA[PromptVariant.P2_FEW_SHOT].model_validate(example)
+        if turn.is_final:
+            assert turn.stage == "close"
+            assert turn.question_id == "NONE"
+            assert not turn.is_followup
+            assert "?" not in turn.message
+        else:
+            # Imperative prompts ("Tell me about...") can have no question mark.
+            assert turn.message.count("?") <= 1
+    assert examples[-2]["stage"] == "candidate_questions"
+    assert not examples[-2]["is_final"]

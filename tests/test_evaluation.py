@@ -237,7 +237,7 @@ def test_judge_prompt_contains_rubric_applicability_and_wrapped_answers():
     assert "E03 (category CQ; applicable items: none - feedback only)" in prompt
     assert "<candidate_answer>\nWe built it.\n</candidate_answer>" in prompt
     assert "T06 candidate: <candidate_answer>" in prompt
-    assert "list the 5-8 most important requirements" in prompt  # no plan given
+    assert "list the 5-8 most important distinct requirements" in prompt  # no plan given
 
 
 def test_judge_prompt_wraps_interviewer_turns_and_plan_requirements_as_data():
