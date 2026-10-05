@@ -22,10 +22,16 @@ from ui_common import (
     safe_md,
     slider_start,
 )
+from wait_ui import StepProgress, moving_bar
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
-from interview_app.evaluation.service import EvaluationError, evaluate_session
+from interview_app.evaluation.service import (
+    EvaluationError,
+    evaluate_session,
+    report_wait_seconds,
+    report_wait_text,
+)
 from interview_app.history import list_sessions, load_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
@@ -215,23 +221,41 @@ def start_form() -> None:
             main_questions=main_questions,
             mode=Mode(mode),
         )
-        # st.status rather than a bare spinner: the start is the slowest wait in the app, so it says
-        # what is happening and keeps a visible end state (done or failed).
+        # st.status rather than a bare spinner: the start is the slowest wait in the app, so it shows each
+        # step as it really finishes (the engine's on_step) and keeps a visible end state (done or failed).
         with st.status("Preparing your interview…", expanded=True) as status:
-            st.write(
-                "The interviewer is reading your documents, planning the questions and writing the "
-                "opening one. This takes about 30 seconds."
-            )
+            progress = StepProgress(eng.preparation_steps(config))
+            deps = engine_deps()
             try:
-                eng.start_interview(engine_deps(), user_id, app_id, config)
+                session_id = eng.start_interview(deps, user_id, app_id, config, on_step=progress.finished)
             except eng.InterviewError as e:
+                progress.stop()
                 status.update(label="The interview could not start", state="error")
                 st.error(str(e))
                 return
+            if config.channel == Channel.VOICE:
+                prepare_opening_voice(deps, session_id)
+                progress.finished(eng.PrepStep.VOICE)
             status.update(label="Interview ready", state="complete")
         st.rerun()
     else:
         st.caption("Preparing takes about 30 seconds. You can end the interview at any time.")
+
+
+def prepare_opening_voice(deps: eng.EngineDeps, session_id: int) -> None:
+    """Voice sessions: generate the opening question's audio inside the preparing wait (one wait, not two).
+
+    Called here, after the start, not inside the engine: voice is a UI-side extra, so a TTS failure can't
+    fail the start. A failure is remembered like in interviewer_message, so the page shows the text with
+    the notice and a rerun doesn't pay for a second attempt.
+    """
+    view = eng.get_session(engine, user_id, session_id)
+    opening = next((t for t in view.turns if t.speaker == "interviewer"), None) if view else None
+    if opening is None:
+        return
+    outcome = speak(engine, get_settings(), deps.make_llm, user_id, session_id, opening.idx)
+    if outcome.path is None:
+        st.session_state.setdefault("voice_notices", {})[f"{session_id}-{opening.idx}"] = outcome.notice
 
 
 def live_chips(live) -> None:
@@ -540,25 +564,31 @@ def feedback(view: eng.SessionView) -> None:
             "A judge model scores every answer against the interview rubric and writes what went well, "
             "what to improve and a stronger version of your weakest answer."
         )
+        # The estimate is computed from this user's recent reports with the same judge (a DB read, no model
+        # call), so it stays honest when the judge model changes in Settings.
+        model = judge_model(load_preferences(engine, user_id), get_settings())
+        wait = report_wait_text(report_wait_seconds(engine, user_id, model, get_settings()))
         with button_row(key="get-report"):
             get_report = st.button("Get my feedback report", type="primary", icon=":material/assessment:")
         if not get_report:
+            st.caption(f":material/schedule: {wait}")
             return
         with st.status("Writing your feedback report…", expanded=True) as status:
             st.write(
                 "The judge reads the whole transcript several times independently and the report uses the "
-                "median, so one unlucky run can't swing your score. This takes about a minute."
+                f"median, so one unlucky run can't swing your score. {wait}"
             )
+            bar = st.empty()
+            moving_bar(bar, "report")
             try:
-                prefs = load_preferences(engine, user_id)
-                report = evaluate_session(
-                    engine_deps(), user_id, view.id, judge_model=judge_model(prefs, get_settings())
-                )
+                report = evaluate_session(engine_deps(), user_id, view.id, judge_model=model)
             except EvaluationError as e:
+                bar.empty()
                 status.update(label="The report could not be written", state="error")
                 st.error(str(e))
                 st.caption("Your interview is saved: press the button again to retry.")
                 return
+            bar.empty()
             status.update(label="Report ready", state="complete", expanded=False)
     render_report(report, get_settings().rubric_path, view.config)
     st.caption(f"Interview + report cost: ${eng.session_cost(engine, view.id):.4f}")

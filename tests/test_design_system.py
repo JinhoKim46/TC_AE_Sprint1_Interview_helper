@@ -98,3 +98,19 @@ def test_every_focusable_kind_has_a_visible_focus_ring():
     ):
         assert "outline: 2px solid" in _rule(css, selector), selector
     assert "outline: 2px solid" in _rule(css, "label:has(input:focus-visible) > span + div")
+
+
+def test_waits_are_animated_and_still_under_reduced_motion():
+    css = CSS.read_text(encoding="utf-8")
+    # wait_ui.py draws containers with these key prefixes; the stylesheet animates them.
+    assert "ih-pulse" in _rule(
+        css, '[class*="st-key-ih-step-active-"] [data-testid="stMarkdownContainer"] p::after'
+    )
+    assert "ih-slide" in _rule(css, '[class*="st-key-ih-wait-"]::after')
+    assert "@keyframes ih-pulse" in css and "@keyframes ih-slide" in css
+    wait_ui = (APP_DIR / "wait_ui.py").read_text(encoding="utf-8")
+    assert 'key=f"ih-step-{state}-' in wait_ui and 'key=f"ih-wait-{key}"' in wait_ui
+    # Every reduced-motion block taken together switches both animations off.
+    reduced = " ".join(re.findall(r"@media \(prefers-reduced-motion: reduce\) \{(.*?)\n\}", css, re.S))
+    assert "st-key-ih-step-active-" in reduced and "st-key-ih-wait-" in reduced
+    assert "animation: none" in reduced

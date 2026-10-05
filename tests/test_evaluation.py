@@ -647,3 +647,58 @@ def test_judge_max_tokens_comes_from_settings():
     with pytest.raises(RuntimeError):
         run_judge(FakeLLM(), Settings(_env_file=None, judge_max_tokens=12345), [])
     assert seen["max_tokens"] == 12345
+
+
+# --- Report wait estimate (spec 2026-10-05, ticket 02) ---------------------------------------------
+
+
+def judge_call(engine, user_id, session_id, latency, model="openai/gpt-5-mini", ok=True, role="judge"):
+    from interview_app.db import LLMCall, session_scope
+
+    with session_scope(engine) as s:
+        s.add(
+            LLMCall(user_id=user_id, session_id=session_id, role=role, model=model, latency_s=latency, ok=ok)
+        )
+
+
+def test_report_wait_has_a_fallback_without_history(engine):
+    from interview_app.evaluation.service import REPORT_WAIT_FALLBACK, report_wait_seconds, report_wait_text
+    from interview_app.users import ensure_local_user
+
+    uid = ensure_local_user(engine)
+    judge_call(engine, uid, 1, 30.0, model="anthropic/claude-haiku-4.5")  # another model's history
+    judge_call(engine, uid, 2, 30.0, role="interviewer", model="openai/gpt-5-mini")
+    assert report_wait_seconds(engine, uid, "openai/gpt-5-mini", Settings(_env_file=None)) is None
+    assert report_wait_text(None) == REPORT_WAIT_FALLBACK
+
+
+def test_report_wait_is_the_median_of_each_reports_slowest_run(engine):
+    from interview_app.evaluation.service import report_wait_seconds, report_wait_text
+    from interview_app.users import ensure_local_user
+
+    uid = ensure_local_user(engine)
+    # Three reports with three parallel runs each: the report waits for its slowest run (64, 71, 58).
+    for sid, latencies in {1: (40.0, 52.0, 64.0), 2: (55.0, 71.0, 60.0), 3: (58.0, 33.0, 41.0)}.items():
+        for latency in latencies:
+            judge_call(engine, uid, sid, latency)
+    judge_call(engine, uid, 3, 300.0, ok=False)  # a failed (timed-out) call doesn't count
+    # A dated build id (what OpenRouter reports back) is the same model.
+    judge_call(engine, uid, 4, 61.0, model="openai/gpt-5-mini-2025-08-07")
+    judge_call(engine, uid, 5, 9.0, model="openai/gpt-5-mini-high")  # a different model
+    seconds = report_wait_seconds(engine, uid, "openai/gpt-5-mini", Settings(_env_file=None))
+    assert seconds == 65  # median of 64, 71, 58, 61 = 62.5, rounded up to the next 5 s
+    assert report_wait_text(seconds) == "This takes about 65 seconds, judging by your recent reports."
+    assert "2 minutes" in report_wait_text(115)
+
+
+def test_report_wait_uses_only_the_most_recent_reports(engine):
+    from interview_app.evaluation.service import report_wait_seconds
+    from interview_app.users import ensure_local_user
+
+    uid = ensure_local_user(engine)
+    for sid in range(1, 4):
+        judge_call(engine, uid, sid, 200.0)  # old, slow reports
+    for sid in range(4, 6):
+        judge_call(engine, uid, sid, 20.0)
+    settings = Settings(_env_file=None, report_wait_history=2)
+    assert report_wait_seconds(engine, uid, "openai/gpt-5-mini", settings) == 20
