@@ -4,10 +4,10 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A finished or ended interview stays on screen (with its report) until the candidate leaves the page
-- [ ] Coming back from another page shows the start form plus a link to the last interview in History
-- [ ] An active or preparing session is always resumed, whatever page the candidate came from
-- [ ] "Open in History" on the finished screen opens that session in History
-- [ ] AppTest covers: stays after ending; start form after visiting another page; active session resumed; full suite and ruff green; exercised once in the running app
+- [x] A finished or ended interview stays on screen (with its report) until the candidate leaves the page
+- [x] Coming back from another page shows the start form plus a link to the last interview in History
+- [x] An active or preparing session is always resumed, whatever page the candidate came from
+- [x] "Open in History" on the finished screen opens that session in History
+- [x] AppTest covers: stays after ending; start form after visiting another page; active session resumed; full suite and ruff green; exercised once in the running app

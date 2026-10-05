@@ -4,9 +4,9 @@
 
 **Blocked by:** 01, 02, 03, 04
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Design spec decision log, channel row and feature list updated
-- [ ] README updated (spoken answers, Dashboard, blocked answers, preparation)
-- [ ] `reports/code_map.json` and the generated reports rebuilt; their tests green
-- [ ] Spec and ticket statuses set to done
+- [x] Design spec decision log, channel row and feature list updated
+- [x] README updated (spoken answers, Dashboard, blocked answers, preparation)
+- [x] `reports/code_map.json` and the generated reports rebuilt; their tests green
+- [x] Spec and ticket statuses set to done

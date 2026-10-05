@@ -4,11 +4,11 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] STT settings section in config (model, language, max seconds, max bytes); config test
-- [ ] Client transcription method: request shape, `LLMCall` row with role `stt` and reported cost, errors → `LLMError` (fake HTTP transport)
-- [ ] Core transcribe: success, empty transcript, too long/too big, over budget, model failure → notice; no file written
-- [ ] Voice session UI: mic first, transcript draft with Send / Re-record, typing still possible, coaching retry, blocked transcript → blocked editor; Text session shows no mic (AppTest with a fake transcriber)
-- [ ] One cheap `@pytest.mark.live` transcription test (e.g. TTS output of a short fictional sentence)
-- [ ] Full suite and ruff green; exercised once in the running app (one spoken answer in a Voice session)
+- [x] STT settings section in config (model, language, max seconds, max bytes); config test
+- [x] Client transcription method: request shape, `LLMCall` row with role `stt` and reported cost, errors → `LLMError` (fake HTTP transport)
+- [x] Core transcribe: success, empty transcript, too long/too big, over budget, model failure → notice; no file written
+- [x] Voice session UI: mic first, transcript draft with Send / Re-record, typing still possible, coaching retry, blocked transcript → blocked editor; Text session shows no mic (AppTest with a fake transcriber)
+- [x] One cheap `@pytest.mark.live` transcription test (e.g. TTS output of a short fictional sentence)
+- [x] Full suite and ruff green; exercised once in the running app (one spoken answer in a Voice session)

@@ -4,12 +4,12 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Engine test: the progress callback receives the steps in order; a failure stops the steps and marks the session failed as before
-- [ ] Voice sessions: the opening question's audio is ready when the preparing panel completes; a TTS failure still falls back to text
-- [ ] Planner reasoning effort is a config setting (default `low`) and is sent on the planning call (unit test on the request)
-- [ ] Report wait estimate: unit test (no history → fallback; several judge calls → computed estimate)
-- [ ] Animated indicator for preparing and report waits, honouring `prefers-reduced-motion`
-- [ ] One live comparison on the committed sample application (old vs `low` planner effort: latency, number of requirements and questions, a short read of the plan) in the PR body
-- [ ] Full suite and ruff green; exercised once in the running app (a Voice start)
+- [x] Engine test: the progress callback receives the steps in order; a failure stops the steps and marks the session failed as before
+- [x] Voice sessions: the opening question's audio is ready when the preparing panel completes; a TTS failure still falls back to text
+- [x] Planner reasoning effort is a config setting (default `low`) and is sent on the planning call (unit test on the request)
+- [x] Report wait estimate: unit test (no history → fallback; several judge calls → computed estimate)
+- [x] Animated indicator for preparing and report waits, honouring `prefers-reduced-motion`
+- [x] One live comparison on the committed sample application (old vs `low` planner effort: latency, number of requirements and questions, a short read of the plan) in the PR body
+- [x] Full suite and ruff green; exercised once in the running app (a Voice start)
