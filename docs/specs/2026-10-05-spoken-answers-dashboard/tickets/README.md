@@ -8,6 +8,9 @@ graph LR
   02[02 Waits that move] --> 05
   03[03 Spoken answers - STT] --> 05
   04[04 Dashboard page] --> 05
+  01 --> 06[06 Exit interview dialog]
+  03 --> 06
+  06 --> 05
 ```
 
 | # | Ticket | Blocked by | Status |
@@ -16,4 +19,5 @@ graph LR
 | 02 | Waits that move | — | ready-for-agent |
 | 03 | Spoken answers (STT) | — | ready-for-agent |
 | 04 | Dashboard page | — | ready-for-agent |
-| 05 | Docs + reports | 01, 02, 03, 04 | ready-for-agent |
+| 05 | Docs + reports | 01, 02, 03, 04, 06 | ready-for-agent |
+| 06 | Exit interview dialog (owner request) | 01, 03 | done |
