@@ -1533,6 +1533,73 @@ def test_settings_page_saves_the_voice_override(offline_catalog):
     assert load_preferences(engine, ui_common.ensure_local_user(engine)).voice == "Puck"
 
 
+# --- Dashboard ---------------------------------------------------------------------------------------
+
+
+def test_dashboard_empty_states_point_to_the_next_step():
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=30)
+    at.run()
+    at.switch_page("views/dashboard.py").run()
+    assert not at.exception, at.exception
+    assert "No applications yet" in at.info[0].value
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    load_sample_application(ui_common.get_engine(), ui_common.ensure_local_user(ui_common.get_engine()))
+    at.run()
+    assert not at.exception, at.exception
+    assert "No interviews yet" in at.info[0].value
+
+
+def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatch):
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.db import Application, session_scope
+    from interview_app.demo import load_sample_application
+    from interview_app.interview.persona import Length, SessionConfig
+    from interview_app.llm.client import LLMClient
+    from interview_app.llm.decide import DecisionClient
+
+    def no_model(*args, **kwargs):
+        raise AssertionError("opening the Dashboard must not build a model client")
+
+    monkeypatch.setattr(ui_common, "engine_deps", no_model)
+    monkeypatch.setattr(LLMClient, "__init__", no_model)
+    monkeypatch.setattr(DecisionClient, "__init__", no_model)
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    with session_scope(engine) as s:
+        other = Application(user_id=uid, company="Brightwater Labs", role="Data Engineer")
+        s.add(other)
+        s.flush()
+        other_id = other.id
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First.")
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 5, tzinfo=UTC), 64.0, "Second.")
+    seed_scored_session(
+        engine,
+        uid,
+        other_id,
+        datetime(2026, 9, 6, tzinfo=UTC),
+        95.0,
+        "Quick.",
+        config=SessionConfig(length=Length.QUICK),
+    )
+
+    at = run_page("dashboard.py", timeout=90)
+    metrics = {m.label: m.value for m in at.metric}
+    assert metrics["Interviews"] == "3"
+    assert metrics["Average score"] == "58" and metrics["Best score"] == "64"  # the Quick 95 is practice
+    assert any(s.value == "Overall score over time" for s in at.subheader)
+    assert any(s.value == "Skills across all applications" for s in at.subheader)
+    assert len(at.dataframe) >= 2  # the applications table and the chart's table alternative
+
+
 # --- Spoken answers (STT) -------------------------------------------------------------------------
 
 
