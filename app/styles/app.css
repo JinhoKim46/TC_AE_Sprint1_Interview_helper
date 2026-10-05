@@ -236,7 +236,75 @@
   }
 }
 
+/* --- Waits: wait_ui.StepProgress and wait_ui.moving_bar() ----------------------------------------
+ * The two slowest waits (preparing an interview, writing the report) show motion, so they never look stuck.
+ * The current preparation step (ih-step-active-) gets a pulsing dot after its label; the report wait
+ * (ih-wait-) gets a bar with a highlight that slides across it. The state is always in the words as well
+ * ("now", the progress text), so the motion is a hint, never the only signal.
+ */
+
+[class*="st-key-ih-step-active-"] [data-testid="stMarkdownContainer"] p::after {
+  content: "";
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: var(--ih-space-2);
+  border-radius: 50%;
+  background-color: var(--ih-accent);
+  vertical-align: middle;
+  animation: ih-pulse 1.2s ease-in-out infinite;
+}
+
+[class*="st-key-ih-wait-"]::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background-color: color-mix(in srgb, var(--ih-accent) 20%, transparent);
+  background-image: linear-gradient(90deg, transparent, var(--ih-accent), transparent);
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: ih-slide 1.6s linear infinite;
+}
+
+@keyframes ih-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes ih-slide {
+  from {
+    background-position: -60% 0;
+  }
+
+  to {
+    background-position: 160% 0;
+  }
+}
+
 /* --- Motion: respect the system setting ----------------------------------------------------------- */
+
+/* The waits keep a still version: a solid dot and a solid bar, so the state is still shown. */
+@media (prefers-reduced-motion: reduce) {
+  [class*="st-key-ih-step-active-"] [data-testid="stMarkdownContainer"] p::after,
+  [class*="st-key-ih-wait-"]::after {
+    animation: none;
+  }
+
+  [class*="st-key-ih-wait-"]::after {
+    background-image: none;
+    background-color: var(--ih-accent);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   [data-testid="stApp"] *,

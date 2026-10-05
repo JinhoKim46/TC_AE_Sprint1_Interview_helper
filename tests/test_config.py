@@ -163,3 +163,11 @@ def test_length_presets_bounds(values):
 def test_length_presets_must_grow_from_quick_to_standard():
     with pytest.raises(ValidationError, match="quick <= standard"):
         LengthPresets(quick=6, standard=5)
+
+
+def test_planner_reasoning_effort_defaults_to_low_and_is_validated(monkeypatch):
+    assert Settings(_env_file=None).planner_reasoning_effort == "low"
+    monkeypatch.setenv("PLANNER_REASONING_EFFORT", "minimal")
+    assert Settings(_env_file=None).planner_reasoning_effort == "minimal"
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, planner_reasoning_effort="fast")

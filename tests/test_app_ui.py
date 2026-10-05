@@ -1602,3 +1602,80 @@ def test_a_session_handed_over_by_another_page_is_opened():
     assert not at.exception, at.exception
     assert any("Interview ended." in s.value for s in at.success)
     assert any(b.label == "Get my feedback report" for b in at.button)
+
+
+# --- Waits that move (spec 2026-10-05, ticket 02) ---------------------------------------------------
+
+
+def test_step_progress_ticks_off_finished_steps_and_marks_the_current_one():
+    def page():
+        from wait_ui import StepProgress
+
+        from interview_app.interview.engine import PrepStep
+
+        progress = StepProgress([PrepStep.DOCUMENTS, PrepStep.PLAN, PrepStep.OPENING, PrepStep.VOICE])
+        progress.finished(PrepStep.DOCUMENTS)
+
+    at = AppTest.from_function(page, default_timeout=30)
+    at.run()
+    assert not at.exception, at.exception
+    lines = [m.value for m in at.markdown]
+    assert lines[0].startswith(":material/check_circle:") and "Reading your documents" in lines[0]
+    assert "Planning the questions" in lines[1] and "(now)" in lines[1]
+    assert all("(now)" not in line for line in lines[2:]) and "Recording the voice" in lines[3]
+    assert at.get("progress")[0].proto.text == "Planning the questions… (step 2 of 4)"
+
+
+def test_voice_start_records_the_opening_voice_inside_the_preparing_wait(monkeypatch):
+    import ui_common
+
+    from interview_app.interview import engine as eng
+
+    speech = voice_deps(monkeypatch, [interviewer_reply("Hi, walk me through your background.")])
+    sample_with_p1()
+    order = []
+    real_start = eng.start_interview
+
+    def start(*args, on_step=None, **kwargs):
+        sid = real_start(*args, on_step=lambda step: (order.append(step), on_step(step)), **kwargs)
+        order.append(f"speech calls after start: {len(speech)}")
+        return sid
+
+    monkeypatch.setattr(eng, "start_interview", start)
+    at = run_page("interview.py")
+    next(b for b in at.button if b.label == "Start interview").click().run()
+    assert not at.exception, at.exception
+    # The audio was generated after the engine's steps, in the same click (before the page reran).
+    assert order == [eng.PrepStep.DOCUMENTS, eng.PrepStep.OPENING, "speech calls after start: 0"]
+    assert len(speech) == 1 and len(at.get("audio")) == 1
+    assert ui_common  # imported so voice_deps' patch target is loaded
+
+
+def test_report_button_shows_the_wait_estimate_from_recent_judge_calls():
+    from datetime import UTC, datetime
+
+    from interview_app.db import LLMCall, session_scope
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="ended_early")
+    at = AppTest.from_file(str(APP_DIR / "views" / "interview.py"), default_timeout=30)
+    at.session_state["viewing_session"] = sid  # the interview that just ended, as after "End interview"
+    at.run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Get my feedback report" for b in at.button)
+    assert any("one to two minutes" in c.value for c in at.caption)  # no history yet: the fallback
+
+    with session_scope(engine) as s:
+        for latency in (41.0, 68.0, 52.0):  # one earlier report with three runs: the slowest decides
+            s.add(
+                LLMCall(
+                    user_id=uid,
+                    session_id=sid + 100,
+                    role="judge",
+                    model="anthropic/claude-haiku-4.5",
+                    latency_s=latency,
+                )
+            )
+    at.run()
+    assert not at.exception, at.exception
+    assert any("about 70 seconds" in c.value for c in at.caption)
