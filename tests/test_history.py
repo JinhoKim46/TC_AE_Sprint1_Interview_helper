@@ -322,3 +322,12 @@ def test_delete_removes_turns_and_evaluation_but_keeps_cost_history(engine, user
         assert s.exec(select(Evaluation)).all() == []
         assert len(s.exec(select(LLMCall)).all()) == 1
     assert delete_session(engine, user_id, sid) is False
+
+
+def test_delete_works_on_an_interview_still_in_progress(engine, user_id, app_id):
+    # "Discard" in the Exit interview dialog deletes the running interview itself.
+    sid = add_session(engine, user_id, app_id, status="active")
+    assert delete_session(engine, user_id, sid) is True
+    with session_scope(engine) as s:
+        assert s.exec(select(InterviewSession)).all() == []
+        assert s.exec(select(Turn)).all() == []

@@ -291,6 +291,34 @@ def test_active_session_resumes_and_end_interview(setup):
     assert eng.get_session(setup.deps.engine, setup.user_id, sid).status == "ended_early"
 
 
+def test_active_session_id_is_a_cheap_check_that_ignores_stale_starts(setup):
+    from datetime import timedelta
+
+    from interview_app.db import InterviewSession, session_scope, utcnow
+
+    engine = setup.deps.engine
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
+    with session_scope(engine) as s:
+        s.add(
+            InterviewSession(
+                user_id=setup.user_id,
+                application_id=setup.app_id,
+                company="c",
+                role="r",
+                config_json=p1_config().model_dump_json(),
+                documents_json="{}",
+                started_at=utcnow() - timedelta(minutes=setup.settings.limits.start_timeout_minutes + 1),
+            )
+        )
+    # An interrupted start must not hide the navigation: it no longer counts as running.
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
+    sid = start(setup)
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) == sid
+    assert eng.active_session_id(engine, setup.user_id + 1, setup.settings) is None  # not theirs
+    eng.end_interview(setup.deps, setup.user_id, sid)
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
+
+
 def test_other_users_cannot_see_or_answer_a_session(setup):
     sid = start(setup)
     assert eng.get_session(setup.deps.engine, setup.user_id + 99, sid) is None
