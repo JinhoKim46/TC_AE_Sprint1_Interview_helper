@@ -9,6 +9,7 @@ import hashlib
 import streamlit as st
 from drill_ui import drill_offer
 from report_view import render_report, session_badge
+from streamlit.errors import StreamlitAPIException
 from ui_common import (
     CANDIDATE_AVATAR,
     INTERVIEWER_AVATAR,
@@ -19,6 +20,7 @@ from ui_common import (
     get_engine,
     go_button,
     kept_widget,
+    leave_site_guard,
     mic_recording,
     page_link,
     panel,
@@ -35,7 +37,7 @@ from interview_app.evaluation.service import (
     report_wait_seconds,
     report_wait_text,
 )
-from interview_app.history import list_sessions, load_report
+from interview_app.history import delete_session, list_sessions, load_report
 from interview_app.interview import engine as eng
 from interview_app.interview.persona import (
     CHANNEL_LABELS,
@@ -505,6 +507,68 @@ def progress_text(view: eng.SessionView, done: int) -> str:
     return text
 
 
+def close_exit_dialog() -> None:
+    st.session_state.pop("exit_dialog", None)
+    st.session_state.pop("exit_confirm_discard", None)
+
+
+# The dialog stays open through a flag in session_state rather than only on the click that opened it: a click
+# inside it (Discard, then the confirmation) reruns the script, and the flag redraws the dialog for the next
+# step. It also lets AppTest, which always reruns the whole script, drive the dialog. Closing it with the X or
+# Esc runs on_dismiss, which clears the flag.
+@st.dialog("Exit interview", width="medium", on_dismiss=close_exit_dialog)
+def exit_dialog(view: eng.SessionView) -> None:
+    """Save & exit, End & get feedback, Discard (with a confirmation step) or Cancel."""
+    answers = sum(1 for t in view.turns if t.speaker == "candidate")
+    if st.session_state.get("exit_confirm_discard") == view.id:
+        st.warning(
+            f"**Delete this interview for good?** Its transcript and {answers} "
+            f"answer{'' if answers == 1 else 's'} are removed, and no report can be written. "
+            "This can't be undone.",
+            icon=":material/delete_forever:",
+        )
+        with button_row(key="exit-discard"):
+            delete = st.button("Delete the interview", type="primary", icon=":material/delete_forever:")
+            back = st.button("Back", icon=":material/arrow_back:")
+        if back:
+            st.session_state.pop("exit_confirm_discard", None)
+            st.rerun()
+        if delete:
+            close_exit_dialog()
+            delete_session(engine, user_id, view.id, get_settings())
+            st.session_state.pop("viewing_session", None)
+            st.session_state.interview_notice = "The interview was deleted."
+            st.rerun()
+        return
+
+    st.markdown("Every answer so far is already saved. What would you like to do?")
+    save = st.button("Save & exit", type="primary", icon=":material/bookmark:", width="stretch")
+    st.caption("Leave now and resume this interview later from Home or the Interview page.")
+    end = st.button("End & get feedback", icon=":material/stop:", width="stretch")
+    st.caption("Finish now. A feedback report can be written on the answers given so far.")
+    discard = st.button("Discard…", icon=":material/delete:", width="stretch")
+    st.caption("Delete this interview and its answers. You will be asked to confirm.")
+    cancel = st.button("Cancel", type="tertiary", icon=":material/close:", width="stretch")
+    if cancel:
+        close_exit_dialog()
+        st.rerun()
+    if discard:
+        st.session_state.exit_confirm_discard = view.id
+        st.rerun()
+    if end:
+        close_exit_dialog()
+        eng.end_interview(engine_deps(), user_id, view.id)
+        st.rerun()  # the finished screen, with "Get my feedback report"
+    if save:
+        close_exit_dialog()
+        # The interview stays active; this flag only brings back the page navigation until it is resumed.
+        st.session_state.paused_session = view.id
+        try:
+            st.switch_page("views/home.py")
+        except StreamlitAPIException:
+            st.rerun()  # the page run on its own (tests) has no navigation to switch with
+
+
 def chat(view: eng.SessionView) -> None:
     persona = view.persona
     coaching = view.config.mode == Mode.COACHING
@@ -513,16 +577,27 @@ def chat(view: eng.SessionView) -> None:
         st.session_state.pop("retrying", None)
     # The session's facts in one panel above the conversation: what is practised, how, and with whom.
     with panel(key="session-head"):
-        st.markdown(
+        facts, actions = form_row([4, 1], key="session-head", align="center")
+        facts.markdown(
             f"**{safe_md(view.company, inline=True)}** — {safe_md(view.role, inline=True)}  \n"
             f":gray-badge[{TYPE_LABELS[view.config.interview_type]}] "
             f":gray-badge[{view.config.difficulty.value.capitalize()}] "
             f":gray-badge[{MODE_LABELS[view.config.mode.value]} mode] "
             f"{session_badge(view.config)}"
         )
-        st.caption(
+        facts.caption(
             f"Your interviewer: {safe_md(persona.name, inline=True)}, {safe_md(persona.title, inline=True)}"
         )
+        # The way out of a running interview, at the top so it is always in sight (the page navigation is
+        # hidden meanwhile, see main.py).
+        if view.status == "active":
+            with actions, button_row(key="exit", align="end"):
+                if st.button("Exit interview", icon=":material/logout:", help="Save, end or discard it."):
+                    st.session_state.exit_dialog = view.id
+    if view.status == "active":
+        leave_site_guard()
+        if st.session_state.get("exit_dialog") == view.id:
+            exit_dialog(view)
     if view.status == "preparing":
         # The opening turn never arrived (the app was closed or crashed while preparing). Without this the
         # page would wait forever, because an unfinished session blocks starting a new one.
@@ -600,16 +675,10 @@ def chat(view: eng.SessionView) -> None:
             st.error(error)
 
         with st.sidebar:
-            # No st.divider here: the navigation already ends with a rule, and two rules left a gap.
+            # Ending, saving or discarding is the "Exit interview" button in the header; the sidebar keeps
+            # only the running cost.
             st.caption("This interview")
             st.metric("Cost so far", f"${view.cost_usd:.4f}")
-            if st.button(
-                "End interview",
-                icon=":material/stop:",
-                help="Stop now. You can still get a feedback report on the answers given so far.",
-            ):
-                eng.end_interview(engine_deps(), user_id, view.id)
-                st.rerun()
     else:
         st.success(
             "Interview complete." if view.status == "finished" else "Interview ended.",
@@ -689,6 +758,8 @@ if handed_over is not None:
 
 active = eng.active_session(engine, user_id)
 if active is not None:  # a running interview is always resumed, whatever page came before
+    if st.session_state.pop("paused_session", None) is not None:
+        st.rerun()  # resumed after "Save & exit": rerun so main.py hides the page navigation again
     st.session_state.viewing_session = active.id
     chat(active)
 elif (
@@ -698,4 +769,6 @@ elif (
 ):
     chat(view)  # just finished: keep the transcript on screen until a new interview starts
 else:
+    if notice := st.session_state.pop("interview_notice", None):
+        st.success(notice, icon=":material/check:")
     start_form()
