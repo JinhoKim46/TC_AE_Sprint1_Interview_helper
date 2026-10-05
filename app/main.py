@@ -24,6 +24,7 @@ load_styles()
 pages = {
     "Practise": [
         st.Page("views/home.py", title="Home", icon=":material/home:", default=True),
+        st.Page("views/dashboard.py", title="Dashboard", icon=":material/insights:"),
         st.Page("views/applications.py", title="Applications", icon=":material/folder_open:"),
         st.Page("views/interview.py", title="Interview", icon=":material/forum:"),
         st.Page("views/history.py", title="History", icon=":material/history:"),
