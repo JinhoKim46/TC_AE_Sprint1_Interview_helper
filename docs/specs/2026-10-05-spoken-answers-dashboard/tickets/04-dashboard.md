@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Core tests on seeded sessions and evaluations across two applications: KPIs, Quick sessions excluded from scores, per-application rows, trend, skill means, empty state
-- [ ] Page: KPI row, score-over-time chart (one line per company), per-company table with a link to History, skills across companies; empty state
-- [ ] AppTest: renders with data and with none; opening it makes no model call
-- [ ] Full suite and ruff green; exercised once in the running app
+- [x] Core tests on seeded sessions and evaluations across two applications: KPIs, Quick sessions excluded from scores, per-application rows, trend, skill means, empty state
+- [x] Page: KPI row, score-over-time chart (one line per company), per-company table with a link to History, skills across companies; empty state
+- [x] AppTest: renders with data and with none; opening it makes no model call
+- [x] Full suite and ruff green; exercised once in the running app

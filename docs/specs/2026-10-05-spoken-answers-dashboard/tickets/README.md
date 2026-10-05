@@ -15,9 +15,9 @@ graph LR
 
 | # | Ticket | Blocked by | Status |
 |---|---|---|---|
-| 01 | Fresh Interview page | — | ready-for-agent |
-| 02 | Waits that move | — | ready-for-agent |
-| 03 | Spoken answers (STT) | — | ready-for-agent |
-| 04 | Dashboard page | — | ready-for-agent |
-| 05 | Docs + reports | 01, 02, 03, 04, 06 | ready-for-agent |
+| 01 | Fresh Interview page | — | done |
+| 02 | Waits that move | — | done |
+| 03 | Spoken answers (STT) | — | done |
+| 04 | Dashboard page | — | done |
+| 05 | Docs + reports | 01, 02, 03, 04, 06 | done |
 | 06 | Exit interview dialog (owner request) | 01, 03 | done |
