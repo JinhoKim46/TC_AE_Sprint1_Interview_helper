@@ -86,7 +86,7 @@ with panel(key="next-step"):
                 "views/interview.py",
                 "Get feedback on the last interview",
                 icon=":material/assessment:",
-                state={"viewing_session": newest.session_id},
+                state={"open_session": newest.session_id},
             )
             # The way out when that interview had no answers to judge, or the report isn't wanted.
             go_button(

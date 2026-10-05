@@ -1531,3 +1531,74 @@ def test_settings_page_saves_the_voice_override(offline_catalog):
     assert not at.exception, at.exception
     engine = ui_common.get_engine()
     assert load_preferences(engine, ui_common.ensure_local_user(engine)).voice == "Puck"
+
+
+def through_main(page: str, timeout: float = 60) -> AppTest:
+    """Run the app through main.py (real navigation) and switch to one page."""
+    at = AppTest.from_file(str(APP_DIR / "main.py"), default_timeout=timeout)
+    at.run()
+    at.switch_page(page).run()
+    assert not at.exception, at.exception
+    return at
+
+
+def test_ended_interview_stays_until_the_page_is_left_then_the_start_form_shows():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "My running answer.", status="active")
+    at = through_main("views/interview.py")
+    next(b for b in at.button if b.label == "End interview").click().run()
+    assert not at.exception, at.exception
+    assert any("Interview ended." in s.value for s in at.success)
+    # Reruns on the same page (e.g. asking for the report) keep the ended interview on screen.
+    at.run()
+    assert any("Interview ended." in s.value for s in at.success)
+    assert any(b.label == "Open in History" for b in at.button)
+    assert not any(b.label == "Start interview" for b in at.button)
+
+    # Leaving for another page and coming back shows the start form, with a link to that interview.
+    at.switch_page("views/home.py").run()
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any(b.label == "Start interview" for b in at.button)
+    assert not any("Interview ended." in s.value for s in at.success)
+    assert any("Your last interview" in c.value for c in at.caption)
+
+
+def test_open_in_history_preselects_the_finished_interview():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "An answer.", status="active")
+    at = through_main("views/interview.py")
+    next(b for b in at.button if b.label == "End interview").click().run()
+    next(b for b in at.button if b.label == "Open in History").click().run()
+    assert not at.exception, at.exception
+    assert at.selectbox(key="history_open").value == sid
+
+
+def test_running_interview_is_resumed_whatever_page_came_before():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "Still talking.", status="active")
+    at = through_main("views/history.py")
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any(b.label == "End interview" for b in at.button)
+    assert not any(b.label == "Start interview" for b in at.button)
+
+
+def test_a_session_handed_over_by_another_page_is_opened():
+    from datetime import UTC, datetime
+
+    engine, uid, app_id = sample_with_p1()
+    sid = seed_scored_session(engine, uid, app_id, datetime.now(UTC), 0.0, "Done.", status="ended_early")
+    at = through_main("views/home.py")
+    # Home's "Get feedback on the last interview" hands the session over before switching pages.
+    at.session_state["open_session"] = sid
+    at.switch_page("views/interview.py").run()
+    assert not at.exception, at.exception
+    assert any("Interview ended." in s.value for s in at.success)
+    assert any(b.label == "Get my feedback report" for b in at.button)

@@ -267,7 +267,7 @@ def session_detail(summary: SessionSummary) -> None:
                     "Open it to get feedback",
                     icon=":material/assessment:",
                     key=f"history_get_report_{summary.session_id}",
-                    state={"viewing_session": summary.session_id},
+                    state={"open_session": summary.session_id},
                 )
 
     with st.expander("Delete this interview", icon=":material/delete:"):
