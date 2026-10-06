@@ -1,6 +1,6 @@
 # Spec: a Voice model picker, and cost tracking on the Dashboard
 
-Status: ready-for-agent · Date: 2026-10-06 · Route: Medium (grill → spec → two parallel builds)
+Status: done · Date: 2026-10-06 · Route: Medium (grill → spec → two parallel builds)
 
 ## Problem Statement
 
@@ -58,3 +58,4 @@ The owner can choose the interviewer's **voice** in Settings but not the **voice
 ## Further Notes
 
 - A typical spoken question (~20 s of audio) costs about $0.004 with the lite model and $0.006 with the standard one.
+- *As built (PR #62):* the spend-over-time chart stacks four purpose groups (Interview = interviewer + planning; Report and scoring = report + live scoring; Voice = speech + transcription; Guard and other), because the theme has four colour-blind-safe chart colours; the tables and the by-purpose bar chart list every purpose. The average cost per interview counts only interviews with at least one model call.
