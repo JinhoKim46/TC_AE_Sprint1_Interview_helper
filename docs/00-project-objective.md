@@ -204,46 +204,46 @@ Do these after the core works. The list is sorted by difficulty. **Caution from 
 
 ### Mandatory
 
-- [ ] R1 Interview-prep focus chosen and justified
-- [ ] R2 Front end built (Streamlit)
-- [ ] R3 Allowed OpenRouter model used
-- [ ] R4 At least 5 system prompts with different techniques, compared, winner chosen
-- [ ] R5 At least one security guard
+- [x] R1 Interview-prep focus chosen and justified — mock interviews grounded in one real application (JD + CV), [user guide](07-user-guide.md)
+- [x] R2 Front end built (Streamlit) — multi-page app in [`app/`](../app/)
+- [x] R3 Allowed OpenRouter model used — interviewer `openai/gpt-5-mini` by default ([`config.py`](../src/interview_app/config.py))
+- [x] R4 At least 5 system prompts with different techniques, compared, winner chosen — P1–P5 in [`prompts/`](../src/interview_app/prompts/), winner P4, [prompt comparison](05-prompt-comparison.md)
+- [x] R5 At least one security guard — regex rules + Jev injection check + spotlighting + limits, [security](09-security.md)
 
 ### Optional — Easy
 
 - [x] E1 ChatGPT critique (usability, security, prompt engineering) — [review and response](../reports/2026-10-05-E1-chatgpt-critique.md)
 - [x] E2 Domain-specific prompts — ML/AI-engineering interview types and questions, prompts revised after a ChatGPT review ([PR #51](https://github.com/JinhoKim46/TC_AE_Sprint1_Interview_helper/pull/51), [question bank](02-question-bank.md))
-- [ ] E3 More security constraints (input + system-prompt validation, possibly LLM-checked)
-- [ ] E4 Difficulty levels (easy / medium / hard)
+- [x] E3 More security constraints (input + system-prompt validation, possibly LLM-checked) — length and size limits plus a Jev (decision-model) check on documents and every answer, [security](09-security.md)
+- [x] E4 Difficulty levels (easy / medium / hard) — friendly / standard / tough, which set the persona and the follow-up cap ([`persona.py`](../src/interview_app/interview/persona.py))
 - [ ] E5 Concise vs. detailed responses
 - [ ] E6 Interviewer guidelines / evaluation criteria (technical + behavioural)
-- [ ] E7 AI interviewer personas (strict / neutral / friendly)
-- [ ] E8 Tune one model setting and compare
+- [x] E7 AI interviewer personas (strict / neutral / friendly) — interview type × difficulty → persona ([`persona.py`](../src/interview_app/interview/persona.py))
+- [x] E8 Tune one model setting and compare — `reasoning_effort` low vs medium, [prompt comparison §7](05-prompt-comparison.md#7-setting-sweep-e8-reasoning-effort)
 
 ### Optional — Medium
 
-- [ ] M1 All model settings as sliders/fields
-- [ ] M2 At least two structured JSON output formats
-- [ ] M3 Prompt price shown (OpenRouter models endpoint)
+- [x] M1 All model settings as sliders/fields — Settings → developer settings ([`settings.py`](../app/views/settings.py))
+- [x] M2 At least two structured JSON output formats — `InterviewPlan`, `InterviewerTurn` and the judge's `Judgement` ([`interview/schemas.py`](../src/interview_app/interview/schemas.py), [`evaluation/schemas.py`](../src/interview_app/evaluation/schemas.py))
+- [x] M3 Prompt price shown (OpenRouter models endpoint) — per interview and on the Dashboard ([`pricing.py`](../src/interview_app/llm/pricing.py), [`cost.py`](../src/interview_app/cost.py))
 - [ ] M4 Own improvement from the OpenRouter docs
 - [ ] M5 Jailbreak my own app; results in an Excel sheet
-- [ ] M6 Job description field for role-specific prep (RAG)
-- [ ] M7 User can choose from a list of LLMs
+- [x] M6 Job description field for role-specific prep (RAG) — the whole app is built around the JD ([`ingest.py`](../src/interview_app/ingest.py))
+- [x] M7 User can choose from a list of LLMs — curated multi-provider picker in Settings ([`config.py`](../src/interview_app/config.py))
 - [ ] M8 Image generation with `google/gemini-2.5-flash-image`
-- [ ] M9 Security guard + developer settings separated from the user experience
+- [x] M9 Security guard + developer settings separated from the user experience — developer settings behind a toggle on the Settings page ([`settings.py`](../app/views/settings.py))
 
 ### Optional — Hard
 
-- [ ] H1 Full chatbot (multi-turn)
+- [x] H1 Full chatbot (multi-turn) — persistent, resumable sessions ([`engine.py`](../src/interview_app/interview/engine.py))
 - [ ] H2 LangChain chains or agents
 - [ ] H3 Vector DB to detect already-seen prep data and generate new data
-- [ ] H4 Open-source LLMs
-- [ ] H5 LLM-as-a-judge (or other) evaluation of prompt/model
+- [x] H4 Open-source LLMs — `google/gemma-4-31b-it` and `minimax/minimax-m2.7` in the picker
+- [x] H5 LLM-as-a-judge (or other) evaluation of prompt/model — report judge ([`evaluation/`](../src/interview_app/evaluation/)) and interviewer-quality judge ([`lab/`](../src/interview_app/lab/))
 
 ### Bonus target
 
-- [ ] At least 2 medium + 1 hard done
+- [x] At least 2 medium + 1 hard done — 6 medium (M1 M2 M3 M6 M7 M9) and 3 hard (H1 H4 H5)
 
 ### Review readiness
 

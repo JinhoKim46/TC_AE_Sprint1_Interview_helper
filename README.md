@@ -118,7 +118,7 @@ Voice interviews speak each question (Gemini TTS) and accept spoken answers (Whi
 
 ![Interviewer realism per prompt variant, judged by Jev on simulated strong, weak and evasive candidates](reports/img/prompt-realism.png)
 
-Measured with [`lab/compare_prompts.py`](lab/compare_prompts.py): a simulated candidate (Gemini, playing strong, weak and evasive personas) and Jev judging each transcript. P4 is the default: it follows the full guideline and a plan of the job's requirements, so coverage is traceable. Zero-shot scored lowest; P2, P4 and P5 are within noise of each other with one session per persona. Details and limits: [prompt comparison](docs/05-prompt-comparison.md).
+Measured with [`lab/compare_prompts.py`](lab/compare_prompts.py): a simulated candidate (Gemini, playing strong, weak and evasive personas) and Jev judging each transcript. P4 is the default: it follows the full guideline and a plan of the job's requirements, so coverage is traceable. Zero-shot scored lowest; P2, P4 and P5 are within noise of each other with one session per persona. The table is the first full run (2026-10-02). After a shared-prompt fix against stacked questions, P2 and P4 were re-run: turns got 18–28% shorter and realism moved to 3.80 (P2) and 3.88 (P4), a change within the noise of one session per persona. P4 stays the default for its plan, not for a proven realism lead. Details and limits: [prompt comparison](docs/05-prompt-comparison.md).
 
 **Output types.** Structured JSON (`json_schema`) for every interviewer turn, the plan and the judge, validated with pydantic and repaired once; typed probabilities from Jev (`noul`, `score`, `choice`) where code sets the thresholds; free text only inside JSON fields.
 
