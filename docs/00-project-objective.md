@@ -212,8 +212,8 @@ Do these after the core works. The list is sorted by difficulty. **Caution from 
 
 ### Optional — Easy
 
-- [ ] E1 ChatGPT critique (usability, security, prompt engineering)
-- [ ] E2 Domain-specific prompts
+- [x] E1 ChatGPT critique (usability, security, prompt engineering) — [review and response](../reports/2026-10-05-E1-chatgpt-critique.md)
+- [x] E2 Domain-specific prompts — ML/AI-engineering interview types and questions, prompts revised after a ChatGPT review ([PR #51](https://github.com/JinhoKim46/TC_AE_Sprint1_Interview_helper/pull/51), [question bank](02-question-bank.md))
 - [ ] E3 More security constraints (input + system-prompt validation, possibly LLM-checked)
 - [ ] E4 Difficulty levels (easy / medium / hard)
 - [ ] E5 Concise vs. detailed responses

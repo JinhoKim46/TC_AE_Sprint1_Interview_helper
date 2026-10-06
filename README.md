@@ -39,6 +39,8 @@ flowchart TB
 | R3 Allowed model | Interviewer `openai/gpt-5-mini` (default, switchable in Settings) | [`config.py`](src/interview_app/config.py) |
 | R4 Five system prompts, compared | Zero-shot, few-shot, chain-of-thought, role-rich + plan, self-critique | [`prompts/`](src/interview_app/prompts/) · [comparison](docs/05-prompt-comparison.md) |
 | R5 Security guard | Rules + Jev injection check, spotlighting, limits, safe output | [`security/`](src/interview_app/security/) · [Security](#security) |
+| E1 ChatGPT critique | A ChatGPT review of usability, security and prompt engineering: 8 findings with evidence, what changed because of it, and the follow-ups | [critique report](reports/2026-10-05-E1-chatgpt-critique.md) |
+| E2 Prompts for my domain (ML/AI engineering) | An ML case / system-design interview type and persona, ML-specific technical questions (shipping a model, domain shift, scaling training), and prompts revised after a ChatGPT review | [PR #51](https://github.com/JinhoKim46/TC_AE_Sprint1_Interview_helper/pull/51) · [question bank](docs/02-question-bank.md) · [`persona.py`](src/interview_app/interview/persona.py) |
 | E3 More security constraints | Input validation, LLM-based injection check, document flags | [`injection.py`](src/interview_app/security/injection.py) |
 | E4 / E7 Difficulty, personas | Interview type × difficulty → interviewer persona | [`persona.py`](src/interview_app/interview/persona.py) |
 | E8 Tune a setting | `reasoning_effort` sweep | [`lab/sweep_setting.py`](lab/sweep_setting.py) |
