@@ -27,11 +27,13 @@ from interview_app.voice import (
     SpeechStatus,
     pcm_to_wav,
     session_voice,
+    session_voice_model,
     speak,
     stored_audio,
 )
 
 TTS_MODEL = "google/gemini-3.8-flash-lite-tts"
+FLASH_TTS = "google/gemini-3.8-flash-tts"  # the second allowed TTS model
 PCM_TYPE = "audio/pcm;rate=24000;channels=1"
 ONE_SECOND = b"\x01\x00" * 24000  # 24 kHz, mono, 16-bit: 48,000 bytes per second
 
@@ -59,8 +61,12 @@ def raw_audio(audio: bytes = ONE_SECOND, content_type: str = PCM_TYPE):
 
 
 def catalog(settings: Settings) -> PriceCatalog:
-    entry = {"id": TTS_MODEL, "name": "TTS", "pricing": {"prompt": "0.0000005", "completion": "0.000006"}}
-    return PriceCatalog(settings, fetch=lambda: {"data": [entry]})
+    # Audio is billed as completion tokens: $6/M for the lite model, $9/M for the standard one.
+    entries = [
+        {"id": TTS_MODEL, "name": "TTS", "pricing": {"prompt": "0.0000005", "completion": "0.000006"}},
+        {"id": FLASH_TTS, "name": "TTS 2", "pricing": {"prompt": "0.0000005", "completion": "0.000009"}},
+    ]
+    return PriceCatalog(settings, fetch=lambda: {"data": entries})
 
 
 @pytest.fixture
@@ -162,11 +168,22 @@ def test_unknown_voice_in_config_is_rejected():
         TTSSettings(voices={"behavioral": "NotAVoice"})
 
 
+def test_session_voice_model_uses_the_stored_model_else_the_default(settings):
+    assert (
+        session_voice_model(SessionConfig(channel=Channel.VOICE, voice_model=FLASH_TTS), settings)
+        == FLASH_TTS
+    )
+    # Sessions stored before the picker existed, and models removed from config since, use the default.
+    assert session_voice_model(SessionConfig(channel=Channel.VOICE), settings) == settings.tts.model
+    removed = SessionConfig(channel=Channel.VOICE, voice_model="google/retired-tts")
+    assert session_voice_model(removed, settings) == settings.tts.model
+
+
 # --- The voice module ------------------------------------------------------------------------------
 
 
 def make_session(
-    engine, channel: Channel = Channel.VOICE, voice: str | None = "Kore"
+    engine, channel: Channel = Channel.VOICE, voice: str | None = "Kore", voice_model: str | None = None
 ) -> tuple[int, int, int]:
     """A user, an application and a session with an opening question (idx 0) and an answer (idx 1)."""
     with session_scope(engine) as s:
@@ -176,7 +193,11 @@ def make_session(
         app = Application(user_id=user.id, company="Fjordlight Analytics", role="ML Engineer")
         s.add(app)
         s.flush()
-        config = SessionConfig(channel=channel, voice=voice if channel == Channel.VOICE else None)
+        config = SessionConfig(
+            channel=channel,
+            voice=voice if channel == Channel.VOICE else None,
+            voice_model=voice_model if channel == Channel.VOICE else None,
+        )
         row = InterviewSession(
             user_id=user.id,
             application_id=app.id,
@@ -238,6 +259,34 @@ def test_speak_generates_once_and_reuses_the_stored_file(engine, settings):
     [call] = calls(engine)
     assert (call.role, call.session_id, call.user_id, call.ok) == ("tts", sid, uid, True)
     assert call.cost_usd > 0  # counts in the session's cost and budget
+
+
+def test_speak_uses_the_sessions_voice_model_and_its_price(engine, settings):
+    uid, _, sid = make_session(engine, voice_model=FLASH_TTS)
+    sdk = FakeSpeechSDK([raw_audio()])
+
+    outcome = speak(engine, settings, factory(engine, settings, sdk), uid, sid, 0)
+
+    assert outcome.status == SpeechStatus.GENERATED
+    assert sdk.requests[0]["model"] == FLASH_TTS and sdk.requests[0]["voice"] == "Kore"
+    with session_scope(engine) as s:
+        assert s.exec(select(TurnAudio)).one().model == FLASH_TTS
+    [call] = calls(engine)
+    assert call.model == FLASH_TTS
+    # "Tell me about you." = 18 chars ~ 5 input tokens; 1 s of audio = 32 tokens at FLASH_TTS's $9/M.
+    assert call.cost_usd == pytest.approx(5 * 0.0000005 + 32 * 0.000009)
+
+
+def test_speak_falls_back_to_the_default_model_when_the_stored_one_was_removed(engine, settings):
+    uid, _, sid = make_session(engine, voice_model="google/retired-tts")
+    sdk = FakeSpeechSDK([raw_audio()])
+
+    speak(engine, settings, factory(engine, settings, sdk), uid, sid, 0)
+
+    assert sdk.requests[0]["model"] == settings.tts.model == TTS_MODEL
+    with session_scope(engine) as s:
+        assert s.exec(select(TurnAudio)).one().model == TTS_MODEL
+    assert calls(engine)[0].model == TTS_MODEL
 
 
 def test_speak_does_nothing_in_a_text_session(engine, settings):

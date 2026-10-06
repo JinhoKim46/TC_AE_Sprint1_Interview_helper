@@ -155,6 +155,9 @@ class SessionConfig(BaseModel):
     # Voice channel: the TTS voice id, fixed when the session starts so the interviewer sounds like one
     # person throughout (voice.session_voice). None = the persona's voice from config.
     voice: str | None = None
+    # Voice channel: the TTS model id, fixed at the start for the same reason (voice.session_voice_model).
+    # None = the default model from config (also how sessions stored before the picker existed load).
+    voice_model: str | None = None
 
     @property
     def max_followups(self) -> int:
