@@ -7,7 +7,7 @@ from test_dashboard import add_session
 from test_history import add_application, add_user
 
 from interview_app.config import Settings
-from interview_app.cost import OTHER, chart_group, cost_overview, purpose
+from interview_app.cost import OTHER, SIMULATION, chart_group, cost_overview, purpose
 from interview_app.dashboard import dashboard
 from interview_app.db import LLMCall, session_scope
 from interview_app.usage import usage_summary
@@ -64,7 +64,11 @@ def test_purposes_have_plain_names_and_unknown_roles_are_other():
     assert purpose("tts") == "Voice"
     assert purpose("stt") == "Transcription"
     assert purpose("guard") == "Guard"
-    assert purpose("lab_judge") == OTHER == "Other"
+    # Lab and audit runs (the simulated candidate, the lab judge, voicing simulated answers) are named as
+    # such, so "Other" never hides them; only a role nobody mapped is Other.
+    assert purpose("lab_judge") == purpose("candidate_sim") == purpose("audit_tts") == SIMULATION
+    assert SIMULATION == "Simulation (lab)"
+    assert purpose("something_new") == OTHER == "Other"
     # The chart stacks at most four groups, so each purpose has a fixed group (and colour).
     assert chart_group("Planning") == chart_group("Interviewer")
     assert chart_group("Transcription") == chart_group("Voice")
@@ -128,7 +132,7 @@ def test_by_purpose_most_expensive_first(engine, user_id, seeded):
         "Transcription": (1, pytest.approx(0.006)),
         "Live scoring": (1, pytest.approx(0.005)),
         "Guard": (1, pytest.approx(0.002)),
-        "Other": (1, pytest.approx(0.003)),
+        "Simulation (lab)": (1, pytest.approx(0.003)),
     }
     assert by_purpose[0].purpose == "Report"
     costs = [p.cost_usd for p in by_purpose]
@@ -147,17 +151,28 @@ def test_daily_buckets_by_purpose(engine, user_id, seeded):
         (date(2026, 9, 2), "Voice"): pytest.approx(0.004),
         (date(2026, 9, 2), "Transcription"): pytest.approx(0.006),
         (date(2026, 9, 2), "Live scoring"): pytest.approx(0.005),
-        (date(2026, 9, 2), "Other"): pytest.approx(0.003),
+        (date(2026, 9, 2), "Simulation (lab)"): pytest.approx(0.003),
     }
     assert [b.start for b in cost.over_time] == sorted(b.start for b in cost.over_time)
 
 
 def test_two_unknown_roles_on_one_day_merge_into_one_other_bucket(engine, user_id):
-    add_call(engine, user_id, "lab_judge", 0.001, DAY1)
+    # "candidate" is not "candidate_sim", and "summariser" has no lab_/audit_ prefix: both unmapped.
+    add_call(engine, user_id, "summariser", 0.001, DAY1)
     add_call(engine, user_id, "candidate", 0.002, DAY1)
     cost = cost_overview(engine, user_id)
     assert [(b.purpose, b.cost_usd) for b in cost.over_time] == [("Other", pytest.approx(0.003))]
     assert [(p.purpose, p.calls) for p in cost.by_purpose] == [("Other", 2)]
+
+
+def test_simulation_roles_group_in_sql_like_in_python(engine, user_id):
+    # The LIKE in the database must treat "_" literally: "labx" is not a lab_ role.
+    add_call(engine, user_id, "candidate_sim", 0.001, DAY1)
+    add_call(engine, user_id, "audit_tts", 0.002, DAY1)
+    add_call(engine, user_id, "labx", 0.004, DAY1)
+    got = {p.purpose: p.calls for p in cost_overview(engine, user_id).by_purpose}
+    assert got == {"Simulation (lab)": 2, "Other": 1}
+    assert purpose("labx") == OTHER
 
 
 def test_weekly_buckets_when_the_data_spans_more_than_60_days(engine, user_id):

@@ -18,6 +18,7 @@ from interview_app.config import get_settings
 from interview_app.cost import CostOverview, cost_overview
 from interview_app.db import Turn, session_scope
 from interview_app.evaluation.rubric import load_rubric
+from interview_app.evaluation.schemas import Improvement
 from interview_app.history import (
     ItemMean,
     SessionSummary,
@@ -25,6 +26,7 @@ from interview_app.history import (
     counts_towards_scores,
     item_means,
     list_sessions,
+    load_report,
     stored_reports,
     trend_points,
 )
@@ -173,3 +175,47 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
         item_means=item_means(reports, rubric),
         cost=cost,
     )
+
+
+# --- Interviews by company ----------------------------------------------------------------------------
+
+
+class AttemptQuestion(BaseModel):
+    question: str
+    score: float | None  # 0-100, the question's weighted score; None if the judge found nothing to score
+
+
+class Attempt(BaseModel):
+    """One interview of an application with the highlights of its report, for the Dashboard's per-company
+    list. The full report (requirements, quotes, the stronger answer) stays on History."""
+
+    session: SessionSummary
+    counted: bool  # False for practice (Quick, Custom, drills): shown, but not part of the progress numbers
+    summary: str | None  # the judge's two or three sentences; None without a report
+    strengths: list[str]
+    improvements: list[Improvement]
+    questions: list[AttemptQuestion]
+
+
+def interview_attempts(engine: Engine, user_id: int) -> dict[int, list[Attempt]]:
+    """Every interview per application id, newest first, with its stored feedback. No model call.
+
+    One report read per interview: a personal practice log has tens of interviews, not thousands, so
+    this stays simpler than a join over the stored report JSON.
+    """
+    attempts: dict[int, list[Attempt]] = defaultdict(list)
+    for s in list_sessions(engine, user_id):  # newest first, this user's only
+        report = load_report(engine, user_id, s.session_id) if s.has_report else None
+        attempts[s.application_id].append(
+            Attempt(
+                session=s,
+                counted=counts_towards_scores(s.length),
+                summary=report.summary if report else None,
+                strengths=[x.point for x in report.strengths] if report else [],
+                improvements=list(report.improvements) if report else [],
+                questions=[AttemptQuestion(question=e.question, score=e.score) for e in report.exchanges]
+                if report
+                else [],
+            )
+        )
+    return dict(attempts)
