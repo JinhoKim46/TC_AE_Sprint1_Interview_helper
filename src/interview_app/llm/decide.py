@@ -50,13 +50,9 @@ import httpx
 from pydantic import BaseModel, Field, ValidationError
 
 from interview_app.config import Settings
-from interview_app.llm.client import CallRecord, LLMError, Recorder
+from interview_app.llm.client import CallRecord, LLMError, Recorder, post_json_with_retries
 
 log = logging.getLogger(__name__)
-
-# Rate limits and server hiccups are worth retrying; other 4xx errors mean our request is wrong,
-# and sending it again would fail the same way.
-RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
 
 # ---------------------------------------------------------------- questions
@@ -235,26 +231,9 @@ class DecisionClient:
         return DecisionResult(answers=answers, model=record.model, record=record)
 
     def _post_with_retries(self, payload: dict) -> dict:
-        """POST the payload; retry network errors and 429/5xx with exponential backoff."""
-        headers = {"Authorization": f"Bearer {self.settings.openrouter_api_key.get_secret_value()}"}
-        attempts = self.settings.max_retries + 1  # max_retries counts *re*-tries, like the OpenAI SDK
-        for attempt in range(attempts):
-            last_try = attempt == attempts - 1
-            try:
-                response = self.http.post(
-                    self.settings.openrouter_decisions_url,
-                    json=payload,
-                    headers=headers,
-                    timeout=self.settings.request_timeout_s,
-                )
-            except httpx.TransportError:  # timeouts, connection resets, DNS failures
-                if last_try:
-                    raise
-            else:
-                if response.is_success:
-                    return response.json()
-                if response.status_code not in RETRYABLE_STATUS or last_try:
-                    # The body holds the API's reason (e.g. a schema error); it never contains our key.
-                    raise RuntimeError(f"HTTP {response.status_code}: {response.text[:500]}")
-            time.sleep(self.backoff_base_s * 2**attempt)
-        raise AssertionError("unreachable")
+        """POST the payload; retry network errors and 429/5xx with exponential backoff.
+
+        The retry loop is shared with speech-to-text (client.post_json_with_retries), so both plain-HTTP
+        endpoints follow the same rules."""
+        url = self.settings.openrouter_decisions_url
+        return post_json_with_retries(self.http, url, payload, self.settings, self.backoff_base_s)

@@ -1,7 +1,16 @@
 import pytest
 from pydantic import ValidationError
 
-from interview_app.config import PROJECT_ROOT, GuardSettings, LengthPresets, Limits, Settings
+from interview_app.config import (
+    PROJECT_ROOT,
+    GuardSettings,
+    LengthPresets,
+    Limits,
+    Settings,
+    STTSettings,
+    TTSModelChoice,
+    TTSSettings,
+)
 
 
 def test_defaults_follow_course_requirements():
@@ -163,3 +172,68 @@ def test_length_presets_bounds(values):
 def test_length_presets_must_grow_from_quick_to_standard():
     with pytest.raises(ValidationError, match="quick <= standard"):
         LengthPresets(quick=6, standard=5)
+
+
+# --- Speech-to-text -------------------------------------------------------------------------------
+
+
+def test_stt_defaults_and_env(monkeypatch):
+    s = Settings(_env_file=None)
+    # The only transcription model this account's guardrail allows (checked 2026-10-05).
+    assert s.stt.model == "openai/whisper-large-v3-turbo"
+    assert s.stt.language == "en"
+    assert s.stt.max_seconds > 0 and s.stt.max_bytes > 0
+    monkeypatch.setenv("STT__MAX_SECONDS", "90")
+    monkeypatch.setenv("STT__LANGUAGE", "de")
+    s = Settings(_env_file=None)
+    assert (s.stt.max_seconds, s.stt.language) == (90, "de")
+
+
+@pytest.mark.parametrize("field, value", [("max_seconds", 0), ("max_seconds", 10_000), ("max_bytes", 0)])
+def test_stt_limits_are_bounded(field, value):
+    with pytest.raises(ValidationError):
+        STTSettings(**{field: value})
+
+
+def test_planner_reasoning_effort_defaults_to_low_and_is_validated(monkeypatch):
+    assert Settings(_env_file=None).planner_reasoning_effort == "low"
+    monkeypatch.setenv("PLANNER_REASONING_EFFORT", "minimal")
+    assert Settings(_env_file=None).planner_reasoning_effort == "minimal"
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None, planner_reasoning_effort="fast")
+
+
+# --- Text-to-speech models ------------------------------------------------------------------------
+
+
+def test_tts_models_default_is_in_the_list_with_labels():
+    tts = Settings(_env_file=None).tts
+    # The two TTS models this account's guardrail allows (checked 2026-10-05).
+    assert tts.model_ids() == ["google/gemini-3.8-flash-lite-tts", "google/gemini-3.8-flash-tts"]
+    assert tts.model == "google/gemini-3.8-flash-lite-tts"
+    assert all(choice.label for choice in tts.available_models)
+    assert "default" in tts.model_label(tts.model)
+    assert tts.model_label("unknown/model") == "unknown/model"
+
+
+def test_tts_default_model_must_be_in_the_list():
+    with pytest.raises(ValidationError, match="TTS model"):
+        TTSSettings(model="google/some-other-tts")
+    with pytest.raises(ValidationError):
+        TTSSettings(available_models=[])
+
+
+def test_tts_model_and_list_from_env(monkeypatch):
+    monkeypatch.setenv("TTS__MODEL", "google/gemini-3.8-flash-tts")
+    assert Settings(_env_file=None).tts.model == "google/gemini-3.8-flash-tts"
+    monkeypatch.setenv(
+        "TTS__AVAILABLE_MODELS",
+        '[{"id": "google/gemini-3.8-flash-tts", "label": "Gemini Flash TTS"}]',
+    )
+    tts = Settings(_env_file=None).tts
+    assert tts.available_models == [
+        TTSModelChoice(id="google/gemini-3.8-flash-tts", label="Gemini Flash TTS")
+    ]
+    monkeypatch.setenv("TTS__MODEL", "google/gemini-3.8-flash-lite-tts")  # not in the env list
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)

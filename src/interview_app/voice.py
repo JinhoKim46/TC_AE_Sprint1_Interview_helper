@@ -10,6 +10,11 @@ called by the UI after a turn is stored, not inside the interview engine: a TTS 
 
 Only the interviewer's own questions are spoken (model output already shown on screen). Coaching tips and
 scores belong to candidate turns and are never passed here.
+
+Spoken answers go the other way (speech-to-text, `transcribe`): the candidate's recording becomes a
+transcript draft that the candidate checks, edits and sends like a typed answer (speak-then-confirm, spec
+2026-10-05). `transcribe` only turns audio into draft text: it stores nothing, never writes the audio to
+disk and never logs the transcript. The guard runs later, on the confirmed text, in the engine's answer path.
 """
 
 import io
@@ -83,6 +88,17 @@ def session_voice(config: SessionConfig, settings: Settings) -> str:
     if config.voice and config.voice in settings.tts.available_voices:
         return config.voice
     return settings.tts.voice_for(config.interview_type.value)
+
+
+def session_voice_model(config: SessionConfig, settings: Settings) -> str:
+    """The session's TTS model: the one stored in its config if config still allows it, else the default.
+
+    Sessions stored before the voice-model picker existed have none and use the default; a model removed
+    from `tts.available_models` (e.g. newly blocked by the guardrail) also falls back, so old sessions play.
+    """
+    if config.voice_model and config.voice_model in settings.tts.model_ids():
+        return config.voice_model
+    return settings.tts.model
 
 
 def session_audio_dir(settings: Settings, user_id: int, session_id: int) -> Path:
@@ -189,9 +205,15 @@ def _speak(
     # Annotated so the code map (reports/tools) can follow the call into the gateway.
     llm: LLMClient = make_llm(user_id, session_id)
     try:
-        result = llm.speech("tts", text[: settings.tts.max_chars], model=settings.tts.model, voice=voice)
+        # The session's model (picked in Settings, fixed at start); the client prices the call with it.
+        # Inline on purpose: the code map recognises `session_voice_model(...)` as the TTS model.
+        result = llm.speech(
+            "tts", text[: settings.tts.max_chars], model=session_voice_model(config, settings), voice=voice
+        )
     except LLMError:
         return SpeechOutcome(SpeechStatus.FAILED, notice=FAILED_NOTICE)  # already logged by the client
+    # The model that really spoke, as recorded by the client: the log line and the TurnAudio row use it too.
+    model = result.record.model
 
     fmt = pcm_format(result.content_type)
     if fmt is not None:
@@ -200,7 +222,7 @@ def _speak(
     elif "wav" in result.content_type.lower():
         wav, seconds = result.audio, 0.0
     else:
-        log.warning("Voice: unexpected audio type %r from %s", result.content_type, settings.tts.model)
+        log.warning("Voice: unexpected audio type %r from %s", result.content_type, model)
         return SpeechOutcome(SpeechStatus.FAILED, notice=FAILED_NOTICE)
 
     path = session_audio_dir(settings, user_id, session_id) / f"{int(turn_idx)}.wav"
@@ -214,7 +236,7 @@ def _speak(
                     turn_idx=turn_idx,
                     path=str(path.relative_to(settings.data_dir)),
                     voice=voice,
-                    model=settings.tts.model,
+                    model=model,
                     seconds=round(seconds, 2),
                 )
             )
@@ -222,6 +244,117 @@ def _speak(
         # Two reruns generated the same turn at once: the other one's row stands (same file path).
         log.info("Voice: audio for session %s turn %s was stored by another run", session_id, turn_idx)
     return SpeechOutcome(SpeechStatus.GENERATED, path)
+
+
+# --- Spoken answers (speech-to-text) ---------------------------------------------------------------
+
+
+class TranscriptStatus(StrEnum):
+    OK = "ok"  # a transcript draft for the candidate to check and send
+    EMPTY = "empty"  # the model heard no words
+    TOO_LONG = "too_long"  # over the configured length or size: refused before any model call
+    TEXT_SESSION = "text_session"  # a Text-channel session: no spoken answers by design
+    BUDGET = "budget"  # the session budget is used up, so transcription is off (typing still works)
+    FAILED = "failed"  # unreadable audio or a model failure
+
+
+@dataclass
+class TranscriptOutcome:
+    status: TranscriptStatus
+    text: str | None = None  # the transcript draft, when there is one
+    notice: str | None = None  # a short message for the UI when there is no draft
+
+
+STT_EMPTY_NOTICE = "No words were heard in that recording. Record again, or type your answer."
+STT_BUDGET_NOTICE = (
+    "The interview's budget is used up, so spoken answers are off. You can still type your answer."
+)
+STT_FAILED_NOTICE = "Your recording could not be transcribed. Record again, or type your answer."
+
+
+def _too_long_notice(max_seconds: float) -> str:
+    return (
+        f"That recording is longer than {max_seconds:g} seconds, so it was not transcribed. "
+        "Record a shorter answer, or type it."
+    )
+
+
+def wav_seconds(audio: bytes) -> float:
+    """Length of a WAV recording, from its header. Raises wave.Error/EOFError for anything else."""
+    with wave.open(io.BytesIO(audio)) as w:
+        rate = w.getframerate()
+        if rate <= 0:
+            raise wave.Error("WAV header has no sample rate")
+        return w.getnframes() / rate
+
+
+def transcribe(
+    engine: Engine,
+    settings: Settings,
+    make_llm: Callable[[int, int | None], LLMClient],
+    user_id: int,
+    session_id: int,
+    audio: bytes,
+) -> TranscriptOutcome:
+    """Turn one recorded answer (WAV bytes) into a transcript draft, or a notice. Never raises.
+
+    `make_llm` builds a client bound to (user_id, session_id) (EngineDeps.make_llm), so the STT cost counts
+    in the session's cost and budget, like the interviewer's voice.
+    """
+    try:
+        return _transcribe(engine, settings, make_llm, user_id, session_id, audio)
+    except Exception:
+        # Spoken answers must never break the interview: typing still works. No transcript in the log.
+        log.exception("Transcription failed for session %s", session_id)
+        return TranscriptOutcome(TranscriptStatus.FAILED, notice=STT_FAILED_NOTICE)
+
+
+def _transcribe(
+    engine: Engine,
+    settings: Settings,
+    make_llm: Callable[[int, int | None], LLMClient],
+    user_id: int,
+    session_id: int,
+    audio: bytes,
+) -> TranscriptOutcome:
+    with session_scope(engine) as s:
+        row = s.exec(
+            select(InterviewSession).where(
+                InterviewSession.id == session_id, InterviewSession.user_id == user_id
+            )
+        ).first()
+        config_json = row.config_json if row else None
+    if config_json is None:
+        log.warning("Transcription: no session %s for this user", session_id)
+        return TranscriptOutcome(TranscriptStatus.FAILED, notice=STT_FAILED_NOTICE)
+    if SessionConfig.model_validate_json(config_json).channel != Channel.VOICE:
+        return TranscriptOutcome(TranscriptStatus.TEXT_SESSION)
+    # Same rule as the interviewer's voice: over budget, switch the extra off rather than end the interview.
+    if not check_budget(_session_cost(engine, session_id), settings.limits).allowed:
+        return TranscriptOutcome(TranscriptStatus.BUDGET, notice=STT_BUDGET_NOTICE)
+
+    stt = settings.stt
+    # Size first: it needs no parsing, and it also catches a WAV whose header understates its length.
+    if len(audio) > stt.max_bytes:
+        return TranscriptOutcome(TranscriptStatus.TOO_LONG, notice=_too_long_notice(stt.max_seconds))
+    try:
+        seconds = wav_seconds(audio)
+    except (wave.Error, EOFError):
+        log.warning("Transcription: the recording is not a readable WAV file (%d bytes)", len(audio))
+        return TranscriptOutcome(TranscriptStatus.FAILED, notice=STT_FAILED_NOTICE)
+    if seconds > stt.max_seconds:
+        return TranscriptOutcome(TranscriptStatus.TOO_LONG, notice=_too_long_notice(stt.max_seconds))
+
+    # Annotated so the code map (reports/tools) can follow the call into the gateway.
+    llm: LLMClient = make_llm(user_id, session_id)
+    try:
+        result = llm.transcribe("stt", audio, model=stt.model, language=stt.language)
+    except LLMError:
+        return TranscriptOutcome(TranscriptStatus.FAILED, notice=STT_FAILED_NOTICE)  # logged by the client
+    text = result.text.strip()
+    if not text:
+        return TranscriptOutcome(TranscriptStatus.EMPTY, notice=STT_EMPTY_NOTICE)
+    return TranscriptOutcome(TranscriptStatus.OK, text=text)
 
 
 def delete_session_audio(settings: Settings, user_id: int, session_id: int) -> None:

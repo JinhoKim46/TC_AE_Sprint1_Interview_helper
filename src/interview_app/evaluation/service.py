@@ -10,12 +10,17 @@ The report is stored, so re-opening it costs nothing; `force=True` re-runs the j
 """
 
 import logging
+import math
+import re
+import statistics
 from concurrent.futures import ThreadPoolExecutor
 
 from pydantic import ValidationError
-from sqlmodel import select
+from sqlalchemy.engine import Engine
+from sqlmodel import col, or_, select
 
-from interview_app.db import Evaluation, InterviewSession, session_scope
+from interview_app.config import Settings
+from interview_app.db import Evaluation, InterviewSession, LLMCall, session_scope
 from interview_app.evaluation.aggregate import aggregate
 from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.judge import judge_messages, run_judge
@@ -47,6 +52,60 @@ def median_run(scored: list[tuple]) -> tuple:
     ordered = sorted(scored, key=lambda pair: (pair[1]["overall"] is None, pair[1]["overall"] or 0))
     with_score = [p for p in ordered if p[1]["overall"] is not None] or ordered
     return with_score[(len(with_score) - 1) // 2]
+
+
+# Shown when this user has no finished report with the chosen judge yet. Deliberately not "about a minute":
+# a reasoning judge run three times took 60-70 s on the owner's machine, and an honest range beats a promise.
+REPORT_WAIT_FALLBACK = "This usually takes one to two minutes."
+
+
+def _same_model(stored: str, chosen: str) -> bool:
+    # The call log stores the model that answered, which OpenRouter may report as a dated build of the chosen
+    # id (`openai/gpt-5-mini-2025-08-07`). Only a date suffix counts: `...-mini-high` is another model.
+    return stored == chosen or re.fullmatch(re.escape(chosen) + r"-\d{4}-?\d{2}-?\d{2}", stored) is not None
+
+
+def report_wait_seconds(engine: Engine, user_id: int, judge_model: str, settings: Settings) -> int | None:
+    """How long a report with `judge_model` usually takes for this user, in seconds; None without history.
+
+    "The model judges, code computes": the estimate comes from the call log, not a guess. The judge runs in
+    parallel, so one report waits for its slowest run: each recent report (its successful judge calls,
+    grouped by session) counts with its slowest call, and the estimate is the median over the last
+    `settings.report_wait_history` reports (one unusually slow report doesn't move it much), rounded up
+    to the next 5 seconds so it reads like an estimate, not a measurement.
+    """
+    history = settings.report_wait_history
+    with session_scope(engine) as s:
+        rows = s.exec(
+            select(LLMCall.session_id, LLMCall.model, LLMCall.latency_s)
+            .where(
+                LLMCall.user_id == user_id,
+                LLMCall.role == "judge",
+                col(LLMCall.ok).is_(True),
+                col(LLMCall.session_id).is_not(None),
+                or_(LLMCall.model == judge_model, col(LLMCall.model).startswith(f"{judge_model}-")),
+            )
+            .order_by(col(LLMCall.created_at).desc(), col(LLMCall.id).desc())
+            # Bounded: a report is a handful of calls (runs plus the odd repair), so this covers `history`.
+            .limit(history * 12)
+        ).all()
+    slowest: dict[int, float] = {}  # session -> its slowest judge call; insertion order = newest first
+    for session_id, model, latency in rows:
+        if _same_model(model, judge_model):
+            slowest[session_id] = max(slowest.get(session_id, 0.0), latency)
+    recent = list(slowest.values())[:history]
+    if not recent:
+        return None
+    return max(5, math.ceil(statistics.median(recent) / 5) * 5)
+
+
+def report_wait_text(seconds: int | None) -> str:
+    """The wait estimate in words, for the report button."""
+    if seconds is None:
+        return REPORT_WAIT_FALLBACK
+    if seconds < 90:
+        return f"This takes about {seconds} seconds, judging by your recent reports."
+    return f"This takes about {round(seconds / 60)} minutes, judging by your recent reports."
 
 
 def stored_report(deps: EngineDeps, user_id: int, session_id: int) -> Report | None:

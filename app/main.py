@@ -11,7 +11,7 @@ restart) then showed the raw file list instead of these sections.
 import logging
 
 import streamlit as st
-from ui_common import load_styles
+from ui_common import interview_running_note, load_styles, navigation_position
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -24,10 +24,21 @@ load_styles()
 pages = {
     "Practise": [
         st.Page("views/home.py", title="Home", icon=":material/home:", default=True),
+        st.Page("views/dashboard.py", title="Dashboard", icon=":material/insights:"),
         st.Page("views/applications.py", title="Applications", icon=":material/folder_open:"),
         st.Page("views/interview.py", title="Interview", icon=":material/forum:"),
         st.Page("views/history.py", title="History", icon=":material/history:"),
     ],
     "Setup": [st.Page("views/settings.py", title="Settings", icon=":material/settings:")],
 }
-st.navigation(pages).run()
+# Hidden while an interview runs: the Interview page's "Exit interview" dialog is then the way out.
+position = navigation_position()
+page = st.navigation(pages, position=position)
+# Remember the page the previous run showed, so a page can tell "entered from another page" from a rerun of
+# itself: the Interview page shows a finished interview right after it ends, but the start form when the
+# candidate comes back later.
+st.session_state.page_entered = st.session_state.get("current_page") != page.url_path
+st.session_state.current_page = page.url_path
+if position == "hidden":
+    interview_running_note(page.url_path)
+page.run()

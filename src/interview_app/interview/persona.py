@@ -83,10 +83,12 @@ LENGTH_LABELS: dict[Length, str] = {
 
 
 class Channel(StrEnum):
-    """How the interviewer's questions reach the candidate. Answers are always typed."""
+    """How the interview is held. Typing an answer works in both channels."""
 
     TEXT = "text"
-    VOICE = "voice"  # questions are spoken (text-to-speech); the text stays available
+    # Questions are spoken (text-to-speech) and answers may be spoken (speech-to-text, confirmed before
+    # sending); the text of both stays available.
+    VOICE = "voice"
 
 
 CHANNEL_LABELS: dict[Channel, str] = {Channel.TEXT: "Text", Channel.VOICE: "Voice"}
@@ -153,6 +155,9 @@ class SessionConfig(BaseModel):
     # Voice channel: the TTS voice id, fixed when the session starts so the interviewer sounds like one
     # person throughout (voice.session_voice). None = the persona's voice from config.
     voice: str | None = None
+    # Voice channel: the TTS model id, fixed at the start for the same reason (voice.session_voice_model).
+    # None = the default model from config (also how sessions stored before the picker existed load).
+    voice_model: str | None = None
 
     @property
     def max_followups(self) -> int:

@@ -16,7 +16,7 @@ from streamlit.errors import StreamlitAPIException
 
 from interview_app.config import get_settings
 from interview_app.db import init_db, make_engine
-from interview_app.interview.engine import EngineDeps
+from interview_app.interview.engine import EngineDeps, active_session_id
 from interview_app.llm.calllog import make_db_recorder
 from interview_app.llm.client import LLMClient
 from interview_app.llm.decide import DecisionClient
@@ -100,10 +100,14 @@ def go_button(
     key: str | None = None,
     primary: bool = True,
     state: dict | None = None,
+    link: bool = False,
 ) -> None:
     """A button that opens another page, for a call to action that must stand out (a page link looks
-    like plain navigation). `state` is written to session_state first, e.g. which interview to open."""
-    if st.button(label, icon=icon, key=key, type="primary" if primary else "secondary"):
+    like plain navigation). `state` is written to session_state first, e.g. which interview to open.
+    `link=True` draws it borderless like a link, for a pointer inside a line of text that needs `state`
+    (st.page_link can't set any)."""
+    kind = "tertiary" if link else "primary" if primary else "secondary"
+    if st.button(label, icon=icon, key=key, type=kind):
         for name, value in (state or {}).items():
             st.session_state[name] = value
         try:
@@ -239,6 +243,70 @@ def button_row(*, key: str, align: Literal["start", "end"] = "start") -> DeltaGe
     """
     prefix = "ih-buttons-end" if align == "end" else "ih-buttons"
     return st.container(horizontal=True, key=f"{prefix}-{key}")
+
+
+def mic_recording(label: str, *, key: str, sample_rate: int, help: str | None = None) -> bytes | None:
+    """The browser mic as WAV bytes (None until something is recorded).
+
+    A thin wrapper on purpose: AppTest can't drive st.audio_input, so UI tests replace this one function
+    with a fake recorder. The bytes stay in memory only (spoken answers are never stored).
+    """
+    recording = st.audio_input(label, sample_rate=sample_rate, key=key, help=help)
+    return recording.getvalue() if recording is not None else None
+
+
+# --- Leaving a running interview -------------------------------------------------------------------
+
+
+def navigation_position() -> Literal["sidebar", "hidden"]:
+    """Where main.py draws the page navigation: hidden while an interview is running, so the Interview
+    page's "Exit interview" dialog (save, end, discard) is the one way out of it.
+
+    "Save & exit" in that dialog sets `paused_session`: the candidate chose to leave, so the navigation
+    comes back until they resume. One small DB query per page view (active_session_id loads no turns).
+    """
+    running = active_session_id(get_engine(), current_user_id())
+    if running is None or st.session_state.get("paused_session") == running:
+        return "sidebar"
+    return "hidden"
+
+
+def interview_running_note(url_path: str) -> None:
+    """With the navigation hidden, a page reached some other way (a bookmark, a typed URL) still needs a
+    way back to the running interview. Home already offers "Resume", and the Interview page is the
+    interview itself, so they get no note."""
+    if url_path in ("", "interview"):
+        return
+    with panel(key="interview-running"):
+        st.markdown("**You have an interview in progress.** Go back to it to continue, save it or end it.")
+        with button_row(key="interview-running"):
+            go_button("views/interview.py", "Back to the interview", icon=":material/forum:")
+
+
+# Asks the browser for its own "Leave site?" prompt when the tab is closed or reloaded mid-interview. Nothing
+# would be lost (every answer is stored), but closing the tab by accident is easy. Why it is built this way:
+# - st.html runs the script in the page itself (not an iframe), so it can listen on `window`.
+# - The listener is added once per browser tab and only acts while the marker span is in the page. Streamlit
+#   removes the span on any run that doesn't draw it (the interview ended, another page is shown), so the
+#   prompt stops without a second "remove the listener" script.
+# - It is a fixed string: no user, document or model text ever reaches it.
+_LEAVE_GUARD_HTML: Final = """<span id="ih-leave-guard" hidden></span>
+<script>
+if (!window.ihLeaveGuard) {
+  window.ihLeaveGuard = true;
+  window.addEventListener("beforeunload", (event) => {
+    if (document.getElementById("ih-leave-guard")) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  });
+}
+</script>"""
+
+
+def leave_site_guard() -> None:
+    """Draw the "Leave site?" guard (see _LEAVE_GUARD_HTML). Call it only while an interview is active."""
+    st.html(_LEAVE_GUARD_HTML, unsafe_allow_javascript=True)
 
 
 # --- Model clients ---------------------------------------------------------------------------------

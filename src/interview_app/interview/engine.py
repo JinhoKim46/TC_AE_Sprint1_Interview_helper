@@ -18,6 +18,7 @@ import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, timedelta
+from enum import StrEnum
 
 from pydantic import ValidationError
 from sqlalchemy.engine import Engine
@@ -30,7 +31,7 @@ from interview_app.evaluation.exchanges import build_exchanges
 from interview_app.evaluation.live import LiveFeedback, live_score
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.ingest import DocKind
-from interview_app.interview.persona import Length, Mode, Persona, SessionConfig, derive_persona
+from interview_app.interview.persona import Channel, Length, Mode, Persona, SessionConfig, derive_persona
 from interview_app.interview.plan import make_plan
 from interview_app.interview.prompting import (
     TURN_SCHEMA,
@@ -60,6 +61,29 @@ ACTIVE_STATUSES = ("preparing", "active")
 
 class InterviewError(Exception):
     """Something the user should see (a model failure, a missing application...)."""
+
+
+class PrepStep(StrEnum):
+    """One stage of starting an interview, reported to `start_interview`'s `on_step` as it finishes, so the
+    UI can show real progress during the slowest wait in the app instead of one static sentence."""
+
+    DOCUMENTS = "documents"  # the application's documents are read and snapshotted into the session
+    PLAN = "plan"  # the planning call returned (only for prompt variants that use a plan)
+    OPENING = "opening"  # the interviewer's opening turn is stored
+    # The opening question's audio (Voice sessions). Never reported by the engine: the UI generates it right
+    # after the start (voice.speak), so a TTS failure can't fail the start. Listed here so there is one list.
+    VOICE = "voice"
+
+
+def preparation_steps(config: SessionConfig) -> list[PrepStep]:
+    """The steps a start with this config goes through, in order (the UI draws them all up front)."""
+    steps = [PrepStep.DOCUMENTS]
+    if config.prompt_variant in USES_PLAN:
+        steps.append(PrepStep.PLAN)
+    steps.append(PrepStep.OPENING)
+    if config.channel == Channel.VOICE:
+        steps.append(PrepStep.VOICE)
+    return steps
 
 
 @dataclass
@@ -405,6 +429,22 @@ def active_session(engine: Engine, user_id: int, settings: Settings | None = Non
     return get_session(engine, user_id, live[0]) if live else None
 
 
+def active_session_id(engine: Engine, user_id: int, settings: Settings | None = None) -> int | None:
+    """The id of the user's running (or freshly preparing) interview, or None.
+
+    A cheap check for the app shell, which runs it on every page view to decide whether to hide the page
+    navigation: one small query, no turns loaded. It only reads; active_session() marks stale starts failed.
+    """
+    settings = settings or get_settings()
+    with session_scope(engine) as s:
+        rows = s.exec(
+            select(InterviewSession)
+            .where(InterviewSession.user_id == user_id, col(InterviewSession.status).in_(ACTIVE_STATUSES))
+            .order_by(col(InterviewSession.id).desc())
+        ).all()
+        return next((r.id for r in rows if not _is_stale_start(r, settings)), None)
+
+
 def _add_turn(
     engine: Engine, row: InterviewSession, idx: int, speaker: str, text: str, turn: AnyTurn | None = None
 ):
@@ -522,8 +562,19 @@ def _interviewer_turn(
 # --- Public API ---------------------------------------------------------------------------------
 
 
-def start_interview(deps: EngineDeps, user_id: int, application_id: int, config: SessionConfig) -> int:
-    """Create a session (with a plan, if the prompt variant uses one) and the interviewer's opening turn."""
+def start_interview(
+    deps: EngineDeps,
+    user_id: int,
+    application_id: int,
+    config: SessionConfig,
+    on_step: Callable[[PrepStep], None] | None = None,
+) -> int:
+    """Create a session (with a plan, if the prompt variant uses one) and the interviewer's opening turn.
+
+    `on_step` (optional) is called with each PrepStep as it finishes. A plain callable, so the core stays free
+    of Streamlit: the UI passes a function that redraws its progress panel. A failed step stops the calls.
+    """
+    report = on_step or (lambda _step: None)
     application = get_application(deps.engine, user_id, application_id)
     if application is None:
         raise InterviewError("That application no longer exists.")
@@ -545,6 +596,8 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
         session_id = row.id
 
     try:
+        # Inside the try: a callback that raises must not leave a "preparing" row behind either.
+        report(PrepStep.DOCUMENTS)
         if config.prompt_variant in USES_PLAN:
             llm = deps.make_llm(user_id, session_id)  # the planning call is billed to this session
             plan = make_plan(llm, deps.settings, application.company, application.role, documents, config)
@@ -552,6 +605,7 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
                 stored = s.get(InterviewSession, session_id)
                 stored.plan_json = plan.model_dump_json()
                 s.add(stored)
+            report(PrepStep.PLAN)
         row, turns = _load(deps.engine, user_id, session_id)
         turn = _interviewer_turn(deps, row, turns, force_close=False)
     except Exception as e:
@@ -568,6 +622,7 @@ def start_interview(deps: EngineDeps, user_id: int, application_id: int, config:
         # Ended (or marked stale) while the start ran: say so instead of silently showing the start form.
         raise InterviewError("This interview was ended before it could start. Please start a new one.")
     _set_status(deps.engine, session_id, "finished" if turn.is_final else "active")
+    report(PrepStep.OPENING)
     return session_id
 
 

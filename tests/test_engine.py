@@ -10,7 +10,7 @@ from interview_app.config import LengthPresets, Limits, Settings
 from interview_app.demo import load_sample_application
 from interview_app.ingest import DocKind
 from interview_app.interview import engine as eng
-from interview_app.interview.persona import Difficulty, Length, PromptVariant, SessionConfig
+from interview_app.interview.persona import Channel, Difficulty, Length, PromptVariant, SessionConfig
 from interview_app.interview.schemas import InterviewPlan
 from interview_app.llm.calllog import make_db_recorder
 from interview_app.llm.client import LLMClient
@@ -289,6 +289,34 @@ def test_active_session_resumes_and_end_interview(setup):
     eng.end_interview(setup.deps, setup.user_id, sid)
     assert eng.active_session(setup.deps.engine, setup.user_id) is None
     assert eng.get_session(setup.deps.engine, setup.user_id, sid).status == "ended_early"
+
+
+def test_active_session_id_is_a_cheap_check_that_ignores_stale_starts(setup):
+    from datetime import timedelta
+
+    from interview_app.db import InterviewSession, session_scope, utcnow
+
+    engine = setup.deps.engine
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
+    with session_scope(engine) as s:
+        s.add(
+            InterviewSession(
+                user_id=setup.user_id,
+                application_id=setup.app_id,
+                company="c",
+                role="r",
+                config_json=p1_config().model_dump_json(),
+                documents_json="{}",
+                started_at=utcnow() - timedelta(minutes=setup.settings.limits.start_timeout_minutes + 1),
+            )
+        )
+    # An interrupted start must not hide the navigation: it no longer counts as running.
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
+    sid = start(setup)
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) == sid
+    assert eng.active_session_id(engine, setup.user_id + 1, setup.settings) is None  # not theirs
+    eng.end_interview(setup.deps, setup.user_id, sid)
+    assert eng.active_session_id(engine, setup.user_id, setup.settings) is None
 
 
 def test_other_users_cannot_see_or_answer_a_session(setup):
@@ -725,3 +753,60 @@ def test_full_p4_plan_has_no_quick_note(setup):
     setup.sdk.replies.append(PLAN.model_dump_json())
     start(setup, SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH))
     assert "quick practice" not in setup.sdk.requests[0]["messages"][-1]["content"]
+
+
+# --- Preparation progress (spec 2026-10-05, ticket 02) ---------------------------------------------
+
+
+def test_start_reports_each_preparation_step_in_order(setup):
+    setup.sdk.replies.extend([PLAN.model_dump_json(), turn("opening", "OPEN-01", message="Hi.")])
+    steps = []
+    config = SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH)
+    sid = eng.start_interview(setup.deps, setup.user_id, setup.app_id, config, on_step=steps.append)
+    assert steps == [eng.PrepStep.DOCUMENTS, eng.PrepStep.PLAN, eng.PrepStep.OPENING]
+    assert steps == eng.preparation_steps(config)
+    assert eng.get_session(setup.deps.engine, setup.user_id, sid).status == "active"
+
+
+def test_a_variant_without_a_plan_skips_the_plan_step(setup):
+    setup.sdk.replies.append(turn("opening", "OPEN-01", message="Hi."))
+    steps = []
+    eng.start_interview(setup.deps, setup.user_id, setup.app_id, p1_config(), on_step=steps.append)
+    assert steps == [eng.PrepStep.DOCUMENTS, eng.PrepStep.OPENING] == eng.preparation_steps(p1_config())
+
+
+def test_voice_sessions_list_the_voice_step_last():
+    # The engine never reports VOICE itself: the UI generates the audio (a TTS failure can't fail a start).
+    steps = eng.preparation_steps(p1_config(channel=Channel.VOICE))
+    assert steps == [eng.PrepStep.DOCUMENTS, eng.PrepStep.OPENING, eng.PrepStep.VOICE]
+
+
+def test_a_failed_plan_stops_the_steps_and_marks_the_session_failed(setup):
+    setup.sdk.replies.append(RuntimeError("planner down"))
+    steps = []
+    config = SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH)
+    with pytest.raises(eng.InterviewError):
+        eng.start_interview(setup.deps, setup.user_id, setup.app_id, config, on_step=steps.append)
+    assert steps == [eng.PrepStep.DOCUMENTS]
+    assert eng.active_session(setup.deps.engine, setup.user_id, setup.settings) is None
+
+
+def test_a_failed_opening_turn_stops_before_the_opening_step(setup):
+    setup.sdk.replies.append(RuntimeError("interviewer down"))
+    steps = []
+    with pytest.raises(eng.InterviewError):
+        eng.start_interview(setup.deps, setup.user_id, setup.app_id, p1_config(), on_step=steps.append)
+    assert steps == [eng.PrepStep.DOCUMENTS]
+
+
+def test_planner_sends_the_configured_reasoning_effort(setup):
+    setup.sdk.replies.append(PLAN.model_dump_json())
+    start(setup, SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH))
+    assert setup.sdk.requests[0]["extra_body"] == {"reasoning": {"effort": "low"}}
+
+
+def test_planner_effort_default_sends_no_reasoning_field(setup):
+    setup.deps.settings = Settings(_env_file=None, planner_reasoning_effort="default")
+    setup.sdk.replies.append(PLAN.model_dump_json())
+    start(setup, SessionConfig(prompt_variant=PromptVariant.P4_ROLE_RICH))
+    assert "extra_body" not in setup.sdk.requests[0]
