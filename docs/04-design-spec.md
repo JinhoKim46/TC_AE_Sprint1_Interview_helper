@@ -58,7 +58,7 @@ Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the 
 | Privacy / repo | Standalone **public** repo `JinhoKim46/TC_AE_Sprint1_Interview_helper` (this folder), own `pyproject.toml` + uv. Gitignored: `docs/applications/` (real CVs), `references/app_design/` (third-party screenshots), `data/`, `.env`, `.worktrees/`. A fake sample application is committed |
 | Quality bar | Type hints, pydantic, pytest with mocked LLM, ruff, pydantic-settings + `.env`, logging, retries, comments that explain *why* |
 
-Optional tasks covered: E3 E4 E7 (E8 via the Lab reasoning-effort sweep, `lab/sweep_setting.py`: gpt-5 ignores temperature), M1 M2 M3 M6 M7 M8 M9, H1 H4 H5 → well over the 2 medium + 1 hard needed for the bonus.
+Optional tasks covered: E1 E2 E3 E4 E7 (E8 via the Lab reasoning-effort sweep, `lab/sweep_setting.py`: gpt-5 ignores temperature), M1 M2 M3 M6 M7 M9, H1 H4 H5 → well over the 2 medium + 1 hard needed for the bonus. M8 (the interviewer avatar) was planned but not built.
 
 ## Components I added that weren't in the brainstorm
 1. **Prep step** (prompt chaining): JD + CV + cover letter → `InterviewPlan` JSON (requirement map, claim map, probe list). Shared by all prompt variants. This is M2 format #1; `Evaluation` is #2.
