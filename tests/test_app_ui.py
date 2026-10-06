@@ -1648,6 +1648,13 @@ def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatc
     assert any({"Application", "Cost", "Cost per interview"} <= c for c in columns)  # applications table
     assert any({"Purpose", "Calls", "Cost", "Share"} <= c for c in columns)  # by purpose, as a table
     assert any({"Day", "Purpose", "Cost"} <= c for c in columns)  # spend over time, as a table
+    # Interviews by company: one tab per application with interviews, each interview with its feedback.
+    assert any(s.value == "Interviews by company" for s in at.subheader)
+    assert sorted(t.label for t in at.tabs) == ["Brightwater Labs (1)", "Northwind Robotics (2)"]
+    titles = [e.label for e in at.expander]
+    assert sum("Hire signal" in t or "/100" in t for t in titles) == 3
+    assert any(t.endswith("practice") for t in titles)  # the Quick session is marked as practice
+    assert any(b.label == "Open the full report" for b in at.button)
 
 
 def test_dashboard_cost_section_without_spend():

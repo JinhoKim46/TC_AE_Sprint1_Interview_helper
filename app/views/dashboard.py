@@ -8,12 +8,24 @@ from contextlib import suppress
 from datetime import timedelta
 
 import streamlit as st
+from report_view import BAND_LABELS
 from streamlit.errors import StreamlitAPIException
-from ui_common import button_row, card_row, current_user_id, get_engine, go_button, page_link, panel
+from ui_common import (
+    button_row,
+    card_row,
+    current_user_id,
+    form_row,
+    get_engine,
+    go_button,
+    page_link,
+    panel,
+    safe_md,
+)
 
 from interview_app.config import get_settings
 from interview_app.cost import CHART_GROUP_ORDER, chart_group
-from interview_app.dashboard import ApplicationRow, CompanyPoint, dashboard
+from interview_app.dashboard import ApplicationRow, Attempt, CompanyPoint, dashboard, interview_attempts
+from interview_app.interview.persona import TYPE_LABELS, InterviewType, SessionConfig, length_channel_label
 
 engine = get_engine()
 user_id = current_user_id()
@@ -46,9 +58,9 @@ def duration(seconds: float) -> str:
 
 
 def money(usd: float) -> str:
-    # Four decimals below a dollar, as in Settings: a typical interview costs a few cents, and $0.00
-    # would hide it.
-    return f"${usd:.2f}" if usd >= 1 else f"${usd:.4f}"
+    # Four decimals for small amounts (a typical interview costs a few cents, and $0.00 would hide it),
+    # two from 10 cents up: "$0.9654" did not fit the narrow KPI card and was cut to "$0.9…".
+    return f"${usd:.2f}" if usd >= 0.1 else f"${usd:.4f}"
 
 
 def unassigned_note() -> str:
@@ -88,11 +100,21 @@ def chart_series(rows: list[ApplicationRow], trend: list[CompanyPoint]) -> list[
     return [r.label for r in sorted(recent, key=lambda r: r.application_id)]
 
 
-def text_color() -> str:
-    """The theme's text colour for the line-end labels: Vega's own default is dark ink, which vanished
-    on the dark background. Read from .streamlit/config.toml, so the colour is defined in one place."""
-    mode = "dark" if st.context.theme.type == "dark" else "light"
-    return st.get_option(f"theme.{mode}.textColor")
+def date_axis(interval: str) -> dict:
+    """A time axis with at most one tick per `interval` ("day" or "week").
+
+    Why: left to itself Vega-Lite puts ticks every few hours on a short range, and with a date-only label
+    every tick of one day read "Oct 03", so one date repeated across the axis. `labelOverlap` drops
+    labels that would collide on a long range. UTC, like the stored times and the tables' "(UTC)".
+    """
+    return {
+        "labelAngle": 0,
+        # A label expression, not `format`: with a time-interval tickCount Vega fell back to its mixed
+        # default labels ("Sat 03", "Oct 04"). Every tick now reads the same way, e.g. "Oct 03".
+        "labelExpr": "utcFormat(datum.value, '%b %d')",
+        "tickCount": {"interval": interval, "step": 1},
+        "labelOverlap": "greedy",
+    }
 
 
 def score_chart(series: list[str]) -> None:
@@ -101,10 +123,17 @@ def score_chart(series: list[str]) -> None:
         for p in board.trend
         if p.label in series
     ]
-    x = {"field": "Date", "type": "temporal", "title": None, "axis": {"format": "%b %d", "labelAngle": 0}}
+    x = {
+        "field": "Date",
+        "type": "temporal",
+        "title": None,
+        "scale": {"type": "utc"},
+        "axis": date_axis("day"),
+    }
     y = {"field": "Score", "type": "quantitative", "scale": {"domain": [0, 100]}, "title": "Score"}
-    # Colour and shape both carry the application, and a label sits at each line's end, so the lines
-    # can be told apart without colour vision. Labels and axes keep the theme's text colour.
+    # Colour and shape both carry the application (one legend entry each), so the lines can be told apart
+    # without colour vision. No labels at the line ends: several interviews on one day put the ends on
+    # the same spot, and the names were drawn on top of each other.
     color = {"field": "Application", "type": "nominal", "scale": {"domain": series}, "title": None}
     st.vega_lite_chart(
         points,
@@ -130,17 +159,6 @@ def score_chart(series: list[str]) -> None:
                             {"field": "Score", "format": ".0f"},
                         ],
                     },
-                },
-                {
-                    "transform": [
-                        {
-                            "joinaggregate": [{"op": "max", "field": "Date", "as": "last"}],
-                            "groupby": ["Application"],
-                        },
-                        {"filter": "datum.Date === datum.last"},
-                    ],
-                    "mark": {"type": "text", "align": "left", "dx": 8, "dy": -8, "color": text_color()},
-                    "encoding": {"text": {"field": "Application"}},
                 },
             ],
             # Vertical, so long application names never run off a phone-width chart.
@@ -250,7 +268,7 @@ def spend_chart() -> None:
                     "type": "temporal",
                     "title": None,
                     "scale": {"type": "utc"},
-                    "axis": {"labelAngle": 0, "format": "%b %d", "formatType": "utc", "tickCount": 6},
+                    "axis": date_axis("week" if week else "day"),
                 },
                 "x2": {"field": "End"},
                 "y": {
@@ -273,7 +291,10 @@ def spend_chart() -> None:
                     {"aggregate": "sum", "field": "Cost", "title": "Cost", "format": "$.4f"},
                 ],
             },
-            "config": {"legend": {"orient": "top", "direction": "horizontal", "columns": 2}},
+            # The four groups on one row (owner's request): short names, so the row fits the chart width.
+            "config": {
+                "legend": {"orient": "top", "direction": "horizontal", "columns": len(CHART_GROUP_ORDER)}
+            },
         },
         width="stretch",
     )
@@ -405,6 +426,93 @@ if opened is not None:
     # A page run on its own (tests) has no navigation to switch with.
     with suppress(StreamlitAPIException):
         st.switch_page("views/history.py")
+
+
+def attempt_title(a: Attempt) -> str:
+    """'2026-10-06 03:37 · Technical deep-dive · Full · Text · Tough · Realistic — 72/100 · Hire signal'."""
+    s = a.session
+    kind = TYPE_LABELS[InterviewType(s.interview_type)]
+    session = length_channel_label(SessionConfig(length=s.length, channel=s.channel))
+    if s.overall is not None:
+        band = BAND_LABELS.get(s.band or "", ("",))[0]
+        result = f"{s.overall:.0f}/100" + (f" · {band}" if band else "")
+    elif s.status == "active":
+        result = "in progress"
+    else:
+        result = "no report yet" if not s.has_report else "no score"
+    practice = " · practice" if not a.counted else ""
+    return (
+        f"{s.started_at:%Y-%m-%d %H:%M} · {kind} · {session} · {s.difficulty.capitalize()} · "
+        f"{s.mode.capitalize()} — {result}{practice}"
+    )
+
+
+def attempt_detail(a: Attempt) -> None:
+    """The highlights of one interview's report; the full report (quotes, requirements, the stronger
+    answer) is one click away on History. Report text is model output, so it goes through safe_md."""
+    sid = a.session.session_id
+    if a.summary is None:
+        if a.session.status == "active":
+            st.caption("This interview is still running.")
+            go_button("views/interview.py", "Resume it", icon=":material/forum:", key=f"attempt-resume-{sid}")
+        else:
+            st.caption("No feedback report yet.")
+            # Handed over like Home's "Get feedback": the Interview page opens this session (ticket 01).
+            go_button(
+                "views/interview.py",
+                "Get feedback",
+                icon=":material/assessment:",
+                key=f"attempt-feedback-{sid}",
+                state={"open_session": sid},
+            )
+        return
+    if not a.counted:
+        st.caption("Practice session: its score is shown here but not counted in the progress numbers.")
+    st.markdown(safe_md(a.summary))
+    well, improve = form_row(2, key=f"attempt-feedback-{sid}", align="top")
+    with well:
+        st.markdown("**What went well**")
+        st.markdown("\n".join(f"- {safe_md(x, inline=True)}" for x in a.strengths) or "—")
+    with improve:
+        st.markdown("**What to improve**")
+        lines = [
+            f"- **{safe_md(i.area, inline=True)}**: {safe_md(i.advice, inline=True)}" for i in a.improvements
+        ]
+        st.markdown("\n".join(lines) or "—")
+    if a.questions:
+        st.dataframe(
+            [{"Question": q.question, "Score": q.score} for q in a.questions],
+            column_config={
+                "Score": st.column_config.ProgressColumn("Score", min_value=0, max_value=100, format="%.0f"),
+            },
+            hide_index=True,
+            width="stretch",
+        )
+    go_button(
+        "views/history.py",
+        "Open the full report",
+        icon=":material/description:",
+        key=f"attempt-open-{sid}",
+        primary=False,
+        state={"history_open": sid},
+    )
+
+
+def attempts_section() -> None:
+    attempts = interview_attempts(engine, user_id)
+    st.subheader("Interviews by company")
+    st.caption("Every interview per application, newest first. Open one for its score and feedback.")
+    rows = [r for r in board.rows if r.interviews]
+    if not rows:
+        return
+    for tab, row in zip(st.tabs([f"{r.label} ({r.interviews})" for r in rows]), rows, strict=True):
+        with tab:
+            for a in attempts.get(row.application_id, []):
+                with st.expander(attempt_title(a)):
+                    attempt_detail(a)
+
+
+attempts_section()
 
 st.subheader("Skills across all applications")
 if board.item_means:

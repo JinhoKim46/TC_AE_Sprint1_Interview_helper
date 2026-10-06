@@ -197,3 +197,50 @@ def test_skill_means_across_all_applications_weakest_first(engine, user_id, two_
     assert [(m.item, m.count) for m in means] == [("A1", 3), ("A3", 3)]
     assert means[0].mean == pytest.approx(10 / 3)
     assert means[1].name == SKILL_NAMES["A3"]  # plain-words name from rubric.json
+
+
+# --- Interviews by company (every attempt with its feedback) ---------------------------------------
+
+
+def test_attempts_per_application_newest_first_with_their_feedback(engine, user_id, two_apps):
+    from interview_app.dashboard import interview_attempts
+
+    fjord, bright = two_apps
+    attempts = interview_attempts(engine, user_id)
+    assert set(attempts) == {fjord, bright}
+
+    f = attempts[fjord]
+    assert [a.session.overall for a in f] == [95.0, 70.0, 50.0]  # newest first
+    # Quick is practice: shown with its score, but marked as not counting towards progress.
+    assert [a.counted for a in f] == [False, True, True]
+    assert f[1].summary == "Fine."
+    assert [(q.question, q.score) for q in f[1].questions] == [("Walk me through a project.", 70.0)]
+
+    b = attempts[bright]
+    # The newest Brightwater interview ended early without a report: listed, with no feedback.
+    assert [a.session.has_report for a in b] == [False, True]
+    assert b[0].summary is None and b[0].questions == [] and b[0].improvements == []
+    assert b[1].session.overall == 60.0
+
+
+def test_attempt_feedback_keeps_the_judge_s_strengths_and_improvements(engine, user_id):
+    from interview_app.dashboard import interview_attempts
+    from interview_app.evaluation.schemas import Strength
+
+    app = add_application(engine, user_id, "Fjordlight Analytics")
+    report = make_report(80.0, improvements=["Quantify results", "Own your work"])
+    report.strengths = [Strength(point="Clear STAR stories", evidence=["T02"])]
+    add_session(engine, user_id, app, "Fjordlight Analytics", report=report)
+    (attempt,) = interview_attempts(engine, user_id)[app]
+    assert attempt.strengths == ["Clear STAR stories"]
+    assert [(i.area, i.advice) for i in attempt.improvements] == [
+        ("Quantify results", "Do it."),
+        ("Own your work", "Do it."),
+    ]
+
+
+def test_attempts_are_per_user(engine, user_id, two_apps):
+    from interview_app.dashboard import interview_attempts
+
+    other = add_user(engine, "sam")
+    assert interview_attempts(engine, other) == {}
