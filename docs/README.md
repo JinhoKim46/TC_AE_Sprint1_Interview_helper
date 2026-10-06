@@ -18,6 +18,9 @@ These documents are the reference material for the two kinds of agents in the ap
 | `02-question-bank.md` | Question templates by category, each with the signal it probes and what a strong vs. weak answer looks like |
 | `03-evaluation-rubric.md` | Evaluation design: transcript format, per-answer and per-session rubric items with anchored levels, red flags, aggregation, LLM-judge prompt, Jev/decision-model mapping, and calibration |
 | `rubric.json` | The same rubric in machine-readable form (item ids, primitive, instructions, criteria, weights) so the app code loads one source of truth |
+| `07-user-guide.md` | How to use the app, page by page: Home, Applications, Interview (length, channel, spoken answers, exit dialog), History, Dashboard, Settings; coaching mode and the weak-spot drill |
+| `08-configuration.md` | The `.env` settings for length, voice and speech, and how voice and transcription costs are counted |
+| `09-security.md` | R5 security in detail: injection guard layers, output handling, limits, grounding, local-only storage |
 | `applications/` | **Local only (gitignored).** Real example applications. Per-application inputs: one folder per `<company>_<role>/` holding `jd.md`, `cv.md` (or `.pdf`/`.tex`), `cover_letter.md`, and optionally `company_notes.md` and `prep_notes.md` |
 
 ## Pipeline
