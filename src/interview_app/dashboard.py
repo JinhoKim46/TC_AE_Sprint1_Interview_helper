@@ -15,6 +15,7 @@ from sqlmodel import col, select
 
 from interview_app.applications import list_applications
 from interview_app.config import get_settings
+from interview_app.cost import CostOverview, cost_overview
 from interview_app.db import Turn, session_scope
 from interview_app.evaluation.rubric import load_rubric
 from interview_app.history import (
@@ -36,7 +37,7 @@ class Kpis(BaseModel):
     scored: int  # sessions that count towards scores and have one
     average_score: float | None  # over the counted sessions only (Standard and Full)
     best_score: float | None
-    cost_usd: float  # model spend of the visible interviews
+    cost_usd: float  # all model spend, as Settings counts it (calls tied to no interview included)
 
 
 class CompanyPoint(BaseModel):
@@ -59,6 +60,8 @@ class ApplicationRow(BaseModel):
     change: float | None  # latest minus the previous counted interview
     last_practised: datetime | None  # the newest session of any length
     weakest_skill: str | None  # the plain-words name of its weakest rubric item
+    cost_usd: float = 0.0  # model spend of its interviews
+    cost_per_interview: float | None = None  # over its interviews that made a model call
 
 
 class Dashboard(BaseModel):
@@ -67,6 +70,7 @@ class Dashboard(BaseModel):
     trend: list[CompanyPoint]  # oldest first
     rows: list[ApplicationRow]  # most recently practised first, never-practised last
     item_means: list[ItemMean]  # across every scored session, weakest first
+    cost: CostOverview
 
 
 def _labels(apps) -> dict[int, str]:
@@ -102,6 +106,7 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
     sessions = list_sessions(engine, user_id)  # newest first
     reports = stored_reports(engine, user_id)  # oldest first
     labels = _labels(apps)
+    cost = cost_overview(engine, user_id)
 
     counted = [s.overall for s in sessions if s.overall is not None and counts_towards_scores(s.length)]
     kpis = Kpis(
@@ -110,7 +115,8 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
         scored=len(counted),
         average_score=sum(counted) / len(counted) if counted else None,
         best_score=max(counted) if counted else None,
-        cost_usd=sum(s.cost_usd for s in sessions),
+        # The call log's total, not the sum over listed sessions, so it equals the Settings usage table.
+        cost_usd=cost.total_usd,
     )
 
     by_app_reports: dict[int, list[StoredReport]] = defaultdict(list)
@@ -139,6 +145,7 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
         app_sessions = by_app_sessions.get(app.id, [])
         stats = score_summary(app_sessions)
         weakest = item_means(by_app_reports.get(app.id, []), rubric)
+        spent = cost.by_application.get(app.id)
         rows.append(
             ApplicationRow(
                 application_id=app.id,
@@ -151,6 +158,8 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
                 change=stats.change,
                 last_practised=max((s.started_at for s in app_sessions), default=None),
                 weakest_skill=weakest[0].name if weakest else None,
+                cost_usd=spent.cost_usd if spent else 0.0,
+                cost_per_interview=spent.average_usd if spent else None,
             )
         )
     # Most recently practised first: the applications in play lead, the untouched ones sit at the end.
@@ -162,4 +171,5 @@ def dashboard(engine: Engine, user_id: int, rubric_path: Path | None = None) -> 
         trend=trend,
         rows=rows,
         item_means=item_means(reports, rubric),
+        cost=cost,
     )
