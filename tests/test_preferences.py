@@ -3,7 +3,7 @@ import logging
 import pytest
 from sqlmodel import select
 
-from interview_app.config import LengthPresets, Settings
+from interview_app.config import LengthPresets, Settings, TTSSettings
 from interview_app.db import User, UserPreferences, session_scope
 from interview_app.interview.persona import (
     DEFAULT_MAIN_QUESTIONS,
@@ -185,3 +185,35 @@ def test_judge_model_falls_back_to_settings():
     settings = Settings(_env_file=None)
     assert judge_model(Preferences(), settings) == settings.models.judge
     assert judge_model(Preferences(judge_model="x/y"), settings) == "x/y"
+
+
+# --- Voice model ---------------------------------------------------------------------------------
+
+
+FLASH_TTS = "google/gemini-3.8-flash-tts"
+
+
+def test_voice_model_preference_round_trip(engine):
+    uid = add_user(engine, "alex")
+    assert Preferences().voice_model is None  # None = the config default
+    save_preferences(engine, uid, Preferences(voice="Puck", voice_model=FLASH_TTS))
+    loaded = load_preferences(engine, uid)
+    assert (loaded.voice, loaded.voice_model) == ("Puck", FLASH_TTS)
+
+
+def test_a_voice_session_stores_its_tts_model():
+    tts = TTSSettings()
+    picked = to_session_config(Preferences(channel=Channel.VOICE, voice_model=FLASH_TTS), tts=tts)
+    assert picked.voice_model == FLASH_TTS
+    # No preference, or one removed from config since: the default model, fixed for the session.
+    assert to_session_config(Preferences(channel=Channel.VOICE), tts=tts).voice_model == tts.model
+    stale = to_session_config(Preferences(channel=Channel.VOICE, voice_model="gone/tts"), tts=tts)
+    assert stale.voice_model == tts.model
+    # A text session has no voice at all.
+    text = to_session_config(Preferences(channel=Channel.TEXT, voice_model=FLASH_TTS), tts=tts)
+    assert text.voice_model is None
+
+
+def test_sessions_stored_before_the_voice_model_existed_load_without_one():
+    old = SessionConfig(channel=Channel.VOICE, voice="Puck").model_dump_json(exclude={"voice_model"})
+    assert SessionConfig.model_validate_json(old).voice_model is None

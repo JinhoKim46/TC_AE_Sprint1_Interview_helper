@@ -1542,6 +1542,26 @@ def test_settings_page_saves_the_voice_override(offline_catalog):
     assert load_preferences(engine, ui_common.ensure_local_user(engine)).voice == "Puck"
 
 
+def test_settings_page_saves_the_voice_model(offline_catalog):
+    import ui_common
+
+    from interview_app.config import get_settings
+    from interview_app.preferences import load_preferences
+
+    at = run_page("settings.py", timeout=90)
+    box = at.selectbox(key="pref_voice_model")
+    assert box.label == "Voice model"
+    tts = get_settings().tts
+    assert box.options == [tts.model_label(m) for m in tts.model_ids()]
+    assert box.value == tts.model  # the config default until the user picks one
+    box.set_value("google/gemini-3.8-flash-tts")
+    next(b for b in at.button if b.label == "Save settings").click().run()
+    assert not at.exception, at.exception
+    engine = ui_common.get_engine()
+    prefs = load_preferences(engine, ui_common.ensure_local_user(engine))
+    assert prefs.voice_model == "google/gemini-3.8-flash-tts"
+
+
 # --- Dashboard ---------------------------------------------------------------------------------------
 
 

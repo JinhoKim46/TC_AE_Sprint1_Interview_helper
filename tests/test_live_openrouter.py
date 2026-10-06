@@ -59,6 +59,18 @@ def test_speech_returns_pcm_and_an_estimated_cost(tmp_path):
     assert records[0].ok and records[0].cost_usd > 0  # the TTS model is in the price catalog
 
 
+def test_the_other_listed_tts_model_speaks_and_is_priced(tmp_path):
+    # The non-default voice model from the Settings picker: one short fictional sentence (well under a cent).
+    settings = Settings(data_dir=tmp_path)
+    [other] = [m for m in settings.tts.model_ids() if m != settings.tts.model]
+    records: list[CallRecord] = []
+    client = LLMClient(settings, recorder=records.append, pricing=PriceCatalog(settings))
+    result = client.speech("tts", "Welcome to Fjordlight Analytics.", model=other, voice="Puck")
+    assert pcm_format(result.content_type) == (24000, 1)  # same PCM -> WAV path as the default model
+    assert pcm_seconds(result.audio, result.content_type) > 0.2
+    assert records[0].model == other and records[0].ok and records[0].cost_usd > 0  # priced from the catalog
+
+
 def test_transcribe_reads_back_a_spoken_sentence(tmp_path):
     # A short fictional sentence, spoken by the TTS model, then transcribed (well under a cent in total).
     from interview_app.voice import pcm_to_wav
