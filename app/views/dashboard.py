@@ -5,12 +5,14 @@ come from interview_app.dashboard, which uses History's rules, so both pages agr
 """
 
 from contextlib import suppress
+from datetime import timedelta
 
 import streamlit as st
 from streamlit.errors import StreamlitAPIException
 from ui_common import button_row, card_row, current_user_id, get_engine, go_button, page_link, panel
 
 from interview_app.config import get_settings
+from interview_app.cost import CHART_GROUP_ORDER, chart_group
 from interview_app.dashboard import ApplicationRow, CompanyPoint, dashboard
 
 engine = get_engine()
@@ -43,6 +45,17 @@ def duration(seconds: float) -> str:
     return f"{minutes // 60}h {minutes % 60:02d}m" if minutes >= 60 else f"{minutes}m"
 
 
+def money(usd: float) -> str:
+    # Four decimals below a dollar, as in Settings: a typical interview costs a few cents, and $0.00
+    # would hide it.
+    return f"${usd:.2f}" if usd >= 1 else f"${usd:.4f}"
+
+
+def unassigned_note() -> str:
+    extra = board.cost.unassigned_usd
+    return f" Includes {money(extra)} not tied to an interview (document checks, lab runs)." if extra else ""
+
+
 def kpi_row() -> None:
     k = board.kpis
     cards = card_row(5, key="kpis", per_row=5)
@@ -60,7 +73,11 @@ def kpi_row() -> None:
     cards[3].metric(
         "Best score", f"{k.best_score:.0f}" if k.best_score is not None else "—", help=COUNTED_ONLY
     )
-    cards[4].metric("Cost", f"${k.cost_usd:.2f}", help="Model spend of these interviews.")
+    cards[4].metric(
+        "Cost",
+        money(k.cost_usd),
+        help=f"All model spend, the same total as Settings → Usage and cost.{unassigned_note()}",
+    )
 
 
 def chart_series(rows: list[ApplicationRow], trend: list[CompanyPoint]) -> list[str]:
@@ -149,6 +166,8 @@ def applications_table() -> None:
                 "Latest": r.latest,
                 "Best": r.best,
                 "Trend": f"{r.change:+.0f}" if r.change is not None else "—",
+                "Cost": r.cost_usd,
+                "Cost per interview": r.cost_per_interview,
                 "Last practised": r.last_practised,
                 "Weakest skill": r.weakest_skill or "—",
                 "Role": r.role,
@@ -162,6 +181,14 @@ def applications_table() -> None:
                 "Trend", help="Latest minus the previous counted interview."
             ),
             "Last practised": st.column_config.DatetimeColumn("Last practised (UTC)", format="YYYY-MM-DD"),
+            "Cost": st.column_config.NumberColumn(
+                "Cost", format="$%.4f", help="Model spend of its interviews."
+            ),
+            "Cost per interview": st.column_config.NumberColumn(
+                "Cost per interview",
+                format="$%.4f",
+                help="Its cost divided by its interviews that made a model call.",
+            ),
         },
         hide_index=True,
         width="stretch",
@@ -169,7 +196,179 @@ def applications_table() -> None:
         on_select=lambda: open_in_history(rows),
         selection_mode="single-row",
     )
-    st.caption(f"Click a row to open that application in History. Scores: {COUNTED_ONLY}")
+    st.caption(
+        f"Click a row to open that application in History. Scores: {COUNTED_ONLY}"
+        f" Cost: every interview of the application, practice included.{unassigned_note()}"
+    )
+
+
+def theme_color(name: str) -> str:
+    mode = "dark" if st.context.theme.type == "dark" else "light"
+    return st.get_option(f"theme.{mode}.{name}")
+
+
+def group_colors() -> list[str]:
+    """The theme's first three categorical colours plus its gray (the fifth slot), so "Guard and other"
+    reads as the minor rest. The fourth (a red) is skipped: red means "error" in this app."""
+    palette = st.get_option("theme.chartCategoricalColors")
+    return [palette[0], palette[1], palette[2], palette[4]]
+
+
+def spend_chart() -> None:
+    cost = board.cost
+    week = cost.bucket == "week"
+    span = timedelta(days=7 if week else 1)
+    points = [
+        {
+            "Date": b.start.isoformat(),
+            "End": (b.start + span).isoformat(),
+            "Label": b.start.isoformat(),
+            "Purpose": b.purpose,
+            "Group": chart_group(b.purpose),
+            "Order": CHART_GROUP_ORDER.index(chart_group(b.purpose)),
+            "Cost": b.cost_usd,
+        }
+        for b in cost.over_time
+    ]
+    period = "Week of" if week else "Day"
+    st.vega_lite_chart(
+        points,
+        {
+            "height": 260,
+            # Aggregated per group, so a stack has at most four segments with fixed colours.
+            "mark": {
+                "type": "bar",
+                # A 2px background-coloured outline keeps touching segments and bars apart.
+                "stroke": theme_color("backgroundColor"),
+                "strokeWidth": 2,
+            },
+            "encoding": {
+                # A time axis (not one slot per bucket), so a day or week without spend shows as a gap.
+                # Each bar spans its bucket, Date to End; UTC, because the buckets are UTC days.
+                "x": {
+                    "field": "Date",
+                    "type": "temporal",
+                    "title": None,
+                    "scale": {"type": "utc"},
+                    "axis": {"labelAngle": 0, "format": "%b %d", "formatType": "utc", "tickCount": 6},
+                },
+                "x2": {"field": "End"},
+                "y": {
+                    "aggregate": "sum",
+                    "field": "Cost",
+                    "type": "quantitative",
+                    "title": "USD",
+                    "axis": {"format": "$.2~f", "tickCount": 4},
+                },
+                "color": {
+                    "field": "Group",
+                    "type": "nominal",
+                    "title": None,
+                    "scale": {"domain": CHART_GROUP_ORDER, "range": group_colors()},
+                },
+                "order": {"aggregate": "min", "field": "Order"},
+                "tooltip": [
+                    {"field": "Label", "title": f"{period} (UTC)"},
+                    {"field": "Group", "title": "Purpose"},
+                    {"aggregate": "sum", "field": "Cost", "title": "Cost", "format": "$.4f"},
+                ],
+            },
+            "config": {"legend": {"orient": "top", "direction": "horizontal", "columns": 2}},
+        },
+        width="stretch",
+    )
+    st.caption(
+        ("One bar per week (Monday start)" if week else "One bar per day")
+        + ", UTC. Interview = interviewer and planning; Report and scoring = the report and live scoring;"
+        " Voice = speech and transcription."
+    )
+    with st.expander("Spend over time as a table", icon=":material/table:"):
+        st.dataframe(
+            [{period: b.start, "Purpose": b.purpose, "Cost": b.cost_usd} for b in cost.over_time],
+            column_config={
+                period: st.column_config.DateColumn(f"{period} (UTC)", format="YYYY-MM-DD"),
+                "Cost": st.column_config.NumberColumn("Cost", format="$%.4f"),
+            },
+            hide_index=True,
+            width="stretch",
+        )
+
+
+def purpose_chart() -> None:
+    cost = board.cost
+    rows = [{"Purpose": p.purpose, "Cost": p.cost_usd} for p in cost.by_purpose]
+    order = [p.purpose for p in cost.by_purpose]  # most expensive on top
+    y = {"field": "Purpose", "type": "nominal", "sort": order, "title": None}
+    x = {"field": "Cost", "type": "quantitative", "title": "USD", "axis": {"format": "$.2~f", "tickCount": 4}}
+    st.vega_lite_chart(
+        rows,
+        {
+            "height": {"step": 28},
+            "encoding": {"y": y, "x": x},
+            "layer": [
+                {
+                    # One series: one colour; the bar's length carries the value.
+                    "mark": {"type": "bar", "cornerRadiusEnd": 4, "color": group_colors()[0]},
+                    "encoding": {
+                        "tooltip": [{"field": "Purpose"}, {"field": "Cost", "format": "$.4f"}],
+                    },
+                },
+                {
+                    "mark": {"type": "text", "align": "left", "dx": 4, "color": theme_color("textColor")},
+                    "encoding": {"text": {"field": "Cost", "format": "$.4f"}},
+                },
+            ],
+        },
+        width="stretch",
+    )
+    with st.expander("Spend by purpose as a table", icon=":material/table:"):
+        total = cost.total_usd or 1.0
+        st.dataframe(
+            [
+                {
+                    "Purpose": p.purpose,
+                    "Calls": p.calls,
+                    "Cost": p.cost_usd,
+                    "Share": 100 * p.cost_usd / total,
+                }
+                for p in cost.by_purpose
+            ],
+            column_config={
+                "Cost": st.column_config.NumberColumn("Cost", format="$%.4f"),
+                "Share": st.column_config.NumberColumn("Share", format="%.0f%%"),
+            },
+            hide_index=True,
+            width="stretch",
+        )
+
+
+def cost_section() -> None:
+    cost = board.cost
+    st.subheader("Cost")
+    if not cost.total_usd:
+        st.caption(
+            "No model spend yet: the cost of each interview appears here once a model has been called."
+        )
+        return
+    cards = card_row(3, key="cost", per_row=3)
+    cards[0].metric("Total spend", money(cost.total_usd), help="The same total as Settings → Usage and cost.")
+    average = cost.average_per_interview_usd
+    cards[1].metric(
+        "Per interview",
+        money(average) if average is not None else "—",
+        help=f"Average over the {cost.interviews} interview(s) that made a model call.",
+    )
+    cards[2].metric(
+        "Not tied to an interview",
+        money(cost.unassigned_usd),
+        help="Document checks when you upload a CV or job description, and lab runs.",
+    )
+    with panel(key="spend-over-time"):
+        st.markdown("**Spend over time**")
+        spend_chart()
+    with panel(key="spend-by-purpose"):
+        st.markdown("**Spend by purpose**")
+        purpose_chart()
 
 
 kpi_row()
@@ -222,6 +421,8 @@ if board.item_means:
     )
 else:
     st.caption("No scored answers yet: the skills appear after the first feedback report.")
+
+cost_section()
 
 with button_row(key="next"):
     go_button("views/interview.py", "Start an interview", icon=":material/play_arrow:")

@@ -1567,7 +1567,7 @@ def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatc
 
     import ui_common
 
-    from interview_app.db import Application, session_scope
+    from interview_app.db import Application, LLMCall, session_scope
     from interview_app.demo import load_sample_application
     from interview_app.interview.persona import Length, SessionConfig
     from interview_app.llm.client import LLMClient
@@ -1588,7 +1588,7 @@ def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatc
         s.add(other)
         s.flush()
         other_id = other.id
-    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First.")
+    first = seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First.")
     seed_scored_session(engine, uid, app_id, datetime(2026, 9, 5, tzinfo=UTC), 64.0, "Second.")
     seed_scored_session(
         engine,
@@ -1599,6 +1599,19 @@ def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatc
         "Quick.",
         config=SessionConfig(length=Length.QUICK),
     )
+    day = datetime(2026, 9, 1, tzinfo=UTC)
+    with session_scope(engine) as s:
+        for role, cost, session_id in [
+            ("interviewer", 0.01, first),
+            ("judge", 0.02, first),
+            ("guard", 0.002, None),
+        ]:
+            # The guard call has no session: a check of an uploaded document.
+            s.add(
+                LLMCall(
+                    user_id=uid, session_id=session_id, role=role, model="m", cost_usd=cost, created_at=day
+                )
+            )
 
     at = run_page("dashboard.py", timeout=90)
     metrics = {m.label: m.value for m in at.metric}
@@ -1606,7 +1619,33 @@ def test_dashboard_shows_kpis_chart_and_tables_without_any_model_call(monkeypatc
     assert metrics["Average score"] == "58" and metrics["Best score"] == "64"  # the Quick 95 is practice
     assert any(s.value == "Overall score over time" for s in at.subheader)
     assert any(s.value == "Skills across all applications" for s in at.subheader)
-    assert len(at.dataframe) >= 2  # the applications table and the chart's table alternative
+    # The KPI is the Settings total (the document check included); the average is over the one interview
+    # that made a call.
+    assert metrics["Cost"] == "$0.0320" and metrics["Total spend"] == "$0.0320"
+    assert metrics["Per interview"] == "$0.0300" and metrics["Not tied to an interview"] == "$0.0020"
+    assert any(s.value == "Cost" for s in at.subheader)
+    columns = [set(d.value.columns) for d in at.dataframe]
+    assert any({"Application", "Cost", "Cost per interview"} <= c for c in columns)  # applications table
+    assert any({"Purpose", "Calls", "Cost", "Share"} <= c for c in columns)  # by purpose, as a table
+    assert any({"Day", "Purpose", "Cost"} <= c for c in columns)  # spend over time, as a table
+
+
+def test_dashboard_cost_section_without_spend():
+    from datetime import UTC, datetime
+
+    import ui_common
+
+    from interview_app.demo import load_sample_application
+
+    engine = ui_common.get_engine()
+    uid = ui_common.ensure_local_user(engine)
+    app_id = load_sample_application(engine, uid)
+    seed_scored_session(engine, uid, app_id, datetime(2026, 9, 1, tzinfo=UTC), 52.0, "First.")
+
+    at = run_page("dashboard.py", timeout=90)
+    assert any(s.value == "Cost" for s in at.subheader)
+    assert any("No model spend yet" in c.value for c in at.caption)
+    assert "Total spend" not in {m.label for m in at.metric}
 
 
 # --- Spoken answers (STT) -------------------------------------------------------------------------
