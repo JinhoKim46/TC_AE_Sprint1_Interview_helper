@@ -14,18 +14,20 @@ Turing College AE · Sprint 1 capstone · Streamlit + OpenRouter · runs locally
 - **Untrusted text never becomes an instruction.** Every answer and document passes a guard (regex rules + a decision-model check) and is wrapped as data before any prompt sees it.
 
 ```mermaid
-flowchart LR
-    A["Application<br/>JD + CV (+ cover letter)"] --> P["Planning call<br/>requirements, coverage, probes"]
-    P --> L
-    subgraph L["Interview loop (each answer)"]
-        direction TB
-        G["Guard<br/>rules → Jev check"] --> I["Interviewer LLM<br/>next question as JSON"]
-        I --> C["Code<br/>counts, limits, stage"]
+flowchart TB
+    subgraph S1["1 · Before: prepare (about 30 s)"]
+        direction LR
+        A["Application<br/>JD + CV (+ cover letter)"] --> P["Planning call<br/>requirements, CV coverage, what to probe"]
     end
-    L --> J["LLM judge × 3<br/>rubric JSON + quotes"]
-    J --> R["Code<br/>verify quotes, weight,<br/>median run, band"]
-    R --> F["Feedback report"]
-    F --> D["History · Dashboard<br/>progress per company"]
+    subgraph S2["2 · During: every answer"]
+        direction LR
+        G["Guard<br/>rules → Jev check"] --> I["Interviewer LLM<br/>next question as JSON"] --> C["Code<br/>counts, limits, next stage"]
+    end
+    subgraph S3["3 · After: feedback"]
+        direction LR
+        J["LLM judge × 3<br/>rubric scores + quotes"] --> R["Code<br/>verify quotes, weight,<br/>median run, band"] --> F["Report · History · Dashboard"]
+    end
+    S1 --> S2 --> S3
 ```
 
 ## For reviewers: requirements → where to look
