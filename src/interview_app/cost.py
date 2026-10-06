@@ -17,8 +17,13 @@ from sqlmodel import col, func, select
 from interview_app.db import InterviewSession, LLMCall, session_scope
 
 OTHER = "Other"
-# Call-log role -> plain-words purpose. A display label map, the one place it lives; any role not listed
-# (the lab's judge and candidate simulator, Jev calls outside the guard) is shown as Other.
+SIMULATION = "Simulation (lab)"
+# Roles of the lab and of audit runs: the simulated candidate, the lab judge, voicing simulated answers.
+# Named, so the Dashboard says where that spend came from instead of filing it under Other.
+SIMULATION_ROLES = ("candidate_sim",)
+SIMULATION_PREFIXES = ("lab_", "audit_")
+# Call-log role -> plain-words purpose. A display label map, the one place it lives; a role neither listed
+# here nor a simulation role (e.g. one added later and not mapped yet) is shown as Other.
 PURPOSES: dict[str, str] = {
     "interviewer": "Interviewer",
     "planner": "Planning",
@@ -39,6 +44,7 @@ CHART_GROUPS: dict[str, str] = {
     "Voice": "Voice",
     "Transcription": "Voice",
     "Guard": "Guard and other",
+    SIMULATION: "Guard and other",
     OTHER: "Guard and other",
 }
 CHART_GROUP_ORDER: list[str] = list(dict.fromkeys(CHART_GROUPS.values()))
@@ -47,7 +53,11 @@ DAILY_SPAN_DAYS = 60
 
 
 def purpose(role: str) -> str:
-    return PURPOSES.get(role, OTHER)
+    if role in PURPOSES:
+        return PURPOSES[role]
+    if role in SIMULATION_ROLES or role.startswith(SIMULATION_PREFIXES):
+        return SIMULATION
+    return OTHER
 
 
 def chart_group(purpose_name: str) -> str:
@@ -87,7 +97,15 @@ class CostOverview(BaseModel):
 def _purpose_column():
     """The purpose as a SQL expression, so the database can group by it (two unknown roles merge into
     one Other row instead of two)."""
-    return case(PURPOSES, value=LLMCall.role, else_=OTHER)
+    role = col(LLMCall.role)
+    simulation = role.in_(SIMULATION_ROLES)
+    for prefix in SIMULATION_PREFIXES:
+        simulation = simulation | role.startswith(prefix, autoescape=True)  # "_" is a LIKE wildcard
+    return case(
+        *[(role == name, label) for name, label in PURPOSES.items()],
+        (simulation, SIMULATION),
+        else_=OTHER,
+    )
 
 
 def cost_overview(engine: Engine, user_id: int) -> CostOverview:
