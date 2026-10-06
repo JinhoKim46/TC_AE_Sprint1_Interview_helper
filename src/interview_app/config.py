@@ -142,6 +142,29 @@ GEMINI_TTS_VOICES: list[str] = [
 ]  # fmt: skip
 
 
+class TTSModelChoice(BaseModel):
+    """One entry of the "Voice model" picker on the Settings page (spec 2026-10-06)."""
+
+    model_config = _STRICT
+
+    id: str  # OpenRouter model id
+    label: str = Field(min_length=1)  # what the picker shows: the model in plain words, with its trade-off
+
+
+# The TTS models this account's OpenRouter guardrail allows: checked 2026-10-05 with one tiny call each; the
+# other 21 listed TTS models return 404 "blocked by guardrail". Both return 24 kHz mono 16-bit PCM and support
+# the same voices (GEMINI_TTS_VOICES), so the WAV path and the voice list are shared. Audio prices: $6 per M
+# tokens (lite) and $9 per M tokens (standard), hence "about 1.5x the price".
+DEFAULT_TTS_MODELS: list[TTSModelChoice] = [
+    TTSModelChoice(
+        id="google/gemini-3.8-flash-lite-tts", label="Gemini Flash Lite TTS: faster, cheaper (default)"
+    ),
+    TTSModelChoice(
+        id="google/gemini-3.8-flash-tts", label="Gemini Flash TTS: more natural, about 1.5× the price"
+    ),
+]
+
+
 class TTSSettings(BaseModel):
     """Text-to-speech for the Voice channel (spec 2026-10-03-length-voice-design, voice.py).
 
@@ -150,9 +173,13 @@ class TTSSettings(BaseModel):
 
     model_config = _STRICT
 
-    # The only TTS model this account's OpenRouter guardrail allows (checked 2026-10-03; others 404).
-    # It returns raw 16-bit PCM only, which voice.py wraps into a WAV file.
+    # The default TTS model (used when the user picked none). It returns raw 16-bit PCM only, which voice.py
+    # wraps into a WAV file. It must be one of `available_models`.
     model: str = "google/gemini-3.8-flash-lite-tts"
+    # The models offered in the Settings "Voice model" picker. Override in .env as JSON, e.g.
+    # TTS__AVAILABLE_MODELS='[{"id": "google/gemini-3.8-flash-tts", "label": "Gemini Flash TTS"}]'.
+    # Check a new model against the guardrail with one tiny call before adding it.
+    available_models: list[TTSModelChoice] = Field(default=DEFAULT_TTS_MODELS, min_length=1)
     # Interview type -> voice, so each fixed persona (persona._BASE) always sounds like the same person.
     # Keys are InterviewType values; config can't import persona.py, so they are plain strings here.
     voices: dict[str, str] = {
@@ -179,8 +206,22 @@ class TTSSettings(BaseModel):
             raise ValueError(f"unknown TTS voice(s): {sorted(unknown)}")
         return self
 
+    @model_validator(mode="after")
+    def _default_model_listed(self) -> Self:
+        # Otherwise the Settings picker could not show the model that is actually used by default.
+        if self.model not in self.model_ids():
+            raise ValueError(f"the default TTS model {self.model!r} is not in tts.available_models")
+        return self
+
     def voice_for(self, interview_type: str) -> str:
         return self.voices.get(interview_type, self.default_voice)
+
+    def model_ids(self) -> list[str]:
+        return [choice.id for choice in self.available_models]
+
+    def model_label(self, model_id: str) -> str:
+        """The picker label of a model; the id itself for a model not (or no longer) in the list."""
+        return next((c.label for c in self.available_models if c.id == model_id), model_id)
 
 
 class STTSettings(BaseModel):

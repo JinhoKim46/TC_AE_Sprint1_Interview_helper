@@ -1171,13 +1171,16 @@ def question_type_of(cm: CodeMap, cls_id: str) -> str | None:
 def models_field(node: ast.AST | None) -> str | None:
     """`deps.settings.models.interviewer` (anywhere in an expression) -> "interviewer".
 
-    The TTS model lives in its own group (`settings.tts.model`, TTSSettings) and maps to "tts"."""
+    The TTS model lives in its own group (`settings.tts.model`, TTSSettings) and maps to "tts", as does
+    `session_voice_model(...)` (voice.py: the session's picked TTS model, else `settings.tts.model`)."""
     if node is None:
         return None
     for n in ast.walk(node):
         if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Attribute) and n.value.attr == "models":
             return n.attr
         if isinstance(n, ast.Attribute) and n.attr == "model" and getattr(n.value, "attr", None) == "tts":
+            return "tts"
+        if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "session_voice_model":
             return "tts"
     return None
 

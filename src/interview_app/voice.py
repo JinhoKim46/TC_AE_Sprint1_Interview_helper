@@ -90,6 +90,17 @@ def session_voice(config: SessionConfig, settings: Settings) -> str:
     return settings.tts.voice_for(config.interview_type.value)
 
 
+def session_voice_model(config: SessionConfig, settings: Settings) -> str:
+    """The session's TTS model: the one stored in its config if config still allows it, else the default.
+
+    Sessions stored before the voice-model picker existed have none and use the default; a model removed
+    from `tts.available_models` (e.g. newly blocked by the guardrail) also falls back, so old sessions play.
+    """
+    if config.voice_model and config.voice_model in settings.tts.model_ids():
+        return config.voice_model
+    return settings.tts.model
+
+
 def session_audio_dir(settings: Settings, user_id: int, session_id: int) -> Path:
     # Built from integers only, so no user or model text ever becomes part of a path.
     return settings.data_dir / AUDIO_DIR / str(int(user_id)) / str(int(session_id))
@@ -194,9 +205,15 @@ def _speak(
     # Annotated so the code map (reports/tools) can follow the call into the gateway.
     llm: LLMClient = make_llm(user_id, session_id)
     try:
-        result = llm.speech("tts", text[: settings.tts.max_chars], model=settings.tts.model, voice=voice)
+        # The session's model (picked in Settings, fixed at start); the client prices the call with it.
+        # Inline on purpose: the code map recognises `session_voice_model(...)` as the TTS model.
+        result = llm.speech(
+            "tts", text[: settings.tts.max_chars], model=session_voice_model(config, settings), voice=voice
+        )
     except LLMError:
         return SpeechOutcome(SpeechStatus.FAILED, notice=FAILED_NOTICE)  # already logged by the client
+    # The model that really spoke, as recorded by the client: the log line and the TurnAudio row use it too.
+    model = result.record.model
 
     fmt = pcm_format(result.content_type)
     if fmt is not None:
@@ -205,7 +222,7 @@ def _speak(
     elif "wav" in result.content_type.lower():
         wav, seconds = result.audio, 0.0
     else:
-        log.warning("Voice: unexpected audio type %r from %s", result.content_type, settings.tts.model)
+        log.warning("Voice: unexpected audio type %r from %s", result.content_type, model)
         return SpeechOutcome(SpeechStatus.FAILED, notice=FAILED_NOTICE)
 
     path = session_audio_dir(settings, user_id, session_id) / f"{int(turn_idx)}.wav"
@@ -219,7 +236,7 @@ def _speak(
                     turn_idx=turn_idx,
                     path=str(path.relative_to(settings.data_dir)),
                     voice=voice,
-                    model=settings.tts.model,
+                    model=model,
                     seconds=round(seconds, 2),
                 )
             )

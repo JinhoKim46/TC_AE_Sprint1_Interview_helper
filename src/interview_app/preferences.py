@@ -46,6 +46,8 @@ class Preferences(BaseModel):
     mode: Mode = Mode.REALISTIC
     # Voice channel: a fixed TTS voice for every interviewer. None = each persona's own voice (config).
     voice: str | None = None
+    # Voice channel: the TTS model (an id from Settings.tts.available_models). None = the config default.
+    voice_model: str | None = None
 
     # --- Developer settings ---
     prompt_variant: PromptVariant = PromptVariant.P4_ROLE_RICH
@@ -111,6 +113,7 @@ def to_session_config(
         "length": prefs.length,
         "channel": prefs.channel,
         "voice": prefs.voice,
+        "voice_model": prefs.voice_model,
         "main_questions": prefs.main_questions,
         "prompt_variant": prefs.prompt_variant,
         # A copy, so editing the session config can never change the saved preferences object.
@@ -132,8 +135,12 @@ def to_session_config(
         tts = tts or get_settings().tts
         if values["voice"] not in tts.available_voices:
             values["voice"] = tts.voice_for(InterviewType(values["interview_type"]).value)
+        # The same for the voice model: a saved model removed from config since falls back to the default.
+        if values["voice_model"] not in tts.model_ids():
+            values["voice_model"] = tts.model
     else:
         values["voice"] = None
+        values["voice_model"] = None
     return SessionConfig(**values)
 
 

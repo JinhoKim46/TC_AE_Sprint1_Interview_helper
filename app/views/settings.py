@@ -141,7 +141,7 @@ with panel(key="defaults"):
     # TTSSettings). Half the width, like the other select boxes, so the grid stays one grid.
     PERSONA_VOICE = ""  # the selectbox needs a plain-string option for "no override" (saved as None)
     voice_options = [PERSONA_VOICE, *cfg.tts.available_voices]
-    voice_col, _ = form_row(2, key="defaults-voice")
+    voice_col, voice_model_col = form_row(2, key="defaults-voice")
     voice = voice_col.selectbox(
         "Interviewer voice",
         options=voice_options,
@@ -149,6 +149,19 @@ with panel(key="defaults"):
         format_func=lambda v: v or "Match the interviewer (each persona has its own voice)",
         help="Used in Voice interviews. The voice is fixed when an interview starts.",
         key="pref_voice",
+    )
+    # The TTS model (config.py TTSSettings.available_models: the ones the guardrail allows). Every voice
+    # above works with every model, so changing the model keeps the chosen voice.
+    voice_model_ids = cfg.tts.model_ids()
+    # None (or a model removed from config since) shows the config default.
+    current_voice_model = prefs.voice_model if prefs.voice_model in voice_model_ids else cfg.tts.model
+    voice_model = voice_model_col.selectbox(
+        "Voice model",
+        options=voice_model_ids,
+        index=voice_model_ids.index(current_voice_model),
+        format_func=cfg.tts.model_label,
+        help="Used in Voice interviews. The model is fixed when an interview starts.",
+        key="pref_voice_model",
     )
 
 # --- Developer settings (hidden by default, course task M9) -------------------------------------
@@ -312,6 +325,8 @@ if save_clicked:
                 "length": length,
                 "channel": channel,
                 "voice": voice or None,
+                # The default is saved as None, so a later change of the config default applies to this user.
+                "voice_model": None if voice_model == cfg.tts.model else voice_model,
                 "main_questions": main_questions,
                 "prompt_variant": variant,
                 "interviewer": llm,
