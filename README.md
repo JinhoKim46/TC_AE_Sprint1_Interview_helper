@@ -166,7 +166,7 @@ uv run pytest -m live         # a few cheap real-API tests (needs .env)
 - **Single user, local only:** MFA is designed but not built; one interview at a time.
 - **Voice:** two TTS models and one transcription model pass this account's OpenRouter guardrail; TTS cost is an estimate (the speech API returns no usage).
 
-The full list, with details: [known limitations](docs/07-user-guide.md#known-limitations-in-detail); the reasons behind each design choice are in the [design spec](docs/04-design-spec.md).
+The full list, with details: [known limitations](docs/07-user-guide.md#known-limitations-in-detail); the reasons behind the big design choices are in the [ADRs](docs/adr/README.md).
 
 ## Next improvements
 
@@ -181,7 +181,8 @@ The full list, with details: [known limitations](docs/07-user-guide.md#known-lim
 | [User guide](docs/07-user-guide.md) | Every page and option in detail |
 | [Configuration and costs](docs/08-configuration.md) | `.env` settings for length, voice and speech; how voice costs are counted |
 | [Security in detail](docs/09-security.md) | R5: every guard layer, limit and output rule, mapped to the OWASP LLM Top 10 |
-| [Design spec](docs/04-design-spec.md) | The design, every decision since, and why |
+| [Design spec](docs/04-design-spec.md) | The current design on one page |
+| [ADRs](docs/adr/README.md) · [decision log](docs/decision-log.md) | Why the five biggest decisions were made; every dated design change since 2026-10-02 |
 | [Prompt comparison](docs/05-prompt-comparison.md) | R4: the five prompts compared |
 | [Project brief](docs/00-project-objective.md) | The course brief and how each requirement is understood |
 | [Interactive report](reports/interview-helper-report.html) · [code-flow report](reports/code-flow-report.html) | Clickable system map, session walkthrough, call graph and data flow, generated from the source |

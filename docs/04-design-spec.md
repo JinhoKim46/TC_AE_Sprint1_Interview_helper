@@ -1,170 +1,94 @@
-# Interview Practice App — Design Plan
+# Interview Practice App — Design Spec
 
-## Changes since approval (kept up to date)
-
-| Date | Change | Why |
-|---|---|---|
-| 2026-10-02 | **Priority:** the grading criteria and the core flow (upload JD + CV, optional cover letter → tailored interview → feedback) come first. Secondary until after the review: MFA, Jev live scoring + Coaching mode, History, Dashboard, avatars (M8), JD from URL, voice. | Owner's decision; the extras aren't graded |
-| 2026-10-02 | **MFA parked** in PR #4 (closed without merging; its behaviour is specified as tests there). The app runs as one built-in local user; tables keep `user_id`. | Not graded; local single-user app |
-| 2026-10-02 | **Models:** this account's OpenRouter guardrail blocks `openai/gpt-5`, DeepSeek and `z-ai/glm-5.2`. Open-weight options (H4) are `google/gemma-4-31b-it` and `minimax/minimax-m2.7`. | Checked with real calls (see `config.py`) |
-| 2026-10-02 | **Prompt variants:** only P4 receives the plan from the separate planning call (prompt chaining); P3 plans in its own `notes`; P1/P2/P5 get no plan. Each variant = zero-shot baseline + one technique. | Clean comparison of techniques (R4) |
-| 2026-10-02 | **Planning call** at `reasoning_effort="low"`: ~21 s / $0.006 vs ~36 s / $0.012 at medium, same plan structure. | Start-up latency |
-| 2026-10-05 | **Waits that move.** The planner's effort is a setting (`PLANNER_REASONING_EFFORT`, default `low`; checked on the sample: 26 s / 2,682 output tokens vs 34 s / 4,060 with no effort sent, both 7 requirements and 7 probes). Preparing shows real steps (the engine's `on_step` callback) and records the Voice opening inside the same wait; the report button shows a wait estimate computed from the user's recent judge calls (median over recent reports of each report's slowest run). | Owner reported the interview "stuck" on a static ~35 s wait |
-| 2026-10-02 | **Developer settings** live on the Settings page (prompt variant, models, temperature, max tokens, reasoning effort, judge model), not on the Interview page. | M9 separation |
-| 2026-10-02 | **Final judge:** one call per session (not per exchange); rationale and evidence before each score; requirement credit and strengths need a verbatim quote that code checks in the cited candidate turns. Median-of-3 runs was not done yet at this point (scores vary between runs); added later in PR #23. | Latency; a real run showed CV-only credit |
-| 2026-10-02 | **Jev's role so far:** injection guard (rules → Jev) and the interviewer-quality judge in `lab/`. Live per-answer scoring is secondary. | Priority change above |
-| 2026-10-02 | **Audit round 3 (PR #37):** a failed lab run ends its session (and the lab ends leftovers on start), so one failure can't block every later R4 comparison; quote checks accept parts from different cited turns and 2-word quotes; guard warnings that quote a document are markdown-escaped; the start timeout is 15 minutes and a start ended meanwhile raises a clear error; the judged session items come from `judge.JUDGED_SESSION_ITEMS`, not a second hard-coded list. | Review of the merged audit fixes |
-| 2026-10-02 | **Audit fixes, core logic (PR #30):** only one interview can be active at a time; a session stuck in "preparing" for longer than `limits.start_timeout_minutes` (5, raised to 15 in PR #37) is marked failed when the page resumes it; `answer`/`respond` check the session state and whose turn it is (no double answers); the last main question can now get a follow-up. Scoring is stricter: exchange items must cite their own exchange, quotes must match in order (PR #37: ≥ 2 words, and parts joined with "..." may come from different cited turns), an unverified positive requirement rating becomes `not_demonstrated` (0 points) instead of dropping out of coverage. A reply cut off at `max_tokens` is no longer "repaired". | Correctness; scores were inflatable |
-| 2026-10-02 | **Audit fixes, config and infra (PR #32):** every `Limits` value and guard setting is range-checked, and a typo in a nested `.env` key fails at start-up; Streamlit binds to `127.0.0.1` only (Docker still binds `0.0.0.0` inside the container), uploads are capped at 5 MB, telemetry is off; Docker drops all capabilities; CI has read-only permissions and builds the image. | A local app should not be reachable from the network; misconfiguration should fail loudly |
-| 2026-10-02 | **Audit fixes, security (PR #33):** the guard's rules and spotlighting run on a canonical form of the text (NFKC, zero-width and other format characters removed, HTML-entity forms of our tags caught), so Unicode tricks no longer hide `</document>` or "ignore previous instructions"; a regex that was quadratic on newlines is linear; documents over `guard.max_document_chunks` (20) chunks are flagged instead of sent to Jev. PDF reading is bounded against decompression bombs (5 MB per stream, a text cap, a 20 s timeout). The P4 plan, the judge's requirement list and the interviewer turns in the judge transcript are wrapped as data (second-order injection). SQLite uses `secure_delete` and the DB file is owner-only (mode 600). | Security audit findings, each reproduced first |
-| 2026-10-02 | **Audit fixes, UI (PR #31):** all model and user text shown in the UI is markdown-escaped (`ui_common.safe_md`; no `unsafe_allow_html`), so a reply cannot render HTML, images, links or LaTeX; a blocked answer comes back in an editable box; deleting an application warns how many interviews go with it and is disabled while one is active; the drill offer links to a running interview instead of starting a second one; double submits are guarded. | Stored XSS / exfiltration via markdown; stale or duplicate UI state |
-| 2026-10-02 | **Claims check (this docs PR):** `docs/05` now says which commit its numbers come from and withdraws claims the re-run did not support; the lab judge's I7 and the rubric treat numbered multi-part questions as stacking, matching the interviewer prompts; the lab judge leaves out superseded (retried) answers like the engine; lab CSVs are committed; `pytest -m live` fails instead of skipping when the API key is missing. | Documentation should only claim what the data and code show |
-| 2026-10-03 | **Spec for Length, Voice and an aligned design (PR #43):** `docs/specs/2026-10-03-length-voice-design/` with six tickets. **Speech-to-text is dropped, not deferred:** answers are always typed, and the Voice channel only speaks the interviewer's questions. | Typed answers keep the guard, the judge's quote checks and the transcript exact; STT added cost and a second failure point for little practice value |
-| 2026-10-03 | **Length and Channel settings (PR #44):** `SessionConfig.length` (quick/standard/full/custom) and `.channel` (text/voice); old sessions load as Full + Text. Presets in `config.LengthPresets` (Quick 3, Standard 5 main questions, Quick follow-up cap 1); Full keeps each interview type's realistic count, Custom uses the slider. Defaults (Standard, Voice) are saved in Settings; badges on the interview header, History and the report. | A quick practice before a call; no counts in prompts |
-| 2026-10-03 | **Voice channel with TTS (PR #45):** `voice.speak` turns each interviewer turn into a WAV once, through `LLMClient.speech` (OpenRouter `/audio/speech`, role `tts`, model `google/gemini-3.8-flash-lite-tts`, the only TTS model this account's guardrail allows). Stored under `data/audio/<user>/<session>/` and in a new `TurnAudio` table; deleted with the session or application. The cost is an **estimate** (the speech response has no usage). Skipped over budget; any error shows the text with a notice. The newest question auto-plays and its text sits behind "Show text". Voice per interview type, overridable in Settings, fixed per session. | Practise listening; voice never blocks the interview |
-| 2026-10-05 | **Speech-to-text reinstated as speak-then-confirm** (reverses 2026-10-03; spec `docs/specs/2026-10-05-spoken-answers-dashboard/`): in Voice sessions the mic is the main input, `voice.transcribe` → `LLMClient.transcribe` (OpenRouter `/audio/transcriptions`, plain HTTP because it isn't OpenAI-compatible, role `stt`, model `openai/whisper-large-v3-turbo`, the only one this account's guardrail allows) turns a recording into a draft the candidate edits and sends. Only the confirmed text reaches the guard, storage and the judge, exactly like a typed answer, so the reasons STT was dropped still hold. Recordings are discarded (never written to disk), transcripts never logged; over-length/over-size recordings are refused before the call, over budget switches transcription off. Typing stays available. Settings in `config.STTSettings`. | A spoken interview should be answered by speaking; the confirm step keeps the transcript exact |
-| 2026-10-03 | **Quick behaviour, History counting, drills as Custom (PR #46):** Quick gets a one-sentence intro, the core questions (motivation, top must-have requirement, one type-specific question), follow-ups capped at min(difficulty cap, Quick cap) and a one-line skippable "any quick question for me?" that counts as the candidate-questions stage. A skipped offer leaves S4 empty. Latest and best scores count only Standard and Full; Quick and Custom (every weak-spot drill) are drawn as separate trend points. The lab refuses non-Full sessions. | Short sessions must stay short, and must not distort progress or the R4 comparison |
-| 2026-10-03 | **Design system (PR #47):** one static stylesheet `app/styles/app.css` loaded by `ui_common.load_styles()` (no user or model text can reach it), layout helpers (`card_row`, `card_footer`, `panel`, `form_row`, `button_row`), Home and Applications aligned. Dark accent `#5D5AEF` for 5.0:1 button text; captions and placeholders above 6:1; visible focus outlines. | The UI looked unfinished; AA contrast in light and dark |
-| 2026-10-03 | **Alignment and accessibility pass (PR #48):** the helpers on every page (start form 2 x 2 grid, interview, report, History, Settings); selected segmented options marked by weight, ring and tint instead of accent text; a 2 px focus ring on every focusable control; light badges raised to 5.8–7.0:1. Data tables still scroll inside themselves on narrow screens (Streamlit's grid). | Consistent layout; keyboard and screen-reader use |
-| 2026-10-05 | **Exit interview dialog** (owner request, ticket 06): an **Exit interview** button in the Interview page header opens a dialog with Save & exit (stays active, resumable), End & get feedback, Discard (confirmed, deletes via `history.delete_session`) and Cancel; it replaces the sidebar End interview button. The page navigation is hidden while an interview is active or preparing (`ui_common.navigation_position`, one query via `engine.active_session_id`) and comes back after Save & exit until the interview is resumed; another page reached mid-interview links back to it. A fixed inline `beforeunload` script, drawn only during an active interview, makes the browser ask "Leave site?" on close or reload. | A running interview was easy to leave by accident, and the only way to end it sat at the bottom of a collapsible sidebar |
-| 2026-10-05 | **Fresh Interview page and a Dashboard** (tickets 01 and 04, PRs #56 and #57): a finished interview stays on the Interview page only until the candidate leaves it; coming back shows the start form with a link to the last interview in History (main.py tracks the page entered; Home and History hand a session over through `open_session`). A new **Dashboard** page shows KPIs, the score over time per application, one row per application and skill means across all reports, computed in `dashboard.py` from History's shared rules with no model call. | Owner: an old company's interview greeting them on the Interview page was awkward, and there was no overview across companies |
-| 2026-10-06 | **Cost on the Dashboard** (spec `docs/specs/2026-10-06-voice-model-cost-dashboard/`): `cost.py` sums the call log in the database (SUM … GROUP BY) per application (through the call's session), per day and purpose (per week, Monday start, when the data spans more than 60 days) and per purpose; one map turns call-log roles into plain-words purposes (anything unknown is Other). Calls with no session (document checks, lab runs) count in the total, over time and by purpose, but in no company row. The Dashboard's Cost KPI is now the call log's total, so it equals Settings → Usage and cost (before, it summed only the listed interviews). The average cost per interview counts interviews that made a model call. The over-time chart stacks four fixed purpose groups (Interview, Report and scoring, Voice, Guard and other) because the theme has four colours that stay apart for colour-blind readers; the tables list every purpose. | Owner wanted to see where the money goes: by company, over time and by feature |
-| 2026-10-06 | **Voice model picker** (spec `docs/specs/2026-10-06-voice-model-cost-dashboard/`): `TTSSettings.available_models` lists the TTS models the guardrail allows (re-checked 2026-10-05: `google/gemini-3.8-flash-lite-tts`, the default, and `google/gemini-3.8-flash-tts`; the other 21 return 404), each with a plain-words label, and a validator keeps the default in the list. Settings has a "Voice model" select box next to "Interviewer voice" (`Preferences.voice_model`, None = the config default). A Voice session stores its model in `SessionConfig.voice_model` at start, like the voice; `voice.session_voice_model` uses it while config still lists it, else the default, so old sessions keep playing. The speech call, its `LLMCall` row (cost estimated from that model's catalog price) and the `TurnAudio` row all use the session's model. No schema change. | A second TTS model passed the guardrail: the candidate can choose a more natural voice or the cheaper one, and the interviewer never changes sound mid-interview |
+The current design, kept short so it can be read in one sitting. **Why** the big decisions were made is in the [ADRs](adr/README.md); every dated change since the design was approved on 2026-10-02 is in the [decision log](decision-log.md); the finished build plan is [archived](archive/2026-10-02-build-plan.md). Feature specs and their tickets live in `docs/specs/`.
 
 ## Context
-Sprint 1 capstone (brief: `docs/00-project-objective.md`). After the review the user keeps using it for real job applications → a clean, tested, readable personal tool rather than a throwaway demo. Existing inputs:
-`docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md`, `rubric.json` (the source of truth for scoring), `docs/applications/**` (real example cases, mostly PDFs), and `references/app_design/` (Attio, Plain). Dates: build Fri 10/2 → Thu 10/8, **review Fri 2026-10-09**, hard submission deadline Mon 10/12. Scope: **everything, including Jev and voice**, before the review. Voice is a per-session channel (Text or Voice; see the 2026-10-03 changes).
 
-## Decisions (from the grilling)
-| Topic | Decision |
+Sprint 1 capstone (brief: `docs/00-project-objective.md`), reviewed Fri 2026-10-09, hard deadline Mon 2026-10-12. After the review the owner keeps using it for real job applications, so it is a clean, tested, readable personal tool rather than a throwaway demo. Reference inputs: `docs/01-interviewer-guideline.md`, `02-question-bank.md`, `03-evaluation-rubric.md` and `rubric.json` (the source of truth for scoring).
+
+## Key decisions
+
+| ADR | Decision |
 |---|---|
-| UI | UI-independent Python core package + Streamlit (`st.navigation` multipage) |
-| Users / hosting | Single user for now, local machine only. Data model is multi-user ready: a `User` table, and `user_id` on every owned row (Application, Session, LLMCall...). Registration closes after the first account |
-| Auth + MFA | **Dropped** (see the 2026-10-02 decision above): the app runs as one built-in local user, listens on localhost only, and has no login. Original plan, kept for reference: local password (argon2-cffi) + TOTP (pyotp; QR enrolment via `qrcode`; 10 one-time recovery codes, stored hashed). Lockout after 5 failed attempts (15 min), idle session timeout (30 min), all pages behind an auth gate in `app/main.py`. The TOTP secret is encrypted at rest with a key from `.env` |
+| [0001](adr/0001-ui-free-core-with-thin-streamlit-ui.md) | A UI-free core package with a thin Streamlit UI |
+| [0002](adr/0002-local-single-user-sqlite-no-login.md) | A local single-user app on SQLite, with no login but a `user_id` on every row |
+| [0003](adr/0003-model-judges-code-computes.md) | The model judges, code computes: a two-tier evaluation |
+| [0004](adr/0004-judge-from-another-family-median-of-three.md) | The final judge comes from another model family and runs three times |
+| [0005](adr/0005-layered-injection-guard.md) | A layered prompt-injection guard: answers are blocked, documents are flagged |
+
+## Design at a glance
+
+| Topic | Design |
+|---|---|
+| UI | Streamlit `st.navigation` multipage over a core package that never imports Streamlit ([ADR 0001](adr/0001-ui-free-core-with-thin-streamlit-ui.md)) |
+| Users / hosting | One built-in local user, `127.0.0.1` only, no login; `user_id` on every owned row ([ADR 0002](adr/0002-local-single-user-sqlite-no-login.md)) |
 | DB | SQLite via SQLModel (moving to Postgres later = changing the URL) |
-| Providers | One OpenAI-compatible client; provider profiles in config. OpenRouter only for now (no local model beats it on 16 GB VRAM); an Ollama profile can be added later |
-| Models (defaults, all changeable) | Interviewer `openai/gpt-5-mini` (R3); final judge from another family (Claude Haiku 4.5 / Gemini Flash); candidate simulator from a third family; live scoring + guard = **Jev**; avatar `google/gemini-2.5-flash-image`; open-weight options in the picker for H4 (Gemma 4 31B, DeepSeek V4, GLM 5.2, MiniMax M2.7) |
-| Inputs | JD + CV required; cover letter and company notes optional. Formats: PDF, pasted text, JD from URL. Each application owns its own copies |
-| Interview | Type (recruiter_screen, hiring_manager, technical_deep_dive, ml_case/system_design, behavioral, final_round) + difficulty (friendly/standard/tough) → derived persona; "Advanced" override. Length (Quick / Standard / Full / Custom) sets the number of main questions; follow-up cap + elapsed-time display |
+| Providers | One OpenAI-compatible client to OpenRouter (`llm/client.py`) plus the Jev decisions client (`llm/decide.py`); every call logged as an `LLMCall` row |
+| Models (defaults, all changeable in Settings) | Interviewer and planner `openai/gpt-5-mini` (R3); judge `anthropic/claude-haiku-4.5` ([ADR 0004](adr/0004-judge-from-another-family-median-of-three.md)); candidate simulator `google/gemini-2.5-flash`; live scoring + guard Jev; open-weight options in the picker (H4). Model ids live only in `config.py` |
+| Inputs | JD + CV required; cover letter and company notes optional. PDF or pasted text. Each application owns its own copies |
+| Interview | Type (recruiter screen, hiring manager, technical deep-dive, ML case / system design, behavioural, final round) + difficulty (friendly / standard / tough) → a derived persona. Length (Quick / Standard / Full / Custom) sets the number of main questions; a follow-up cap and an elapsed-time display |
 | Modes | Realistic (live scores hidden, report at the end) and Coaching (live score chips + tip + retry; the last attempt is scored and the session is marked "coached") |
-| Input/output channel | Text, or Voice (TTS speaks the questions via OpenRouter's `/audio/speech`; answers may be spoken, transcribed via `/audio/transcriptions` and confirmed before sending, or typed); chosen per session (spec `docs/specs/2026-10-03-length-voice-design/`) |
-| Turn format | Structured JSON per interviewer turn `{stage, question_id, message, is_final}`, no streaming |
-| 5 prompts (R4) | P1 zero-shot · P2 few-shot · P3 CoT plan-first · P4 role-rich · P5 self-critique |
-| Prompt eval (R4/H5) | Simulated-candidate LLM + judge harness (CLI); results shown read-only in Settings → Lab |
-| **Two-tier evaluation** | **Live (Jev, ~0.4 s, after every answer):** A1 relevance, A3 specificity, A6 depth + a "needs follow-up?" yes/no that routes the interviewer to probe or move on. **Final (LLM judge):** the full rubric A1–A10 with rationale, S1–S6, red flags, recommendations. Aggregation in code (rubric §7). Dashboard shows Jev vs LLM agreement on the same answers |
-| Security | (1) limits + validation (OWASP LLM10); (2) regex rules → Jev yes/no injection check with a threshold tuned in the Lab (LLM01), on docs and every answer; (3) documents wrapped in delimiters as data |
-| Pages | Home, Dashboard (KPIs, score over time per application, per-application rows, skills across applications; as built 2026-10-05, no radar or judge agreement yet), Applications, Interview, History, Settings (user + Developer section) |
-| Extras | M8 interviewer avatar per persona (cached). English only |
-| Privacy / repo | Standalone **public** repo `JinhoKim46/TC_AE_Sprint1_Interview_helper` (this folder), own `pyproject.toml` + uv. Gitignored: `docs/applications/` (real CVs), `references/app_design/` (third-party screenshots), `data/`, `.env`, `.worktrees/`. A fake sample application is committed |
-| Quality bar | Type hints, pydantic, pytest with mocked LLM, ruff, pydantic-settings + `.env`, logging, retries, comments that explain *why* |
+| Channel | Text, or Voice: TTS speaks each question; answers are spoken (transcribed, then confirmed and sent like typed text) or typed. Chosen per session |
+| Turn format | Structured JSON per interviewer turn `{stage, question_id, message, is_final}`; no streaming |
+| 5 prompts (R4) | P1 zero-shot · P2 few-shot · P3 CoT plan-first · P4 role-rich (gets the planning call's plan) · P5 self-critique; compared in `lab/` |
+| Evaluation | Live Jev scores on three rubric items per answer; a final LLM-judge report on the full rubric, quotes checked and scores aggregated in code ([ADR 0003](adr/0003-model-judges-code-computes.md)) |
+| Security | Limits, canonicalised regex rules, a Jev injection check and spotlighting ([ADR 0005](adr/0005-layered-injection-guard.md)); details in `docs/09-security.md` |
+| Pages | Home, Dashboard, Applications, Interview, History, Settings (user + Developer section) |
+| Privacy / repo | Public repo. Gitignored: `docs/applications/` (real CVs), `references/app_design/`, `data/`, `.env`, worktrees. Only a fictional sample application is committed |
+| Quality bar | Type hints, pydantic, pytest with a mocked LLM, ruff, pydantic-settings + `.env`, logging, retries, comments that explain *why* |
 
-Optional tasks covered: E1 E2 E3 E4 E7 (E8 via the Lab reasoning-effort sweep, `lab/sweep_setting.py`: gpt-5 ignores temperature), M1 M2 M3 M6 M7 M9, H1 H4 H5 → well over the 2 medium + 1 hard needed for the bonus. M8 (the interviewer avatar) was planned but not built.
+Not built from the original plan: login and MFA (parked in PR #4), JD import from a URL, the interviewer avatar (M8), Jev-vs-judge agreement on the Dashboard, and the guard-threshold sweep (`lab/tune_guard.py`).
 
-## Components I added that weren't in the brainstorm
-1. **Prep step** (prompt chaining): JD + CV + cover letter → `InterviewPlan` JSON (requirement map, claim map, probe list). Shared by all prompt variants. This is M2 format #1; `Evaluation` is #2.
+Optional tasks covered: E1 E2 E3 E4 E7 (E8 via the reasoning-effort sweep, `lab/sweep_setting.py`: gpt-5 ignores temperature), M1 M2 M3 M6 M7 M9, H1 H4 H5, well over the 2 medium + 1 hard needed for the bonus.
+
+## Components beyond the brief
+
+1. **Planning step** (prompt chaining): JD + CV + cover letter → `InterviewPlan` JSON (requirement map, claim map, probe list). This is structured format #1; the evaluation is #2.
 2. **Candidate simulator** to compare prompts reproducibly (strong / weak / evasive personas).
-3. **LLM call log**: each call stores its role, model, tokens, cost and latency → cost display (M3) and dashboard.
+3. **LLM call log**: every call stores its role, model, tokens, cost and latency, which feeds the cost display and the Dashboard.
 4. **Pricing cache** from OpenRouter `GET /api/v1/models` (refreshed daily).
-5. **Session persistence**: every turn is written to the DB right away, so a refresh or crash resumes the interview.
+5. **Session persistence**: every turn is written to the DB at once, so a refresh or crash resumes the interview.
 6. **Code-enforced limits**: question count, follow-up cap, turn cap, spend cap per session. When a limit is hit, code forces the closing stage.
-7. **Missing cover letter**: the prompt and rubric skip items that depend on the cover letter.
-8. **Data deletion**: delete an application together with its sessions, calls and audio.
-9. **Failure handling**: retry with backoff, then a friendly error, and state is kept. Invalid JSON → one repair retry. Jev down → skip live scores (the final LLM judge still runs). TTS failure → the question is shown as text with a short notice. STT failure, silence or an over-long recording → a short notice; typing still works.
+7. **Missing cover letter**: the prompt and rubric skip the items that depend on it.
+8. **Data deletion**: deleting an application deletes its sessions, calls and audio.
+9. **Failure handling**: retry with backoff, then a friendly error, and state is kept. Invalid JSON → one repair retry. Jev down → no live scores (the final judge still runs) and the guard falls back to rules. TTS failure → the question is shown as text. STT failure, silence or an over-long recording → a short notice; typing still works.
 
 ## Architecture
+
 ```
 project_Interview_App/
-  pyproject.toml  .env.example  README.md  .gitignore (data/, docs/applications/)
-  app/                         # Streamlit only — no business logic
-    main.py                    # st.navigation, page registry
-    views/{interview,applications,history,dashboard,settings,help}.py
+  app/                              # Streamlit only, no business logic
+    main.py                         # st.navigation, page registry
+    views/{home,dashboard,applications,interview,history,settings}.py
+    ui_common.py  report_view.py  drill_ui.py  wait_ui.py  styles/app.css
   src/interview_app/
-    config.py                  # pydantic-settings: provider profiles, role→model map, limits, feature flags
-    models.py                  # pydantic: InterviewPlan, InterviewerTurn, LiveScore, Evaluation, GuardResult
-    auth.py                    # DROPPED (no login; one built-in local user). Was: register, password, TOTP, recovery codes, lockout
-    db.py                      # SQLModel: User, Application, Document, Session, Turn, LLMCall, LiveScore, Evaluation, Avatar
-    llm/client.py              # chat(), chat_json(schema): OpenAI SDK + base_url, retries, usage → LLMCall
-    llm/decide.py              # Jev decisions API (pattern: sprint1/judge/judgebench/openrouter.py:decide)
-    llm/pricing.py             # OpenRouter /models cache → cost per call
-    llm/image.py               # avatar generation (modalities=["image","text"], base64 decode)
-    voice.py                   # TTS for interviewer turns (LLMClient.speech), stored once as WAV; STT drafts for spoken answers
-    ingest.py                  # PDF (pypdf) / paste / URL (httpx + trafilatura) → text; validation
-    security/{limits,injection}.py   # rules → Jev check → GuardResult(allowed, reason, score)
-    prompts/                   # Jinja2: plan.md, interviewer_p1..p5.md, coach.md, candidate_sim.md, judge_*.md
-    interview/{persona,plan,engine}.py   # engine: start(), answer(text) → turn, retry(), finish()
-    evaluation/{metrics,live_jev,llm_judge,aggregate,report}.py   # rubric items loaded from docs/rubric.json
-  lab/compare_prompts.py       # CLI: 5 variants × N sessions × candidate personas → CSV + markdown
-  lab/tune_guard.py            # injection threshold sweep on attack/benign examples
-  samples/demo_application/    # fake JD, CV, cover letter (committed)
-  tests/                       # unit tests, LLM/Jev calls mocked
+    config.py                       # pydantic-settings: role → model map, limits, guard, voice
+    db.py                           # SQLModel tables; user_id on every owned row
+    users.py  preferences.py  applications.py  ingest.py  history.py
+    dashboard.py  cost.py  usage.py  journey.py  demo.py  voice.py
+    llm/{client,decide,pricing,calllog}.py      # every model call goes through here
+    security/{limits,injection,spotlight,models}.py
+    interview/{persona,plan,prompting,engine,drill,schemas}.py
+    evaluation/{rubric,live,judge,exchanges,metrics,aggregate,service,schemas}.py
+    lab/{candidate,runner,compare,judge}.py
+    prompts/*.md                    # Jinja2: plan, interviewer_p1..p5, judge, candidate_sim, shared parts
+  lab/compare_prompts.py  lab/sweep_setting.py  # CLI experiments, results in lab/results/
+  samples/demo_application/         # fictional JD, CV, cover letter
+  tests/                            # unit tests, LLM and Jev mocked
 ```
-Reuse: `sprint1/judge/judgebench/openrouter.py` (`chat`, `decide`, `Reply`) and `judges.py` (`jev_request`, `jev_parse`, `LLMJudge`) as patterns for the client, Jev and the judge. `sprint1/streamlit_app.py` as a reference for the chat UI.
 
 ## Core flows
-- **Auth (dropped, not built):** first run → register (password + TOTP enrolment by QR code + recovery codes shown once) → afterwards login = password → 6-digit code (or a recovery code) → session in `st.session_state`, expires when idle.
-- **Import:** upload/paste/URL → validate → injection scan (warnings shown) → text preview/edit → save the Application.
-- **Interview turn:** answer (typed, or spoken → transcript draft → confirmed) → limits + guard → **Jev live scores + follow-up signal (in parallel)** → engine builds messages (system = variant + persona + plan + spotlighted docs + routing hint; then history) → `chat_json` → validate → save Turn + LiveScore → show (TTS in voice mode; score chips + tip in Coaching mode) → repeat until `is_final` or a limit.
-- **Finish:** metrics (code) → LLM judge (full rubric) → aggregate (§7 weights, §6 caps, bands) → report → History/Dashboard (including Jev-vs-LLM agreement).
-- **Guard outcome:** blocked answer → not sent, "please rephrase", logged. Flagged document → the user must confirm or edit it.
 
-## Execution method
-**Autonomous**, like a real team. I only stop to ask about decisions that really are the user's to make (product behaviour, privacy, spend). Hybrid: the foundation and the interview engine are built **sequentially**. Independent leaf modules (ingest, pricing, aggregate, avatar, audio, dashboard) go to **2–3 parallel subagents**, each in its own worktree, once their interfaces are fixed. No large Workflow.
-
-### Git workflow (every change)
-1. `git worktree add .worktrees/<branch> -b <type>/<short-name> origin/main` (types: feat, fix, chore, docs, test). Never commit on `main` directly.
-2. Small Conventional-Commit commits inside the worktree, ending with the Co-Authored-By line.
-3. Push → `gh pr create --base main` with Summary, Test plan and the 🤖 footer.
-4. CI (GitHub Actions: `uv sync`, `ruff check`, `ruff format --check`, `pytest -m "not live"`) must be green. No API keys in CI; real-API tests are marked `@pytest.mark.live` and run locally.
-5. `gh pr merge --squash --delete-branch`, then `git worktree remove .worktrees/<branch>`, `git fetch --prune`, and fast-forward local `main`.
-6. Before each PR: a self-review of the diff (code-review skill) and a scan for secrets/PII.
-
-### PR sequence (roughly one per row; parallel where marked ∥)
-| # | Branch | Content |
-|---|---|---|
-| 1 | chore/bootstrap | .gitignore (privacy rules first), pyproject, ruff, pytest, CI workflow, `.env.example`, docs + `docs/04-design-spec.md` |
-| 2 | feat/core | config, pydantic models, DB (User + user_id everywhere), LLM client + call log |
-| 3 | feat/auth-mfa (dropped) | password + TOTP + recovery codes + lockout + login gate + app shell (`st.navigation`) |
-| 4–6 ∥ | feat/pricing, feat/jev-client, feat/ingest | pricing cache · Jev decisions client · PDF/paste ingest + Applications page + sample application |
-| 7 | feat/guards | limits + rules + Jev injection check |
-| 8 | feat/plan-and-prompts | prep step + P4 prompt + persona derivation |
-| 9 | feat/interview-engine | engine + Interview page (text) → **MVP** |
-| 10 | feat/live-scoring | Jev live scores + routing + Coaching mode + retry |
-| 11 | feat/final-evaluation | LLM judge + aggregate + report + History |
-| 12 | feat/settings-dev | Settings (user + Developer), P1/P2/P3/P5, model picker incl. open-weight (H4), cost display |
-| 13–14 ∥ | feat/jd-url, feat/avatar | JD from URL · M8 avatar |
-| 15 | feat/lab | candidate simulator, `compare_prompts.py`, `tune_guard.py`, results doc |
-| 16 | feat/dashboard-help | Dashboard (trend, radar, cost, judge agreement) + Help |
-| 17 | feat/voice | TTS for the interviewer's questions (Voice channel; speech-to-text was dropped on 2026-10-03) |
-| 18 | docs/readme-final | README, review notes (prompt choice, settings, problems, improvements) |
-
-## Build order (cut line = what must work for the review)
-| When | Work |
-|---|---|
-| Fri 10/2 – Sat 10/3 | Save the spec, scaffold, config, DB (with User), auth + MFA + login gate (dropped), LLM client + Jev client + pricing + call log, ingest (PDF/paste), Applications page, sample application, tests |
-| Sun 10/4 | Plan step, P4 prompt, interview engine, guards (rules + Jev), Interview page (text) → **end-to-end MVP** |
-| Mon 10/5 | Jev live scoring + routing, Coaching mode, LLM judge + aggregation + report, History |
-| Tue 10/6 | Settings (Developer section, cost), P1/P2/P3/P5 variants, open-weight models (H4), JD from URL, avatar (M8) |
-| Wed 10/7 | Candidate simulator + `compare_prompts.py` + `tune_guard.py` runs + write-up, Dashboard, Help |
-| **── cut line: review-complete without voice ──** | |
-| Thu 10/8 | Voice (TTS playback of the interviewer's questions). Then README (run, architecture, prompt/settings choices, known problems, improvements) and a demo rehearsal |
-| Fri 10/9 | Review. Mon 10/12 buffer for fixes before the hard deadline |
-
-## Next step after approval
-1. PR 1 (bootstrap): add the privacy .gitignore **before** anything else is staged, then commit the docs + `docs/04-design-spec.md` (this plan).
-2. Write a task-level implementation plan (writing-plans) into `docs/plans/`, then execute the PR sequence autonomously.
-
-## Verification
-- Auth (dropped, not built): register → enrol TOTP → log out → login needs password + a valid code; a wrong code 5× locks the account; a recovery code works once; pages can't be opened without logging in.
-- `uv run pytest` (auth, engine, guards, aggregation against hand-computed rubric examples, ingest, pricing; LLM/Jev mocked) and `uv run ruff check`.
-- Manual end-to-end with `samples/demo_application`: import → realistic interview → report → History/Dashboard show the session, its cost and judge agreement.
-- Coaching mode: live chips appear within about 1 s of submitting; a retry replaces the scored attempt.
-- Guard: `lab/tune_guard.py` reports the catch rate and false-positive rate; injection text in a CV and in an answer gets blocked or flagged.
-- `uv run python lab/compare_prompts.py --sessions 3` produces the 5-variant table; the winner is named in the README.
-- The same interview runs with an open-weight model (H4).
-- Voice: each interviewer question plays as audio with its text behind Show text; a TTS failure shows the text; Text sessions work as before.
+- **Import:** upload or paste → validate → injection scan (warnings shown) → text preview and edit → save the Application.
+- **Start:** the planning call builds the `InterviewPlan`; the waiting panel shows its real steps.
+- **Interview turn:** answer (typed, or spoken → transcript draft → confirmed) → limits + guard → Jev live scores and a follow-up signal → the engine builds the messages (system = variant + persona + plan + spotlighted documents + routing hint, then the history) → `chat_json` → validate → save Turn and live scores → show (TTS in Voice; score chips + tip in Coaching) → repeat until `is_final` or a limit.
+- **Finish:** metrics in code → three parallel judge runs → aggregate in code (rubric weights, caps, bands) → the median run is the report → History and Dashboard.
+- **Guard outcome:** a blocked answer is not sent and comes back for rephrasing; a flagged document must be confirmed or edited by the user.
 
 ## Known risks
-- **Scope:** voice gets one day (Thu); the Text channel keeps the demo safe if it slips.
-- Jev's per-item thresholds need calibration; until then live scores are labelled "indicative".
+
+- Judge scores vary between runs (median-of-3 reduces this) and the judge is not calibrated against human scores ([ADR 0004](adr/0004-judge-from-another-family-median-of-three.md)).
+- Live Jev scores are not calibrated against the judge, so they are labelled indicative.
+- The guard fails open when Jev is down, and its threshold is untuned ([ADR 0005](adr/0005-layered-injection-guard.md)).
 - Some open-weight models don't support strict JSON schemas → JSON mode + pydantic validation + one repair retry.
-- The exact OpenRouter TTS and decisions request shapes get checked at implementation time (openrouter-tts/decisions skills).
+- Waits: about 30 s to start and about a minute for a report.
