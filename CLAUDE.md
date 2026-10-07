@@ -66,3 +66,17 @@ uv add <pkg>    /    uv add --dev <pkg>   # never pip install
 ## Course requirements to keep visible
 
 R4 needs 5 interviewer system prompts using different techniques (zero-shot, few-shot, CoT plan-first, role-rich, self-critique), compared with the `lab/` harness. R5 needs at least one security guard. At the review the owner must explain the prompting techniques, model settings, message roles, output types, the app's weaknesses and possible improvements, so keep the README and `docs/` current when behaviour changes.
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on this repo, via `gh`; PRs close them with `Closes #N`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Matt Pocock's five default roles, label name = role name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the root (created when needed), plus the decision table in `docs/04-design-spec.md`. See `docs/agents/domain.md`.
