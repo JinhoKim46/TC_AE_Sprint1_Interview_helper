@@ -9,6 +9,8 @@ These documents are the reference material for the two kinds of agents in the ap
 | `01-interviewer-guideline.md`, `02-question-bank.md` |
 | **Evaluator agent(s)** | Scores the finished transcript (LLM-as-a-judge and/or a decision model such as Jev) | `03-evaluation-rubric.md`, `rubric.json` |
 
+The interviewer guideline, question bank and rubric are based on the interview-preparation framework of [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) by Mads Lorentzen (MIT): STAR examples, tough questions, questions to ask and the roleplay protocol behind its `/interview` command. This app extends them into a weighted, machine-readable rubric for an LLM judge and the Jev decision model. The per-application documents in `applications/` (JD, tailored CV, cover letter) are the ones ai-job-search produces.
+
 ## Files
 
 | File | Purpose |
