@@ -66,3 +66,13 @@ uv add <pkg>    /    uv add --dev <pkg>   # never pip install
 ## Course requirements to keep visible
 
 R4 needs 5 interviewer system prompts using different techniques (zero-shot, few-shot, CoT plan-first, role-rich, self-critique), compared with the `lab/` harness. R5 needs at least one security guard. At the review the owner must explain the prompting techniques, model settings, message roles, output types, the app's weaknesses and possible improvements, so keep the README and `docs/` current when behaviour changes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` plus `docs/adr/` at the repo root, created lazily. See `docs/agents/domain.md`.
