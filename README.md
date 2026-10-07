@@ -30,6 +30,16 @@ flowchart TB
     S1 --> S2 --> S3
 ```
 
+## Works with ai-job-search
+
+Interview Helper is designed as the practice step after [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) by Mads Lorentzen (MIT), a Claude Code framework that evaluates job postings and writes a tailored CV and cover letter for each application.
+
+- **Customised inputs:** ai-job-search's `/apply` produces exactly what this app needs for one application (the posting, a CV tailored to it, and a cover letter), and `/outcome` archives them per application in `documents/applications/<company>_<role>/`. Upload the compiled CV and cover letter PDFs and paste the posting text, and the interview is grounded in the documents the real interviewer will read.
+- **Shared interview framework:** the interviewer guideline, question bank and rubric in `docs/` are based on ai-job-search's interview-preparation framework (STAR examples, tough questions, questions to ask, the roleplay protocol behind `/interview`), extended here into a weighted, machine-readable rubric (`docs/rubric.json`) that an LLM judge and the Jev decision model can score.
+- **What it adds:** ai-job-search prepares you for an interview inside a Claude Code chat; this app runs the interview itself, as a persistent, timed, scored session with a report, voice, history and progress across applications.
+
+Today the documents are added by hand; importing an ai-job-search application folder in one step is on the [next improvements](#next-improvements) list.
+
 ## For reviewers: requirements → where to look
 
 | Requirement | Where it is met | Evidence |
@@ -166,13 +176,14 @@ uv run pytest -m live         # a few cheap real-API tests (needs .env)
 - **Single user, local only:** MFA is designed but not built; one interview at a time.
 - **Voice:** two TTS models and one transcription model pass this account's OpenRouter guardrail; TTS cost is an estimate (the speech API returns no usage).
 
-The full list, with details: [known limitations](docs/07-user-guide.md#known-limitations-in-detail); the reasons behind each design choice are in the [design spec](docs/04-design-spec.md).
+The full list, with details: [known limitations](docs/07-user-guide.md#known-limitations-in-detail); the reasons behind the big design choices are in the [ADRs](docs/adr/README.md).
 
 ## Next improvements
 
 - The N-item red-flag checks with Jev, and calibrating the live Jev scores against the judge.
 - A larger evaluation set (several applications, human-rated transcripts) to calibrate the judge.
 - JD import from a URL; playing stored audio in History.
+- Import an [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) application folder (`documents/applications/<company>_<role>/`) in one step instead of uploading each document.
 
 ## Docs
 
@@ -181,7 +192,8 @@ The full list, with details: [known limitations](docs/07-user-guide.md#known-lim
 | [User guide](docs/07-user-guide.md) | Every page and option in detail |
 | [Configuration and costs](docs/08-configuration.md) | `.env` settings for length, voice and speech; how voice costs are counted |
 | [Security in detail](docs/09-security.md) | R5: every guard layer, limit and output rule, mapped to the OWASP LLM Top 10 |
-| [Design spec](docs/04-design-spec.md) | The design, every decision since, and why |
+| [Design spec](docs/04-design-spec.md) | The current design on one page |
+| [ADRs](docs/adr/README.md) · [decision log](docs/decision-log.md) | Why the five biggest decisions were made; every dated design change since 2026-10-02 |
 | [Prompt comparison](docs/05-prompt-comparison.md) | R4: the five prompts compared |
 | [Project brief](docs/00-project-objective.md) | The course brief and how each requirement is understood |
 | [Interactive report](reports/interview-helper-report.html) · [code-flow report](reports/code-flow-report.html) | Clickable system map, session walkthrough, call graph and data flow, generated from the source |

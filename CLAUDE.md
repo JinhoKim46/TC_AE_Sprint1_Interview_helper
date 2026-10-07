@@ -1,6 +1,6 @@
 # CLAUDE.md — Interview Helper
 
-Rules for anyone (human or agent) changing this repo. The design is in `docs/04-design-spec.md`; read it before starting a feature. The course brief and grading criteria are in `docs/00-project-objective.md`.
+Rules for anyone (human or agent) changing this repo. The current design is in `docs/04-design-spec.md` and the reasons for the big decisions in `docs/adr/`; read both before starting a feature. The course brief and grading criteria are in `docs/00-project-objective.md`.
 
 ## What this is
 
@@ -79,4 +79,4 @@ Matt Pocock's five default roles, label name = role name (`needs-triage`, `needs
 
 ### Domain docs
 
-Single-context: `GLOSSARY.md` and `docs/adr/` at the root (created when needed), plus the decision table in `docs/04-design-spec.md`. See `docs/agents/domain.md`.
+Single-context: `GLOSSARY.md` at the root (created when needed), ADRs in `docs/adr/` for the big decisions, and dated smaller decisions in `docs/decision-log.md`. See `docs/agents/domain.md`.

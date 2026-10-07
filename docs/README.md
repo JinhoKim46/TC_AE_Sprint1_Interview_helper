@@ -4,10 +4,12 @@ These documents are the reference material for the two kinds of agents in the ap
 
 | Agent | Role | Reads |
 |---|---|---|
-| **Interviewer agent** | Runs a realistic mock interview grounded in a specific JD, CV and cover letter | `04-design-spec.md` | The approved design: decisions, architecture, flows, git workflow, PR sequence, build order, verification |
+| **Interviewer agent** | Runs a realistic mock interview grounded in a specific JD, CV and cover letter | `04-design-spec.md` | The current design on one page: key decisions, design at a glance, architecture, flows, risks |
 | `brainstorming.md` | My original feature brainstorm (input to the design spec) |
 | `01-interviewer-guideline.md`, `02-question-bank.md` |
 | **Evaluator agent(s)** | Scores the finished transcript (LLM-as-a-judge and/or a decision model such as Jev) | `03-evaluation-rubric.md`, `rubric.json` |
+
+The interviewer guideline, question bank and rubric are based on the interview-preparation framework of [ai-job-search](https://github.com/MadsLorentzen/ai-job-search) by Mads Lorentzen (MIT): STAR examples, tough questions, questions to ask and the roleplay protocol behind its `/interview` command. This app extends them into a weighted, machine-readable rubric for an LLM judge and the Jev decision model. The per-application documents in `applications/` (JD, tailored CV, cover letter) are the ones ai-job-search produces.
 
 ## Files
 
@@ -21,6 +23,9 @@ These documents are the reference material for the two kinds of agents in the ap
 | `07-user-guide.md` | How to use the app, page by page: Home, Applications, Interview (length, channel, spoken answers, exit dialog), History, Dashboard, Settings; coaching mode and the weak-spot drill |
 | `08-configuration.md` | The `.env` settings for length, voice and speech, and how voice and transcription costs are counted |
 | `09-security.md` | R5 security in detail: injection guard layers, output handling, limits, grounding, local-only storage |
+| `adr/` | Architecture Decision Records: why the five biggest decisions were made (index and format in `adr/README.md`) |
+| `decision-log.md` | Every dated design decision and change since the design was approved on 2026-10-02 |
+| `archive/` | Finished plans kept for reference (the original build plan) |
 | `applications/` | **Local only (gitignored).** Real example applications. Per-application inputs: one folder per `<company>_<role>/` holding `jd.md`, `cv.md` (or `.pdf`/`.tex`), `cover_letter.md`, and optionally `company_notes.md` and `prep_notes.md` |
 
 ## Pipeline

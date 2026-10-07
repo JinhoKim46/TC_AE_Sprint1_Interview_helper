@@ -7,9 +7,10 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`GLOSSARY.md`** at the repo root, or
 - **`GLOSSARY-MAP.md`** at the repo root if it exists: it points at one `GLOSSARY.md` per context. Read each one relevant to the topic.
 - **`docs/adr/`**: read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
-- **`docs/04-design-spec.md`** (this repo): its **Changes since approval** table is the record of design decisions made before `docs/adr/` existed. Read the rows that touch your area. New decisions go to `docs/adr/` as ADRs; add a one-line row to that table pointing at the ADR, so both stay current.
+- **`docs/decision-log.md`** (this repo): the dated record of every design decision since 2026-10-02. Read the rows that touch your area. A new decision that is hard to reverse, surprising and a real trade-off gets an ADR in `docs/adr/` plus a one-line row in the log pointing at it; anything smaller is just a row in the log.
+- **`docs/04-design-spec.md`**: the current design in short, linking to the ADRs.
 
-This repo is **single-context**: one `GLOSSARY.md` at the root and `docs/adr/`, both created lazily.
+This repo is **single-context**: one `GLOSSARY.md` at the root (created lazily) and `docs/adr/` (ADRs 0001–0005 exist; see its README for the index and format).
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
