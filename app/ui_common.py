@@ -264,18 +264,29 @@ def navigation_position() -> Literal["sidebar", "hidden"]:
 
     "Save & exit" in that dialog sets `paused_session`: the candidate chose to leave, so the navigation
     comes back until they resume. One small DB query per page view (active_session_id loads no turns).
+
+    A new browser session (a reload, a new tab, a reconnect after a server restart) counts as paused too:
+    session_state starts empty then, so the flag above is gone, yet the candidate isn't mid-answer. Without
+    this the sidebar vanished on every reload until they resumed and saved again. Opening the Interview
+    page clears the flag, so the navigation hides as soon as they are back in the interview.
     """
     running = active_session_id(get_engine(), current_user_id())
+    if running is not None and "nav_seen" not in st.session_state:
+        st.session_state.paused_session = running
+    st.session_state.nav_seen = True
     if running is None or st.session_state.get("paused_session") == running:
         return "sidebar"
     return "hidden"
 
 
 def interview_running_note(url_path: str) -> None:
-    """With the navigation hidden, a page reached some other way (a bookmark, a typed URL) still needs a
-    way back to the running interview. Home already offers "Resume", and the Interview page is the
-    interview itself, so they get no note."""
+    """While an interview is running, other pages show a way back to it: with the navigation hidden it is
+    the only way, and in a new browser session (navigation shown, see navigation_position) it is a
+    reminder. Home already offers "Resume", and the Interview page is the interview itself, so they get no
+    note."""
     if url_path in ("", "interview"):
+        return
+    if active_session_id(get_engine(), current_user_id()) is None:
         return
     with panel(key="interview-running"):
         st.markdown("**You have an interview in progress.** Go back to it to continue, save it or end it.")

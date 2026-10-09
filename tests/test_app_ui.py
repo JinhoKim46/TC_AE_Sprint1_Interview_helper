@@ -2152,6 +2152,24 @@ def test_navigation_is_hidden_while_an_interview_runs(monkeypatch):
     assert positions[-1] == "sidebar"
 
 
+def test_a_new_browser_session_shows_the_navigation_until_the_interview_is_opened(monkeypatch):
+    # A reload, a new tab or a server restart starts a fresh Streamlit session: the "Save & exit" flag
+    # is gone, but the candidate isn't mid-answer either, so the sidebar must not vanish.
+    positions: list[str] = []
+    real = st.navigation
+
+    def recording_navigation(pages, **kwargs):
+        positions.append(kwargs.get("position", "sidebar"))
+        return real(pages, **kwargs)
+
+    monkeypatch.setattr(st, "navigation", recording_navigation)
+    running_interview()
+    at = through_main("views/home.py")
+    assert positions[-1] == "sidebar"
+    at.switch_page("views/interview.py").run()
+    assert positions[-1] == "hidden"  # back in the interview: the exit dialog is the way out again
+
+
 def test_another_page_reached_mid_interview_links_back_to_it():
     running_interview()
     at = through_main("views/history.py")

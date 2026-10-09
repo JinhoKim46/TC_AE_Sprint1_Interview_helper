@@ -39,6 +39,5 @@ page = st.navigation(pages, position=position)
 # candidate comes back later.
 st.session_state.page_entered = st.session_state.get("current_page") != page.url_path
 st.session_state.current_page = page.url_path
-if position == "hidden":
-    interview_running_note(page.url_path)
+interview_running_note(page.url_path)
 page.run()
