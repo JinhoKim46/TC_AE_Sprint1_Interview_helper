@@ -187,3 +187,7 @@ The full list, with details: [known limitations](docs/07-user-guide.md#known-lim
 | [Interactive report](reports/interview-helper-report.html) · [code-flow report](reports/code-flow-report.html) | Clickable system map, session walkthrough, call graph and data flow, generated from the source |
 | [Interviewer guideline](docs/01-interviewer-guideline.md) · [question bank](docs/02-question-bank.md) · [rubric](docs/03-evaluation-rubric.md) | Reference material the interviewer and judge are built on |
 | [Docker](docs/06-docker.md) · [`CLAUDE.md`](CLAUDE.md) | Running as a service; the rules for changing this repo |
+
+## License
+
+MIT. See [LICENSE](LICENSE).
